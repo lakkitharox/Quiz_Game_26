@@ -174,7 +174,11 @@ a{color:inherit}
 footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);font-size:12.5px;line-height:1.6;text-align:center;color:var(--muted)}
 /* --- v5: clean fullscreen host, branding, timer & button styles --- */
 .stage.full{height:100dvh;min-height:100dvh}
-.stage-logo img{max-height:120px;max-width:300px;object-fit:contain;display:block;margin:0 auto;filter:drop-shadow(0 4px 18px rgba(0,0,0,.45))}
+.stage-logo img{max-height:260px;max-width:640px;object-fit:contain;display:block;margin:0 auto;filter:drop-shadow(0 4px 18px rgba(0,0,0,.45))}
+.scale-presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.scale-presets button{border:1px solid var(--line);background:var(--bg);color:var(--muted);font-weight:800;font-size:12px;padding:7px 10px;border-radius:999px;min-height:34px;cursor:pointer}
+.scale-presets button:hover{color:var(--text);border-color:var(--amber)}
+.scale-presets button.on{background:var(--amber);color:#111;border-color:var(--amber)}
 .stage-headline{font-family:Archivo;font-weight:900;line-height:1.05;font-size:clamp(22px,3.6vw,40px);text-wrap:balance;text-shadow:0 2px 16px rgba(0,0,0,.45)}
 .stage-subtext{font-size:clamp(13px,1.6vw,17px);line-height:1.5;opacity:.92;text-shadow:0 2px 10px rgba(0,0,0,.5);max-width:640px}
 .timer-bar-wrap{width:min(520px,80vw);margin:0 auto}
@@ -305,9 +309,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
     <b>💾 Save = publish live</b>
     <button class="btn small primary" id="saveAllBtn">Save All Screens &amp; Settings</button>
     <button class="btn small" id="saveScreenBtn">Save This Screen Only</button>
-    <label class="btn small" for="importFile" style="margin:0">Open Saved File</label>
-    <input type="file" id="importFile" accept=".json,application/json" hidden>
-    <span id="saveStatus" style="font-size:12.5px;font-weight:700;opacity:.85">Screen edits stay drafts until you Save</span>
+    <span id="saveStatus" style="font-size:12.5px;font-weight:700;opacity:.85">Screen edits stay drafts until you Save — Save publishes them live to the Host &amp; Player screens. No file is downloaded.</span>
   </div>
   <div class="admin-shell">
     <nav class="admin-menu" id="adminMenu" aria-label="Admin sections">
@@ -358,8 +360,26 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <div class="field"><label>Headline</label><input id="headlineInput" placeholder="e.g. Grand Quiz Night" maxlength="60"></div>
         <div class="field"><label>Sub-text</label><input id="subtextInput" placeholder="e.g. True or False — winner takes all!" maxlength="90"></div>
         <div class="row2">
-          <div class="field"><label>Overall screen scale — <span id="globalScaleVal"></span></label><input type="range" id="globalScale" min="70" max="140" step="5"></div>
+          <div class="field"><label>Overall screen scale — <span id="globalScaleVal"></span></label><input type="range" id="globalScale" min="25" max="300" step="5"><div class="scale-presets" id="globalScalePresets"><button type="button" data-gs="25">25%</button><button type="button" data-gs="50">50%</button><button type="button" data-gs="75">75%</button><button type="button" data-gs="100">100%</button><button type="button" data-gs="150">150%</button><button type="button" data-gs="200">200%</button><button type="button" data-gs="250">250%</button><button type="button" data-gs="300">300%</button></div><p style="font-size:12.5px;color:var(--muted);margin:7px 0 0">Scales the whole screen — 25% tiny up to 300% huge.</p></div>
           <div class="field"><label>Layout</label><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="resetLayoutBtn">↺ Reset this screen</button><button class="btn small" id="resetAllDesignBtn">Reset all</button></div></div>
+        </div>
+        <div class="divider"></div>
+        <h3 style="font-size:15px">Timer &amp; button styles</h3>
+        <p style="color:var(--muted);font-size:13.5px;line-height:1.5;margin:6px 0 14px">How the timer looks on the Host screen and how the TRUE / FALSE buttons look on the player screens. The canvas above previews every style as you tap — check the Host tab for the timer and a Player tab for the buttons.</p>
+        <div class="field"><label>Timer style (on Host screen)</label>
+          <div class="seg" id="timerStyleSeg"><button data-tstyle="ring">◉ Ring</button><button data-tstyle="bar">▬ Bar</button><button data-tstyle="big">Big numbers</button><button data-tstyle="minimal">Minimal pill</button></div>
+        </div>
+        <div class="field"><label>TRUE / FALSE button style</label>
+          <div class="seg" id="btnStyleSeg"><button data-bstyle="classic">Classic blocks</button><button data-bstyle="pill">Pill</button><button data-bstyle="soft">Soft 3D</button><button data-bstyle="outline">Outline</button><button data-bstyle="sharp">Sharp</button></div>
+        </div>
+        <div class="field"><label>Button size (scale) — <span id="btnScaleVal"></span></label><input type="range" id="btnScale" min="25" max="300" step="5"><div class="scale-presets" id="btnScalePresets"><button type="button" data-bs="25">25%</button><button type="button" data-bs="50">50%</button><button type="button" data-bs="75">75%</button><button type="button" data-bs="100">100%</button><button type="button" data-bs="150">150%</button><button type="button" data-bs="200">200%</button><button type="button" data-bs="250">250%</button><button type="button" data-bs="300">300%</button></div><p style="font-size:12.5px;color:var(--muted);margin:7px 0 0">TRUE / FALSE buttons — 25% tiny up to 300% huge. Combines with the buttons element scale on the canvas.</p></div>
+        <div class="row2">
+          <div class="field"><label>TRUE button colour</label><input type="color" id="trueCol"></div>
+          <div class="field"><label>FALSE button colour</label><input type="color" id="falseCol"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>TRUE button label</label><input id="trueLabelInput" maxlength="14"></div>
+          <div class="field"><label>FALSE button label</label><input id="falseLabelInput" maxlength="14"></div>
         </div>
       </div>
 
@@ -412,16 +432,13 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="admin-sec" data-sec="admin" hidden>
       <!-- GAME SETTINGS -->
       <div class="panel">
-        <h3>Game, timer &amp; button settings</h3>
-        <p>Order, timer style, scoring and how the TRUE / FALSE buttons look on the player screens.</p>
+        <h3>Game &amp; scoring settings</h3>
+        <p>Question order, timer length, what happens when time runs out, and scoring. All styling — timer style, button style, colours and labels — is done in the <b style="color:var(--text)">Screens</b> designer, while you design the screen.</p>
         <div class="field"><label>Question order</label>
           <div class="seg" id="orderSeg"><button data-order="sequence">➡ Sequence</button><button data-order="random">🔀 Random shuffle</button></div>
           <p style="font-size:12.5px;color:var(--muted);margin:7px 0 0" id="orderHint"></p>
         </div>
         <div class="field"><label>Seconds per question — <span id="timerVal">15s</span></label><input type="range" id="timerRange" min="0" max="90" step="5" value="15"></div>
-        <div class="field"><label>Timer style (on Host screen)</label>
-          <div class="seg" id="timerStyleSeg"><button data-tstyle="ring">◉ Ring</button><button data-tstyle="bar">▬ Bar</button><button data-tstyle="big">Big numbers</button><button data-tstyle="minimal">Minimal pill</button></div>
-        </div>
         <div class="field"><label>When time runs out</label>
           <div class="seg" id="timeoutSeg"><button data-timeout="reveal">Auto-reveal answer</button><button data-timeout="wait">Wait for Admin</button></div>
         </div>
@@ -431,19 +448,6 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
             <button type="button" data-points-preset="10">10</button><button type="button" data-points-preset="25">25</button><button type="button" data-points-preset="50">50</button><button type="button" data-points-preset="100">100</button><button type="button" data-points-preset="200">200</button><button type="button" data-points-preset="500">500</button><button type="button" data-points-preset="1000">1000</button>
           </div>
           <p style="font-size:12.5px;color:var(--muted);margin:7px 0 0">Points for <b style="color:var(--text)">one correct answer</b> — type any number or tap a preset. Applies from the next reveal; the − / + score buttons in <b style="color:var(--text)">Live → Players</b> step by the same amount. 0 = no-score round.</p>
-        </div>
-        <div class="divider"></div>
-        <div class="field"><label>TRUE / FALSE button style</label>
-          <div class="seg" id="btnStyleSeg"><button data-bstyle="classic">Classic blocks</button><button data-bstyle="pill">Pill</button><button data-bstyle="soft">Soft 3D</button><button data-bstyle="outline">Outline</button><button data-bstyle="sharp">Sharp</button></div>
-        </div>
-        <div class="field"><label>Button size (scale) — <span id="btnScaleVal"></span></label><input type="range" id="btnScale" min="70" max="130" step="5"></div>
-        <div class="row2">
-          <div class="field"><label>TRUE button colour</label><input type="color" id="trueCol"></div>
-          <div class="field"><label>FALSE button colour</label><input type="color" id="falseCol"></div>
-        </div>
-        <div class="row2">
-          <div class="field"><label>TRUE button label</label><input id="trueLabelInput" maxlength="14"></div>
-          <div class="field"><label>FALSE button label</label><input id="falseLabelInput" maxlength="14"></div>
         </div>
       </div>
 
@@ -486,7 +490,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <h3>About this app</h3>
         <p><b style="color:var(--text)">True or False Quiz Game</b> — a two-player quiz for one big screen and two iPads. The Host screen shows the question, timer, scores and the winner; each player gets their own screen with just two big TRUE / FALSE buttons.</p>
         <p><b style="color:var(--text)">How a live game runs:</b> in <b style="color:var(--text)">Live</b>, press “Create Live Room for iPads”, then give the players the room code (it only ever appears here in Admin). Players open their Player link, enter the code and their name, and their taps count live on the Host screen. Start, reveal, end and reset are all controlled from Live. The <b style="color:var(--text)">Live monitor</b> at the top of Live shows each player's screen link, Connected / Disconnected status, score, correct count, streak, current answer, answer time, recent answers, plus the current question and the timer.</p>
-        <p><b style="color:var(--text)">Designing:</b> in <b style="color:var(--text)">Screens</b> you edit a draft of each screen — the canvas previews every change as you make it, but the Host and Player screens keep showing the last saved design until you press <b style="color:var(--text)">Save</b>, which publishes it to all screens at once. Save also downloads a backup file you can reopen later with “Open Saved File”.</p>
+        <p><b style="color:var(--text)">Designing:</b> in <b style="color:var(--text)">Screens</b> you edit a draft of each screen — the canvas previews every change as you make it, but the Host and Player screens keep showing the last saved design until you press <b style="color:var(--text)">Save</b>. Save means one thing only: it publishes the design live to all screens at once. There is no download or file export.</p>
         <p style="margin-bottom:0"><b style="color:var(--text)">Screens:</b> Host (main address) · Player 1 (/Player1) · Player 2 (/Player2) · Admin (/Admin). No accounts or installs — everything runs in the browser.</p>
       </div>
       </div>
@@ -1077,6 +1081,7 @@ function renderAdmin(){
   document.querySelectorAll("#btnStyleSeg button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-bstyle")===state.buttonStyle);});
   var bsEl=$("btnScale"); if(bsEl&&document.activeElement!==bsEl)bsEl.value=String(state.buttonScale);
   var bsvEl=$("btnScaleVal"); if(bsvEl)bsvEl.textContent=state.buttonScale+"%";
+  document.querySelectorAll("#btnScalePresets [data-bs]").forEach(function(b){b.classList.toggle("on",+b.getAttribute("data-bs")===state.buttonScale);});
   var tcEl=$("trueCol"); if(tcEl&&document.activeElement!==tcEl)tcEl.value=state.trueColor;
   var fcEl=$("falseCol"); if(fcEl&&document.activeElement!==fcEl)fcEl.value=state.falseColor;
   var tlEl=$("trueLabelInput"); if(tlEl&&document.activeElement!==tlEl)tlEl.value=state.trueLabel;
@@ -1167,7 +1172,7 @@ function renderDesigner(){
   if(document.activeElement!==$("logoUrl"))$("logoUrl").value=d.logoUrl&&d.logoUrl.indexOf("data:")===0?"(uploaded logo)":(d.logoUrl||"");
   if(document.activeElement!==$("headlineInput"))$("headlineInput").value=d.headline||"";
   if(document.activeElement!==$("subtextInput"))$("subtextInput").value=d.subtext||"";
-  $("globalScale").value=d.globalScale||100; $("globalScaleVal").textContent=(d.globalScale||100)+"%";
+  $("globalScale").value=d.globalScale||100; $("globalScaleVal").textContent=(d.globalScale||100)+"%"; document.querySelectorAll("#globalScalePresets [data-gs]").forEach(function(b){b.classList.toggle("on",+b.getAttribute("data-gs")===(d.globalScale||100));});
   var ps=$("publishStatus"); if(ps){var dirty=designIsDirty();ps.textContent=dirty?"● Draft edits — not on the screens yet. Press Save (top of Admin) to publish live.":"✓ Published — the screens are showing this design.";ps.style.color=dirty?"var(--amber)":"#4ADE80";}
   $("presetRow").innerHTML=PRESETS.map(function(p,i){return '<button class="preset" title="'+p.name+'" data-preset="'+i+'" style="background:linear-gradient(135deg,'+p.bg1+','+p.bg2+')"></button>';}).join("");
   document.querySelectorAll("[data-preset]").forEach(function(b){b.addEventListener("click",function(){var p=PRESETS[+b.getAttribute("data-preset")];var dd=design[designTab];dd.bg1=p.bg1;dd.bg2=p.bg2;dd.bgColor=p.bg1;if(dd.bgMode==="color")dd.bgMode="gradient";designChanged();toast(p.name+" background applied to "+designTabLabel());});});
@@ -1182,11 +1187,15 @@ function renderInspector(){
    +'<div class="row3" style="margin-top:10px">'
    +'<div class="field"><label>Left ↔ — <span id="elXVal">'+Math.round(e.x)+'%</span></label><input type="range" id="elX" min="4" max="96" value="'+e.x+'"></div>'
    +'<div class="field"><label>Top ↕ — <span id="elYVal">'+Math.round(e.y)+'%</span></label><input type="range" id="elY" min="5" max="95" value="'+e.y+'"></div>'
-   +'<div class="field"><label>Size (scale) — <span id="elSVal">'+e.s+'%</span></label><input type="range" id="elS" min="60" max="170" step="5" value="'+e.s+'"></div></div>'
+   +'<div class="field"><label>Size (scale) — <span id="elSVal">'+e.s+'%</span></label><input type="range" id="elS" min="10" max="400" step="5" value="'+e.s+'"><div style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="number" id="elSNum" min="10" max="400" step="5" value="'+e.s+'" aria-label="Scale percent" style="width:92px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-weight:700"><span style="font-size:12.5px;color:var(--muted)">% &nbsp;·&nbsp; 10% tiny → 400% huge</span></div><div class="scale-presets" id="elSPresets"><button type="button" data-es="10">10%</button><button type="button" data-es="25">25%</button><button type="button" data-es="50">50%</button><button type="button" data-es="75">75%</button><button type="button" data-es="100">100%</button><button type="button" data-es="150">150%</button><button type="button" data-es="200">200%</button><button type="button" data-es="300">300%</button><button type="button" data-es="400">400%</button></div></div></div>'
    +'<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap"><span style="font-weight:700;font-size:14px">Show this element on the screen:</span><span class="seg"><button id="elShowOn">Shown</button><button id="elShowOff">Hidden</button></span></div>';
   $("elX").addEventListener("input",function(ev){e.x=+ev.target.value;syncCanvasEl();});
   $("elY").addEventListener("input",function(ev){e.y=+ev.target.value;syncCanvasEl();});
-  $("elS").addEventListener("input",function(ev){e.s=+ev.target.value;syncCanvasEl();});
+  $("elS").addEventListener("input",function(ev){e.s=+ev.target.value;var n=$("elSNum");if(n)n.value=e.s;syncCanvasEl();markElSPresets();});
+  var elSNumEl=$("elSNum"); if(elSNumEl)elSNumEl.addEventListener("input",function(ev){var v=Math.max(10,Math.min(400,Math.round(Number(ev.target.value)||100)));e.s=v;var s=$("elS");if(s)s.value=v;syncCanvasEl();markElSPresets();});
+  function markElSPresets(){document.querySelectorAll("#elSPresets [data-es]").forEach(function(b){b.classList.toggle("on",+b.getAttribute("data-es")===e.s);});}
+  document.querySelectorAll("#elSPresets [data-es]").forEach(function(b){b.addEventListener("click",function(){e.s=+b.getAttribute("data-es");var s=$("elS");if(s)s.value=e.s;var n=$("elSNum");if(n)n.value=e.s;syncCanvasEl();markElSPresets();});});
+  markElSPresets();
   $("elShowOn").className=e.show?"on":""; $("elShowOff").className=!e.show?"on":"";
   $("elShowOn").addEventListener("click",function(){e.show=true;designChanged();});
   $("elShowOff").addEventListener("click",function(){e.show=false;designChanged();});
@@ -1337,7 +1346,8 @@ $("ctlHardReset").addEventListener("click",function(){stopTimer();state.paused=f
 document.querySelectorAll("#timerStyleSeg button").forEach(function(b){b.addEventListener("click",function(){state.timerStyle=b.getAttribute("data-tstyle");render();renderDesigner();toast("Timer style: "+b.textContent.trim()+" — preview is on the designer canvas");});});
 document.querySelectorAll("#timeoutSeg button").forEach(function(b){b.addEventListener("click",function(){state.timeoutMode=b.getAttribute("data-timeout");render();toast(state.timeoutMode==="reveal"?"Time-up will auto-reveal the answer":"Time-up will wait for Admin to reveal");});});
 document.querySelectorAll("#btnStyleSeg button").forEach(function(b){b.addEventListener("click",function(){state.buttonStyle=b.getAttribute("data-bstyle");render();renderDesigner();toast("Button style: "+b.textContent.trim()+" — preview is on the designer canvas (Player tabs)");});});
-$("btnScale").addEventListener("input",function(e){state.buttonScale=+e.target.value;$("btnScaleVal").textContent=state.buttonScale+"%";designChangedSoft();});
+$("btnScale").addEventListener("input",function(e){state.buttonScale=+e.target.value;$("btnScaleVal").textContent=state.buttonScale+"%";document.querySelectorAll("#btnScalePresets [data-bs]").forEach(function(b){b.classList.toggle("on",+b.getAttribute("data-bs")===state.buttonScale);});designChangedSoft();});
+document.querySelectorAll("#btnScalePresets [data-bs]").forEach(function(b){b.addEventListener("click",function(){state.buttonScale=+b.getAttribute("data-bs");var s=$("btnScale");if(s)s.value=state.buttonScale;$("btnScaleVal").textContent=state.buttonScale+"%";document.querySelectorAll("#btnScalePresets [data-bs]").forEach(function(x){x.classList.toggle("on",x===b);});designChangedSoft();render();toast("Button size: "+state.buttonScale+"%");});});
 $("trueCol").addEventListener("input",function(e){state.trueColor=e.target.value;designChangedSoft();});
 $("falseCol").addEventListener("input",function(e){state.falseColor=e.target.value;designChangedSoft();});
 $("trueLabelInput").addEventListener("change",function(e){state.trueLabel=e.target.value.trim()||"TRUE";render();toast("TRUE button label: "+state.trueLabel);});
@@ -1346,13 +1356,14 @@ $("logoUrl").addEventListener("change",function(e){var v=e.target.value.trim();i
 $("logoFile").addEventListener("change",function(e){var f=e.target.files&&e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(){design[designTab].logoUrl=String(r.result);if(design[designTab].els.logo)design[designTab].els.logo.show=true;designChanged();toast("Logo uploaded for "+designTabLabel());};r.readAsDataURL(f);});
 $("headlineInput").addEventListener("change",function(e){design[designTab].headline=e.target.value.trim();if(design[designTab].headline&&design[designTab].els.headline)design[designTab].els.headline.show=true;designChanged();});
 $("subtextInput").addEventListener("change",function(e){design[designTab].subtext=e.target.value.trim();if(design[designTab].subtext&&design[designTab].els.subtext)design[designTab].els.subtext.show=true;designChanged();});
-$("globalScale").addEventListener("input",function(e){design[designTab].globalScale=+e.target.value;$("globalScaleVal").textContent=e.target.value+"%";designChangedSoft();});
-function collectSaveData(){ensureDesign();return{app:"true-or-false-quiz-game",version:5,savedAt:new Date().toISOString(),design:clone(design),questions:clone(state.questions),players:[state.players[0].name,state.players[1].name],settings:{timerDur:state.timerDur,points:state.points,orderMode:state.orderMode,timerStyle:state.timerStyle,timeoutMode:state.timeoutMode,buttonStyle:state.buttonStyle,buttonScale:state.buttonScale,trueColor:state.trueColor,falseColor:state.falseColor,trueLabel:state.trueLabel,falseLabel:state.falseLabel}};}
-function downloadSave(data,filename){var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},400);}
-function markSaved(what){var el=$("saveStatus");if(el)el.textContent="✓ Saved & live "+what+" · "+new Date().toLocaleTimeString();toast("💾 Saved & published live — "+what+" is now showing on the Host/Player screens (a backup file was downloaded too).");queueBroadcast();}
-$("saveAllBtn").addEventListener("click",function(){liveDesign=clone(design);downloadSave(collectSaveData(),"quiz-screens-and-settings.json");render();renderDesigner();markSaved("all screens & settings");});
-$("saveScreenBtn").addEventListener("click",function(){liveDesign[designTab]=clone(design[designTab]);var data={app:"true-or-false-quiz-game",version:5,screen:designTab,savedAt:new Date().toISOString(),design:{}};data.design[designTab]=clone(design[designTab]);downloadSave(data,"quiz-"+designTab+"-screen.json");render();renderDesigner();markSaved(designTabLabel()+" only");});
-$("importFile").addEventListener("change",function(e){var f=e.target.files&&e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var data=JSON.parse(String(r.result));if(data.design){Object.keys(data.design).forEach(function(k){if(design[k]){design[k]=data.design[k];liveDesign[k]=clone(data.design[k]);}});ensureDesign();}if(data.questions&&data.questions.length)state.questions=data.questions;if(data.settings){Object.keys(data.settings).forEach(function(k){if(state[k]!==undefined)state[k]=data.settings[k];});}if(data.players){state.players[0].name=data.players[0]||state.players[0].name;state.players[1].name=data.players[1]||state.players[1].name;}selectedEl=null;designChanged();render();toast("Saved file loaded — screens & settings restored ✓");}catch(err){toast("That file could not be read — pick a quiz save file (.json)");}};r.readAsText(f);e.target.value="";});
+$("globalScale").addEventListener("input",function(e){design[designTab].globalScale=+e.target.value;$("globalScaleVal").textContent=e.target.value+"%";document.querySelectorAll("#globalScalePresets [data-gs]").forEach(function(b){b.classList.toggle("on",+b.getAttribute("data-gs")===design[designTab].globalScale);});designChangedSoft();});
+document.querySelectorAll("#globalScalePresets [data-gs]").forEach(function(b){b.addEventListener("click",function(){design[designTab].globalScale=+b.getAttribute("data-gs");var s=$("globalScale");if(s)s.value=design[designTab].globalScale;$("globalScaleVal").textContent=design[designTab].globalScale+"%";document.querySelectorAll("#globalScalePresets [data-gs]").forEach(function(x){x.classList.toggle("on",x===b);});designChangedSoft();render();toast("Overall screen scale: "+design[designTab].globalScale+"% — press Save to publish");});});
+/* Save = publish live ONLY. No JSON download, no file export, no import.
+   Pressing Save copies the draft design into liveDesign (what the Host/Player
+   screens render from) and broadcasts it, so every connected screen updates. */
+function markSaved(what){var el=$("saveStatus");if(el)el.textContent="✓ Saved & live — "+what+" · "+new Date().toLocaleTimeString();toast("💾 Saved & published live — "+what+" is now showing on the Host & Player screens.");queueBroadcast();}
+$("saveAllBtn").addEventListener("click",function(){ensureDesign();liveDesign=clone(design);render();renderDesigner();markSaved("all screens & settings");});
+$("saveScreenBtn").addEventListener("click",function(){ensureDesign();liveDesign[designTab]=clone(design[designTab]);render();renderDesigner();markSaved(designTabLabel()+" only");});
 
 /* ================= INIT ================= */
 render(); updateLiveUI();
