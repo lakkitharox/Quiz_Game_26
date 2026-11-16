@@ -7,323 +7,313 @@
 <link rel="icon" href="data:,"/>
 <title>True or False Quiz Game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0B0E14; --bg2:#11151F; --card:#171B26; --card2:#1E2433; --line:#262D3F;
+  --bg:#0B0E14; --card:#171B26; --card2:#1E2433; --line:#2A3247;
   --text:#F4F5F7; --muted:#9AA3B5; --muted2:#6B7488;
-  --amber:#FFB020; --amber2:#FF8A00;
-  --green:#22C55E; --green-d:#15803D; --green-bg:#0F2A1A;
-  --red:#EF4444; --red-d:#B91C1C; --red-bg:#2B1416;
-  --blue:#38BDF8;
-  --radius:20px;
+  --amber:#FFB020; --green:#22C55E; --red:#EF4444; --blue:#38BDF8;
 }
 @media (prefers-color-scheme: light){
-  :root{ --bg:#F2F0EB; --bg2:#FFFFFF; --card:#FFFFFF; --card2:#F8F7F3; --line:#E6E1D6; --text:#14161A; --muted:#5B6472; --muted2:#8A919E; --green-bg:#DCFCE7; --red-bg:#FEE2E2; }
+  :root{ --bg:#F2F0EB; --card:#FFFFFF; --card2:#F8F7F3; --line:#E2DDD0; --text:#14161A; --muted:#5B6472; }
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-a{color:inherit}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}
 button,input,textarea,select{font:inherit}
 button{min-height:44px;cursor:pointer}
-h1,h2,h3{font-family:Archivo,Inter,system-ui,sans-serif;letter-spacing:-.02em;margin:0}
-.topbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb, var(--bg) 88%, transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
-.topbar-in{max-width:1180px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:12px;margin-right:auto}
-.mark{width:44px;height:44px;border-radius:12px;background:var(--text);color:var(--bg);display:grid;place-items:center;font-family:Archivo;font-weight:900;font-size:18px;letter-spacing:-.04em}
-.mark span:first-child{color:#16A34A}.mark span:last-child{color:#DC2626}
-.brand b{font-family:Archivo;font-size:18px;line-height:1;display:block}
-.brand small{color:var(--muted);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
-.room{font-size:13px;font-weight:700;background:var(--card);border:1px solid var(--line);padding:9px 12px;border-radius:999px}
+h1,h2,h3{font-family:Archivo,Inter,sans-serif;letter-spacing:-.02em;margin:0}
+a{color:inherit}
+[hidden]{display:none !important}
+
+/* slim nav — the shell already shows the title, this is just screen switching */
+.topbar{position:sticky;top:0;z-index:40;background:color-mix(in srgb, var(--bg) 90%, transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1240px;margin:0 auto;padding:9px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{font-family:Archivo;font-weight:900;font-size:15px;margin-right:auto;display:flex;gap:9px;align-items:center}
+.brand .mark{width:34px;height:34px;border-radius:9px;background:var(--text);color:var(--bg);display:grid;place-items:center;font-size:13px}
+.brand .mark span:first-child{color:#16A34A}.brand .mark span:last-child{color:#DC2626}
+.room{font-size:12.5px;font-weight:700;background:var(--card);border:1px solid var(--line);padding:8px 11px;border-radius:999px}
 .room i{color:var(--amber);font-style:normal}
-.conn-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#94A3B8;vertical-align:middle;margin-right:6px}
-.conn-dot.on{background:var(--green);box-shadow:0 0 0 4px rgba(34,197,94,.18)}
-.conn-dot.wait{background:var(--amber)}
-.tabs{display:flex;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:4px;gap:2px;max-width:100%}
-.tabs button{border:0;background:transparent;color:var(--muted);font-weight:700;font-size:13.5px;padding:9px 12px;border-radius:999px;white-space:nowrap;min-height:38px}
+.conn-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#94A3B8;margin-right:6px;vertical-align:middle}
+.conn-dot.on{background:var(--green);box-shadow:0 0 0 4px rgba(34,197,94,.18)} .conn-dot.wait{background:var(--amber)}
+.tabs{display:flex;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.tabs button{border:0;background:transparent;color:var(--muted);font-weight:700;font-size:13px;padding:8px 13px;border-radius:999px;min-height:36px;white-space:nowrap}
 .tabs button.active{background:var(--text);color:var(--bg)}
-.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 40px}
-.intro{display:flex;justify-content:space-between;gap:16px;align-items:end;flex-wrap:wrap;margin:6px 0 16px}
-.intro h1{font-size:clamp(28px,5vw,46px);line-height:.95;font-weight:900}
-.intro h1 em{font-style:normal;color:var(--amber)}
-.intro p{color:var(--muted);max-width:620px;line-height:1.55;margin:8px 0 0;font-size:15px}
-.host-actions{display:flex;gap:8px;flex-wrap:wrap}
-.btn{border:1px solid var(--line);background:var(--card);color:var(--text);padding:11px 16px;border-radius:999px;font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:8px}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--text);padding:11px 16px;border-radius:999px;font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:8px;justify-content:center}
 .btn.primary{background:var(--amber);color:#111;border-color:var(--amber)}
 .btn.dark{background:var(--text);color:var(--bg);border-color:var(--text)}
-.btn.ghost{background:transparent}
-.btn:disabled{opacity:.45;cursor:not-allowed}
 .btn.danger{color:#FCA5A5;border-color:#7F1D1D;background:#2B1416}
-@media(prefers-color-scheme:light){.btn.danger{background:#FEF2F2;color:#991B1B;border-color:#FECACA}}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.small{padding:8px 12px;min-height:38px;font-size:13px}
 
-/* LIVE BAR */
-.livebar{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:16px}
-.livebar h3{font-size:18px;font-weight:900}
-.livebar p{color:var(--muted);font-size:14px;line-height:1.55;margin:6px 0 0}
-.live-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:16px}
-@media(max-width:760px){.live-grid{grid-template-columns:1fr}}
-.live-box{border:1px solid var(--line);background:var(--card2);border-radius:16px;padding:16px}
-.live-box h4{margin:0 0 6px;font-size:15px}
-.live-box p{font-size:13.5px}
-.join-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:12px}
-@media(max-width:560px){.join-row{grid-template-columns:1fr}}
-.join-row input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-weight:700;letter-spacing:.04em}
-.join-row input.name{letter-spacing:0;text-transform:none}
-.codebig{font-family:Archivo;font-weight:900;font-size:clamp(36px,6vw,54px);letter-spacing:.06em;line-height:1;color:var(--amber)}
-.slot-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border-radius:999px;border:1px solid var(--line);background:var(--bg);font-size:13px;font-weight:700;margin:6px 6px 0 0}
-.slot-chip.filled{border-color:var(--green);background:var(--green-bg)}
-.statusline{font-size:13px;font-weight:700;margin-top:10px}
-.statusline.ok{color:#4ADE80}.statusline.wait{color:var(--amber)}
+/* ============ FULL-SCREEN STAGE (Host + Players) ============ */
+.stage{position:relative;width:100%;min-height:calc(100dvh - 57px);overflow:hidden;isolation:isolate}
+.stage-bg{position:absolute;inset:0;z-index:-2;background-size:cover;background-position:center}
+.stage-shade{position:absolute;inset:0;z-index:-1;background:#000}
+.stage-el{position:absolute;transform:translate(-50%,-50%);text-align:center;width:max-content;max-width:92%}
+.stage-badge{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(6px)}
+.stage-badge.live{background:var(--amber);color:#111;border-color:var(--amber)}
+.timer-ring{width:92px;height:92px;border-radius:50%;display:grid;place-items:center;margin:0 auto;background:conic-gradient(var(--amber) calc(var(--p)*1%), rgba(255,255,255,.22) 0)}
+.timer-ring b{width:74px;height:74px;border-radius:50%;background:rgba(0,0,0,.45);display:grid;place-items:center;font-family:Archivo;font-size:30px;font-weight:900}
+.timer-cap{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.85;margin-top:7px}
+.q-kicker{font-size:13px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;opacity:.85}
+.q-text{font-family:Archivo;font-weight:900;line-height:1.04;font-size:clamp(28px,5.2vw,58px);max-width:880px;margin:10px auto 0;text-wrap:balance}
+.q-sub{opacity:.85;font-size:16px;line-height:1.55;max-width:560px;margin:12px auto 0}
+.answer-banner{margin:16px auto 0;display:inline-block;padding:13px 22px;border-radius:999px;font-weight:900;font-size:19px;font-family:Archivo}
+.answer-banner.true{background:var(--green);color:#fff}.answer-banner.false{background:var(--red);color:#fff}
+.score-tile{min-width:210px;padding:18px 26px;border-radius:20px;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(8px)}
+.score-tile small{display:block;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.85}
+.score-tile strong{font-family:Archivo;font-size:52px;line-height:1;display:block;margin:4px 0 2px}
+.score-tile span{font-size:13px;opacity:.85}
+.score-tile .lock{font-size:12px;font-weight:800;margin-top:7px;display:block}
+.score-tile .lock.done{color:#4ADE80}
+.winner-box{padding:30px 34px;border-radius:26px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(10px);max-width:640px}
+.winner-box .trophy{font-size:54px;line-height:1}
+.winner-box h2{font-size:clamp(34px,6vw,60px);font-weight:900;line-height:1;margin-top:8px}
+.winner-box p{opacity:.9;line-height:1.6;margin:10px 0 0}
+.stage-controls{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:5;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:max-content;max-width:96vw;background:rgba(10,12,18,.72);border:1px solid rgba(255,255,255,.2);padding:8px;border-radius:999px;backdrop-filter:blur(10px)}
+.stage-controls .btn{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.25)}
+.stage-controls .btn.primary{background:var(--amber);color:#111;border-color:var(--amber)}
+.lobby-panel{width:min(680px,92vw);padding:26px;border-radius:24px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(10px)}
+.lobby-panel h2{font-size:clamp(26px,4vw,38px);font-weight:900;line-height:1.05}
+.lobby-panel p{opacity:.9;line-height:1.6;margin:10px 0 0}
+.codebig{font-family:Archivo;font-weight:900;font-size:44px;letter-spacing:.06em;color:var(--amber);line-height:1.1}
+.slot-chip{display:inline-flex;padding:7px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.3);font-size:12.5px;font-weight:700;margin:6px 6px 0 0;background:rgba(255,255,255,.08)}
+.slot-chip.filled{border-color:var(--green);background:rgba(34,197,94,.25)}
+.join-mini{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:12px}
+@media(max-width:560px){.join-mini{grid-template-columns:1fr}}
+.join-mini input{padding:12px 13px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.4);color:#fff;font-weight:700;width:100%}
+.statusline{font-size:13px;font-weight:700;margin-top:9px}.statusline.ok{color:#4ADE80}.statusline.wait{color:var(--amber)}
 
-/* HOST */
-.host{background:var(--card);border:1px solid var(--line);border-radius:24px;overflow:hidden}
-.host-top{padding:18px 20px 0;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
-.pill{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card2)}
-.pill.live{color:#111;background:var(--amber);border-color:var(--amber)}
-.timer{display:flex;align-items:center;gap:10px}
-.timer-ring{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--amber) calc(var(--p)*1%), var(--line) 0);font-family:Archivo;font-weight:900}
-.timer-ring b{width:42px;height:42px;background:var(--card);border-radius:50%;display:grid;place-items:center;font-size:16px}
-.progress{height:8px;background:var(--line);border-radius:999px;margin:16px 20px 0;overflow:hidden}
-.progress i{display:block;height:100%;background:var(--amber);border-radius:999px;transition:width .4s}
-.qarea{padding:22px 20px 8px;text-align:center}
-.qarea .qnum{color:var(--amber);font-weight:800;font-size:13px;letter-spacing:.12em;text-transform:uppercase}
-.qarea h2{font-size:clamp(26px,4.5vw,42px);line-height:1.05;font-weight:900;max-width:820px;margin:10px auto 0}
-.qarea p{color:var(--muted);margin:12px auto 0;max-width:600px;line-height:1.5}
-.answer-banner{margin:16px auto 0;max-width:520px;padding:14px 16px;border-radius:16px;font-weight:800;font-size:18px;display:none}
-.answer-banner.show{display:block}
-.answer-banner.true{background:var(--green-bg);color:#4ADE80;border:1px solid #166534}
-.answer-banner.false{background:var(--red-bg);color:#FCA5A5;border:1px solid #7F1D1D}
-@media(prefers-color-scheme:light){.answer-banner.true{color:#166534}.answer-banner.false{color:#991B1B}}
-.status-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px 20px}
-@media(max-width:560px){.status-row{grid-template-columns:1fr}}
-.player-status{border:1px solid var(--line);background:var(--card2);border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center}
-.avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-family:Archivo;font-weight:900;color:#fff;flex-shrink:0}
-.av1{background:#0EA5E9}.av2{background:#F97316}
-.player-status b{display:block;font-size:15px}.player-status span{font-size:13px;color:var(--muted)}
-.dot{margin-left:auto;font-size:12px;font-weight:800;padding:7px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--line);white-space:nowrap}
-.dot.done{background:var(--green);color:#fff;border-color:var(--green)}
-.host-controls{border-top:1px solid var(--line);padding:14px 20px 18px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;background:var(--card2)}
-.score-strip{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;padding:0 20px 20px}
-@media(max-width:640px){.score-strip{grid-template-columns:1fr 1fr}.score-strip .vs{display:none}}
-.score-card{text-align:center;padding:16px;border-radius:16px;border:1px solid var(--line)}
-.score-card small{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:800}
-.score-card strong{font-family:Archivo;font-size:36px;display:block;line-height:1}
-.score-card span{font-size:13px;color:var(--muted)}
-.vs{font-family:Archivo;font-weight:900;color:var(--muted2);font-size:20px}
+/* player stage */
+.p-head{min-width:min(420px,88vw);padding:16px 22px;border-radius:20px;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(8px)}
+.p-head b{font-family:Archivo;font-size:22px;display:block}
+.p-head span{opacity:.85;font-size:13.5px}
+.p-head strong{font-family:Archivo;font-size:34px}
+.tf{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:min(620px,90vw)}
+.tf button{height:180px;border-radius:22px;border:0;color:#fff;font-family:Archivo;font-weight:900;font-size:34px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.tf button small{font-family:Inter;font-weight:600;font-size:13px;opacity:.92}
+.tf .tbtn{background:var(--green)} .tf .fbtn{background:var(--red)}
+.tf button:disabled{opacity:.35}
+.tf button.selected{opacity:1;outline:5px solid #fff;outline-offset:2px}
+.p-status{padding:13px 20px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.28);font-weight:700;font-size:15px;max-width:88vw}
+.p-status.good{border-color:var(--green);color:#4ADE80}.p-status.bad{border-color:var(--red);color:#FCA5A5}
+.p-wait{padding:22px 26px;border-radius:20px;background:rgba(0,0,0,.42);border:1.5px dashed rgba(255,255,255,.35);font-size:16px;line-height:1.6;max-width:88vw}
+.p-q{font-weight:700;line-height:1.45;font-size:17px;max-width:620px;margin-bottom:14px;text-shadow:0 2px 12px rgba(0,0,0,.5)}
 
-/* PLAYERS GRID */
-.section-label{margin:22px 0 12px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-.section-label h3{font-size:18px;font-weight:900}
-.section-label p{color:var(--muted);font-size:13.5px;margin:4px 0 0}
-.players{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:760px){.players{grid-template-columns:1fr}}
-.pcard{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;overflow:hidden}
-.pcard-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.pcard-head b{font-size:16px;display:block}.pcard-head span{font-size:13px;color:var(--muted)}
-.pcard-score{margin-left:auto;text-align:right}.pcard-score strong{font-family:Archivo;font-size:24px;line-height:1;display:block}.pcard-score span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
-.tf{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.tf button{height:132px;border-radius:18px;border:0;color:#fff;font-family:Archivo;font-weight:900;font-size:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:transform .08s, opacity .2s, outline .2s}
-.tf button:active{transform:scale(.98)}
-.tf button small{font-family:Inter;font-weight:600;font-size:12.5px;opacity:.9;letter-spacing:0;text-transform:none}
-.tf .tbtn{background:var(--green)}.tf .fbtn{background:var(--red)}
-.tf button:disabled{opacity:.38;cursor:not-allowed}
-.tf button.selected{opacity:1;outline:4px solid var(--text);outline-offset:2px}
-.locked{margin-top:12px;padding:12px;border-radius:12px;background:var(--card2);border:1px dashed var(--line);text-align:center;font-size:14px;font-weight:600;color:var(--muted)}
-.locked.good{color:#4ADE80;border-color:#166534;background:var(--green-bg)}
-.locked.bad{color:#FCA5A5;border-color:#7F1D1D;background:var(--red-bg)}
-.waiting{min-height:132px;border-radius:18px;border:1.5px dashed var(--line);display:grid;place-items:center;text-align:center;color:var(--muted);padding:16px;line-height:1.5;font-size:14.5px}
-
-/* SOLO / LIVE PLAYER */
-.solo{max-width:760px;margin:0 auto}
-.solo .tf button{height:190px;font-size:38px}
-.bigjoin{max-width:560px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px}
-.bigjoin input{width:100%;padding:16px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:18px;font-weight:700;margin-bottom:10px}
-.bigjoin .btn{width:100%;justify-content:center;padding:16px;font-size:16px}
-.hint{font-size:13px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.5}
-
-/* FINAL */
-.final{background:#111827;color:#fff;border-radius:24px;padding:28px 20px;text-align:center;border:1px solid var(--line);overflow:hidden;position:relative}
-@media(prefers-color-scheme:light){.final{background:#14161A}}
-.final h2{font-size:clamp(30px,5vw,48px);font-weight:900}
-.final p{color:#CBD5E1}
-.podium{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:560px;margin:20px auto 0}
-@media(max-width:520px){.podium{grid-template-columns:1fr}}
-.podium div{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:18px}
-.podium strong{font-family:Archivo;font-size:32px;display:block}
-
-/* ADMIN */
-.admin-grid{display:grid;grid-template-columns:1.55fr .85fr;gap:14px;align-items:start}
-@media(max-width:860px){.admin-grid{grid-template-columns:1fr}}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px}
+/* ============ ADMIN ============ */
+.wrap{max-width:1240px;margin:0 auto;padding:18px 16px 44px}
+.intro h1{font-size:clamp(26px,4vw,38px);font-weight:900;line-height:1}
+.intro p{color:var(--muted);max-width:680px;line-height:1.55;margin:8px 0 16px;font-size:14.5px}
+.admin-grid{display:grid;grid-template-columns:1.5fr .9fr;gap:14px;align-items:start}
+@media(max-width:900px){.admin-grid{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:14px}
 .panel h3{font-size:17px;font-weight:900}
 .panel>p{color:var(--muted);font-size:13.5px;line-height:1.5;margin:6px 0 14px}
-.qitem{display:grid;grid-template-columns:34px 1fr auto auto;gap:10px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;background:var(--card2)}
-@media(max-width:560px){.qitem{grid-template-columns:28px 1fr;}.qitem .seg,.qitem .del{grid-column:2}}
-.qnum-badge{width:30px;height:30px;border-radius:50%;background:var(--text);color:var(--bg);display:grid;place-items:center;font-weight:800;font-size:13px}
-.qitem textarea{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:10px;padding:10px 11px;resize:vertical;min-height:44px;line-height:1.4}
-.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px}
-.seg button{border:0;background:transparent;padding:8px 12px;border-radius:999px;font-weight:800;font-size:13px;color:var(--muted);min-height:36px}
+.field{margin-bottom:12px}
+.field label{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px}
+.field input,.field select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text)}
+.field input[type=color]{padding:4px;height:44px}
+.field input[type=range]{padding:0}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:520px){.row2,.row3{grid-template-columns:1fr}}
+.seg{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;padding:8px 13px;border-radius:999px;font-weight:800;font-size:13px;color:var(--muted);min-height:36px}
+.seg button.on{background:var(--text);color:var(--bg)}
 .seg button.on-true{background:var(--green);color:#fff}.seg button.on-false{background:var(--red);color:#fff}
-.del{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--muted);font-size:18px}
-.field{margin-bottom:12px}.field label{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px}
-.field input,.field select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text)}
-.stack{display:grid;gap:8px}.stack .btn{justify-content:center;width:100%}
 .divider{height:1px;background:var(--line);margin:16px 0}
-.kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}.kv:last-child{border:0}.kv span{color:var(--muted)}
+.stack{display:grid;gap:8px}.stack .btn{width:100%}
+.kv{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px;gap:10px}.kv:last-child{border:0}.kv span{color:var(--muted)}
 .scoreadj{display:flex;gap:6px;align-items:center}
 .scoreadj button{width:38px;height:38px;min-height:38px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--text);font-weight:900}
-.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:12px 16px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.3);max-width:92vw;text-align:center}
+.qitem{display:grid;grid-template-columns:34px 1fr auto auto;gap:10px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;background:var(--card2)}
+@media(max-width:560px){.qitem{grid-template-columns:28px 1fr}.qitem .seg,.qitem .del{grid-column:2}}
+.qnum-badge{width:30px;height:30px;border-radius:50%;background:var(--text);color:var(--bg);display:grid;place-items:center;font-weight:800;font-size:13px}
+.qitem textarea{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:10px;padding:10px 11px;resize:vertical;min-height:44px;line-height:1.4}
+.del{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--muted);font-size:18px}
+.linkrow{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.linkrow:last-child{border:0}
+.linkrow code{font-size:13px;font-weight:700;background:var(--card2);border:1px solid var(--line);padding:7px 10px;border-radius:9px;word-break:break-all}
+.bigjoin{max-width:560px;margin:26px auto;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px}
+.bigjoin input{width:100%;padding:15px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:17px;font-weight:700;margin:6px 0 10px}
+.bigjoin .btn{width:100%;padding:15px}
+.hint{font-size:13px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.5;padding:0 16px 20px}
+
+/* --- Figma-style designer --- */
+.design-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.design-tabs button{border:1px solid var(--line);background:var(--bg);color:var(--muted);font-weight:800;font-size:13px;padding:9px 14px;border-radius:999px;min-height:38px}
+.design-tabs button.on{background:var(--amber);color:#111;border-color:var(--amber)}
+.canvas-shell{border:1px solid var(--line);border-radius:16px;padding:10px;background:repeating-conic-gradient(var(--card2) 0% 25%, var(--card) 0% 50%) 0 0/22px 22px}
+.canvas{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;touch-action:none;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.canvas.portrait{aspect-ratio:4/5;max-width:380px;margin:0 auto}
+.canvas-bg{position:absolute;inset:0;background-size:cover;background-position:center}
+.canvas-shade{position:absolute;inset:0;background:#000}
+.d-el{position:absolute;transform:translate(-50%,-50%);cursor:grab;user-select:none;-webkit-user-select:none;text-align:center;padding:6px;border-radius:10px;outline:2px dashed transparent;outline-offset:3px;white-space:nowrap}
+.d-el:active{cursor:grabbing}
+.d-el.sel{outline-color:var(--amber);background:rgba(255,176,32,.12)}
+.d-el .mini-badge{font-size:9px;font-weight:800;letter-spacing:.12em;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35)}
+.d-el .mini-q{font-family:Archivo;font-weight:900;font-size:15px;line-height:1.1;max-width:230px;white-space:normal}
+.d-el .mini-score{padding:8px 14px;border-radius:12px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.3);font-family:Archivo}
+.d-el .mini-score b{font-size:20px;display:block;line-height:1}
+.d-el .mini-score small{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.d-el .mini-timer{width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.5);border:3px solid var(--amber);display:grid;place-items:center;font-family:Archivo;font-weight:900;font-size:15px;margin:0 auto}
+.d-el .mini-tf{display:flex;gap:8px}
+.d-el .mini-tf span{padding:14px 18px;border-radius:12px;color:#fff;font-family:Archivo;font-weight:900;font-size:14px}
+.preset-row{display:flex;gap:7px;flex-wrap:wrap}
+.preset{width:52px;height:36px;border-radius:9px;border:2px solid var(--line);cursor:pointer;padding:0;min-height:36px}
+.preset.on{border-color:var(--amber)}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:12px 16px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.3);max-width:92vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-footer{max-width:1180px;margin:0 auto;padding:0 16px 28px;color:var(--muted2);font-size:12.5px;line-height:1.6;text-align:center}
-[hidden]{display:none !important}
+footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);font-size:12.5px;line-height:1.6;text-align:center;color:var(--muted)}
 </style>
 </head>
 <body>
 <header class="topbar"><div class="topbar-in">
-  <div class="brand"><div class="mark"><span>✓</span><span>✕</span></div><div><b>TRUE or FALSE</b><small>Quiz Game • 2 Players • Live iPads</small></div></div>
-  <div class="room"><span class="conn-dot" id="connDot"></span>ROOM <i id="roomCodeDisplay">—</i> &nbsp;•&nbsp; <span id="connStatus">Demo mode</span></div>
-  <nav class="tabs" id="tabs">
-    <button data-view="stage" class="active">Stage</button>
-    <button data-view="host">Host</button>
-    <button data-view="join">📱 iPad Join</button>
-    <button data-view="p1">Player 1</button>
-    <button data-view="p2">Player 2</button>
-    <button data-view="admin">Admin</button>
-  </nav>
+  <div class="brand"><span class="mark"><span>✓</span><span>✕</span></span> TRUE or FALSE</div>
+  <div class="room"><span class="conn-dot" id="connDot"></span>ROOM <i id="roomCodeDisplay">—</i> · <span id="connStatus">Demo mode</span></div>
+  <span style="font-size:12.5px;color:var(--muted);font-weight:600">Each screen has its own link — <b style="color:var(--text)">/Player1</b> · <b style="color:var(--text)">/Player2</b> · <b style="color:var(--text)">/Admin</b></span>
 </div></header>
 
-<main class="wrap">
-  <!-- STAGE -->
-  <section id="view-stage">
-    <div class="intro">
-      <div><h1>One question.<br>Two iPads. <em>Who's right?</em></h1><p><b style="color:var(--text)">Live play:</b> on this main screen tap <b style="color:var(--text)">Create Live Room</b> — you get a room code. Each iPad opens this same link, goes to <b style="color:var(--text)">📱 iPad Join</b>, enters the code + their name, and gets just the big TRUE / FALSE buttons. Their taps count live here. No live room? The one-screen demo below still works as a fallback.</p></div>
-      <div class="host-actions" id="topActions"></div>
+<!-- ================= HOST — full screen ================= -->
+<section id="view-host">
+  <div class="stage" id="hostStage"></div>
+</section>
+
+<!-- ================= PLAYER 1 / 2 — full screen ================= -->
+<section id="view-p1" hidden><div class="stage" id="p1Stage"></div></section>
+<section id="view-p2" hidden><div class="stage" id="p2Stage"></div></section>
+
+<!-- ================= IPAD JOIN (live) ================= -->
+<section id="view-join" hidden>
+  <div id="joinOfflineBox">
+    <div class="bigjoin">
+      <h2 style="font-size:26px;font-weight:900">Join the game 📱</h2>
+      <p style="color:var(--muted);line-height:1.55;margin:8px 0 10px">Enter the room code shown on the host screen and your name. First to join becomes Player 1, second becomes Player 2 — you'll land on your own full-screen player screen.</p>
+      <label style="font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Room code</label>
+      <input id="joinCode2" placeholder="e.g. 4821" maxlength="10" autocapitalize="characters" autocomplete="off">
+      <label style="font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Your name</label>
+      <input id="joinName2" placeholder="Your name" maxlength="18" autocomplete="off">
+      <button class="btn primary" onclick="playerJoinFrom('join2')">Join Game →</button>
+      <div class="statusline" id="joinStatus2"></div>
     </div>
+    <p class="hint">No host yet? The host must tap “Create Live Room” on the Host screen first.</p>
+  </div>
+  <div id="livePlayerNote" hidden><p class="hint" style="padding-top:22px">✅ You're in — your controller is on your <b>Player screen</b>. Keep this device on that screen during the game.</p></div>
+</section>
 
-    <!-- LIVE BAR (static inputs so typing is never wiped by re-renders) -->
-    <div class="livebar" id="liveBar">
-      <div id="liveOffline">
-        <h3>🔴 Live room — connect the iPads</h3>
-        <p>Host creates the room on the main screen. Players join from their iPads — no app install, just this link in Safari.</p>
-        <div class="live-grid" style="margin-top:14px">
-          <div class="live-box">
-            <h4>Main screen — Host</h4>
-            <p>Create a room and show the code to the players. You stay in control: start, reveal, next question, scores and Admin all live here.</p>
-            <button class="btn primary" style="margin-top:12px" onclick="hostCreateRoom()">● Create Live Room</button>
-            <div class="statusline" id="hostCreateStatus"></div>
-          </div>
-          <div class="live-box">
-            <h4>iPad — Join as a player</h4>
-            <p>Enter the host's room code and your name. First to join becomes Player 1, second becomes Player 2.</p>
-            <div class="join-row">
-              <input id="joinCode" placeholder="ROOM CODE e.g. 4821" maxlength="10" autocapitalize="characters" autocomplete="off">
-              <input id="joinName" class="name" placeholder="Your name" maxlength="18" autocomplete="off">
-              <button class="btn dark" onclick="playerJoinFrom('join')">Join →</button>
-            </div>
-            <div class="statusline" id="joinStatus"></div>
-          </div>
+<!-- ================= ADMIN ================= -->
+<section id="view-admin" hidden>
+<div class="wrap">
+  <div class="intro">
+    <h1>Admin — design every screen, run the quiz</h1>
+    <p>Drag elements on the mini canvas to lay out the Host and Player screens (just like Figma), set backgrounds, then edit questions, order, timer and points. Design changes apply live — and broadcast to connected iPads.</p>
+  </div>
+  <div class="admin-grid">
+    <div>
+      <!-- DESIGNER -->
+      <div class="panel">
+        <h3>🎨 Screen designer</h3>
+        <p>Pick a screen, then <b style="color:var(--text)">drag any element</b> on the canvas to move it. Tap an element to select it and fine-tune position, size and visibility below.</p>
+        <div class="design-tabs" id="designTabs">
+          <button data-dt="host" class="on">🖥 Host screen</button>
+          <button data-dt="player1">Player 1 screen</button>
+          <button data-dt="player2">Player 2 screen</button>
+        </div>
+        <div class="canvas-shell"><div class="canvas" id="designCanvas"></div></div>
+        <div class="divider"></div>
+        <div id="elInspector"></div>
+        <div class="divider"></div>
+        <h3 style="font-size:15px">Background</h3>
+        <p>Gradient, solid colour, or your own image (paste a link or upload). The dark shade keeps text readable over photos.</p>
+        <div class="row3">
+          <div class="field"><label>Background type</label><select id="bgMode"><option value="gradient">Gradient</option><option value="color">Solid colour</option><option value="image">Image</option></select></div>
+          <div class="field"><label>Colour / Gradient start</label><input type="color" id="bg1"></div>
+          <div class="field"><label>Gradient end</label><input type="color" id="bg2"></div>
+        </div>
+        <div class="field"><label>Background image URL</label><input id="bgImage" placeholder="https://… (or upload below)"></div>
+        <div class="row2">
+          <div class="field"><label>Upload background image</label><input type="file" id="bgFile" accept="image/*"></div>
+          <div class="field"><label>Dark shade over image — <span id="overlayVal"></span></label><input type="range" id="bgOverlay" min="0" max="85" step="1"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Accent colour (timer, highlights)</label><input type="color" id="accentCol"></div>
+          <div class="field"><label>Text colour</label><input type="color" id="textCol"></div>
+        </div>
+        <div class="field"><label>Quick presets</label>
+          <div class="preset-row" id="presetRow"></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn small" id="resetLayoutBtn">↺ Reset this screen's layout</button>
+          <button class="btn small" id="resetAllDesignBtn">Reset all designs</button>
         </div>
       </div>
-      <div id="liveHost" hidden>
-        <div style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:start">
-          <div>
-            <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">Room code — players enter this on their iPads</div>
-            <div class="codebig" id="hostCodeBig">----</div>
-            <div id="hostSlots"></div>
-            <div class="statusline ok" id="hostConnStatus">Connecting…</div>
-            <p style="max-width:520px">On each iPad: open this same page link → tap <b style="color:var(--text)">📱 iPad Join</b> → enter the code + a name → Join. Then press Start Game below.</p>
-          </div>
-          <button class="btn danger" onclick="disconnectLive(true)">Close Room</button>
-        </div>
-      </div>
-      <div id="livePlayerInfo" hidden>
-        <div style="display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center">
-          <div><h3 id="playerInfoTitle">Connected as player</h3><p id="playerInfoSub">Waiting for the host…</p></div>
-          <button class="btn" onclick="disconnectLive(false)">Leave Room</button>
-        </div>
-      </div>
-    </div>
 
-    <div id="stageHost"></div>
-    <div id="stageFinal"></div>
-    <div class="section-label"><div><h3>Player controllers — demo fallback</h3><p>Same-screen controllers for testing without iPads. In live play the real iPads use the 📱 iPad Join screen instead — these still work on the host screen for a quick test.</p></div><span class="pill" id="answeredPill">0 / 2 answered</span></div>
-    <div class="players"><div id="stageP1"></div><div id="stageP2"></div></div>
-  </section>
-
-  <!-- HOST SOLO -->
-  <section id="view-host" hidden><div class="solo" style="max-width:900px"><div id="soloHost"></div><div id="soloFinal"></div><p class="hint">Host view — run the game from here. In live mode, create the room on the Stage tab first, then Start Game here or there — both stay in sync.</p></div></section>
-
-  <!-- IPAD JOIN / LIVE PLAYER -->
-  <section id="view-join" hidden>
-    <div class="solo">
-      <div id="joinOfflineBox">
-        <div class="bigjoin">
-          <h2 style="font-size:26px;font-weight:900">Join the game 📱</h2>
-          <p style="color:var(--muted);line-height:1.55;margin:8px 0 16px">Enter the room code shown on the main screen and your name. You'll get just two big buttons — TRUE and FALSE.</p>
-          <label style="font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Room code</label>
-          <input id="joinCode2" placeholder="e.g. 4821" maxlength="10" autocapitalize="characters" autocomplete="off" style="margin-top:6px">
-          <label style="font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Your name</label>
-          <input id="joinName2" placeholder="Your name" maxlength="18" autocomplete="off" style="margin-top:6px">
-          <button class="btn primary" onclick="playerJoinFrom('join2')">Join Game →</button>
-          <div class="statusline" id="joinStatus2"></div>
-          <p class="hint">No host yet? The host must tap “Create Live Room” on the main screen first. You can also test in demo mode from the Player 1 / Player 2 tabs.</p>
-        </div>
-      </div>
-      <div id="livePlayerRoot" hidden></div>
-      <p class="hint" id="joinHint" hidden>Keep this screen open during the game. Your answer locks in when you tap — the correct answer only appears after the host reveals it.</p>
-    </div>
-  </section>
-
-  <!-- PLAYER SOLO (demo fallback) -->
-  <section id="view-p1" hidden><div class="solo"><div id="soloP1"></div><p class="hint">Demo Player 1 view (one-screen fallback) — for real iPad play use 📱 iPad Join with the room code.</p></div></section>
-  <section id="view-p2" hidden><div class="solo"><div id="soloP2"></div><p class="hint">Demo Player 2 view (one-screen fallback) — for real iPad play use 📱 iPad Join with the room code.</p></div></section>
-
-  <!-- ADMIN -->
-  <section id="view-admin" hidden>
-    <div class="intro"><div><h1 style="font-size:34px">Admin — Questions &amp; Players</h1><p>Edit any question or flip its correct answer and it updates everywhere instantly. In a live room, changes broadcast to the iPads on the next question. No save button needed.</p></div></div>
-    <div class="admin-grid">
+      <!-- QUESTIONS -->
       <div class="panel">
         <h3>Questions <span id="qCount" style="color:var(--amber)"></span></h3>
-        <p>Tap TRUE / FALSE on a question to set the correct answer. Changes apply to the next game — if a game is running, finish or reset it first.</p>
+        <p>Tap TRUE / FALSE on a question to set the correct answer. Edits apply to the next game — finish or reset a running game first.</p>
         <div id="qList"></div>
         <div class="divider"></div>
         <div class="field"><label for="newQ">Add a new question</label><input id="newQ" placeholder="e.g. The Moon is made of cheese."></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <div class="seg" id="newSeg"><button id="newTrue" class="on-true">✓ TRUE is correct</button><button id="newFalse">✕ FALSE is correct</button></div>
+          <div class="seg"><button id="newTrue" class="on-true">✓ TRUE is correct</button><button id="newFalse">✕ FALSE is correct</button></div>
           <button class="btn primary" id="addQBtn">+ Add question</button>
         </div>
       </div>
-      <div style="display:grid;gap:14px">
-        <div class="panel">
-          <h3>Players</h3><p>Rename players, adjust scores with + / −, reset scores, or reset a player. Resetting a live player also frees their iPad slot so they can rejoin.</p>
-          <div class="field"><label>Player 1 name</label><input id="name1" maxlength="18"></div>
-          <div class="field"><label>Player 2 name</label><input id="name2" maxlength="18"></div>
-          <div class="kv"><span id="scoreLabel1">Player 1 score</span><span class="scoreadj"><button data-adj="0,-100" aria-label="Player 1 minus 100">−</button><b id="scoreVal1">0</b><button data-adj="0,100" aria-label="Player 1 plus 100">+</button></span></div>
-          <div class="kv"><span id="scoreLabel2">Player 2 score</span><span class="scoreadj"><button data-adj="1,-100" aria-label="Player 2 minus 100">−</button><b id="scoreVal2">0</b><button data-adj="1,100" aria-label="Player 2 plus 100">+</button></span></div>
-          <div class="divider"></div>
-          <div class="stack">
-            <button class="btn" id="resetScoresBtn">↺ Reset scores only</button>
-            <button class="btn" id="resetP1Btn">Reset Player 1 (score + free slot)</button>
-            <button class="btn" id="resetP2Btn">Reset Player 2 (score + free slot)</button>
-            <button class="btn danger" id="resetPlayersBtn">Reset both players</button>
-          </div>
+    </div>
+
+    <div>
+      <!-- GAME SETTINGS -->
+      <div class="panel">
+        <h3>Game settings</h3>
+        <p>Order, timer and scoring for the next game.</p>
+        <div class="field"><label>Question order</label>
+          <div class="seg" id="orderSeg"><button data-order="sequence">➡ Sequence</button><button data-order="random">🔀 Random shuffle</button></div>
+          <p style="font-size:12.5px;color:var(--muted);margin:7px 0 0" id="orderHint"></p>
         </div>
-        <div class="panel">
-          <h3>Game settings</h3><p>Timer and flow for the host screen.</p>
-          <div class="field"><label>Seconds per question</label><select id="timerSel"><option value="10">10 seconds</option><option value="15" selected>15 seconds</option><option value="20">20 seconds</option><option value="30">30 seconds</option><option value="0">No timer</option></select></div>
-          <div class="field"><label>Points per correct answer</label><select id="pointsSel"><option value="50">50 points</option><option value="100" selected>100 points</option><option value="200">200 points</option></select></div>
-          <div class="divider"></div>
-          <div class="stack"><button class="btn dark" id="resetGameBtn">↺ Reset whole game</button><button class="btn ghost" id="restoreBtn">Restore example questions</button></div>
-        </div>
-        <div class="panel">
-          <h3>Live room</h3><p id="adminLiveInfo">No live room — you're in one-screen demo mode. Create a room from the Stage tab to connect iPads.</p>
-          <div class="stack"><button class="btn" onclick="switchView('stage')">Go to Stage / Live Room →</button></div>
+        <div class="field"><label>Seconds per question — <span id="timerVal">15s</span></label><input type="range" id="timerRange" min="0" max="60" step="5" value="15"></div>
+        <div class="field"><label>Points per correct answer</label><select id="pointsSel"><option value="50">50 points</option><option value="100" selected>100 points</option><option value="150">150 points</option><option value="200">200 points</option><option value="250">250 points</option></select></div>
+        <div class="divider"></div>
+        <div class="stack">
+          <button class="btn primary" onclick="startGame();switchView('host')">▶ Start game on Host screen</button>
+          <button class="btn dark" id="resetGameBtn">↺ Reset whole game</button>
+          <button class="btn" id="restoreBtn">Restore example questions</button>
         </div>
       </div>
+
+      <!-- PLAYERS -->
+      <div class="panel">
+        <h3>Players</h3>
+        <p>Rename players, adjust scores, or reset a player. Resetting a live player also frees their iPad slot so they can rejoin.</p>
+        <div class="field"><label>Player 1 name</label><input id="name1" maxlength="18"></div>
+        <div class="field"><label>Player 2 name</label><input id="name2" maxlength="18"></div>
+        <div class="kv"><span id="scoreLabel1">Player 1 score</span><span class="scoreadj"><button data-adj="0,-100" aria-label="Player 1 minus 100">−</button><b id="scoreVal1">0</b><button data-adj="0,100" aria-label="Player 1 plus 100">+</button></span></div>
+        <div class="kv"><span id="scoreLabel2">Player 2 score</span><span class="scoreadj"><button data-adj="1,-100" aria-label="Player 2 minus 100">−</button><b id="scoreVal2">0</b><button data-adj="1,100" aria-label="Player 2 plus 100">+</button></span></div>
+        <div class="divider"></div>
+        <div class="stack">
+          <button class="btn" id="resetScoresBtn">↺ Reset scores only</button>
+          <button class="btn" id="resetP1Btn">Reset Player 1 (score + free slot)</button>
+          <button class="btn" id="resetP2Btn">Reset Player 2 (score + free slot)</button>
+          <button class="btn danger" id="resetPlayersBtn">Reset both players</button>
+        </div>
+      </div>
+
+      <!-- SCREEN LINKS -->
+      <div class="panel">
+        <h3>Screen links</h3>
+        <p>Give each device its own link — each one opens that screen directly, on its own. Use the <b style="color:var(--text)">live-site links</b> on real devices; <b style="color:var(--text)">Open here</b> opens the same screen in this tab.</p>
+        <div id="linkList"></div>
+        <div class="divider"></div>
+        <h3 style="font-size:15px">Live room</h3>
+        <p id="adminLiveInfo" style="margin-bottom:10px">No live room — one-screen demo mode.</p>
+        <div class="stack"><button class="btn" onclick="switchView('host')">Go to Host / Live Room →</button></div>
+      </div>
     </div>
-  </section>
-</main>
-<footer><b style="color:var(--muted)">Live play:</b> Host creates a room on the main screen → iPads join with the code on the 📱 iPad Join tab → taps count live on the host, final scores show on the main screen. If the connection drops, the Stage / Host / Player 1 / Player 2 tabs still work as a one-screen demo in this browser.</footer>
+  </div>
+</div>
+</section>
+
+<footer>Each screen lives at its own link — Host at the main address, <b>/Player1</b> and <b>/Player2</b> for the players, <b>/Admin</b> to design all three screens and run the quiz. Live play: host creates a room → iPads join with the code → taps count live on the host.</footer>
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -340,434 +330,563 @@ var DEFAULT_QS=[
  {text:"Lightning never strikes the same place twice.",answer:false},
  {text:"A group of flamingos is called a flamboyance.",answer:true}
 ];
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function toast(msg){var t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},2400)}
+function initials(n){return String(n||"P").trim().split(/\s+/).map(function(w){return w[0]}).join("").slice(0,2).toUpperCase()||"P"}
+function clone(o){return JSON.parse(JSON.stringify(o))}
+
+/* ================= DESIGN (customisable screens) ================= */
+var HOST_ELS={badge:{label:"Live badge / title",x:14,y:10,s:100,show:true},timer:{label:"Timer",x:88,y:12,s:100,show:true},question:{label:"Question",x:50,y:44,s:100,show:true},score1:{label:"Player 1 — name & score",x:23,y:85,s:100,show:true},score2:{label:"Player 2 — name & score",x:77,y:85,s:100,show:true}};
+var PLAYER_ELS={header:{label:"Name & score header",x:50,y:13,s:100,show:true},buttons:{label:"TRUE / FALSE buttons",x:50,y:52,s:100,show:true},status:{label:"Status message",x:50,y:88,s:100,show:true}};
+var DEFAULT_DESIGN={
+ host:{bgMode:"gradient",bg1:"#0F172A",bg2:"#312E81",bgColor:"#0F172A",bgImage:"",overlay:55,accent:"#FFB020",text:"#FFFFFF",els:clone(HOST_ELS)},
+ player1:{bgMode:"gradient",bg1:"#082F49",bg2:"#0C4A6E",bgColor:"#082F49",bgImage:"",overlay:55,accent:"#38BDF8",text:"#FFFFFF",els:clone(PLAYER_ELS)},
+ player2:{bgMode:"gradient",bg1:"#431407",bg2:"#7C2D12",bgColor:"#431407",bgImage:"",overlay:55,accent:"#FB923C",text:"#FFFFFF",els:clone(PLAYER_ELS)}
+};
+var PRESETS=[
+ {name:"Midnight",bg1:"#0F172A",bg2:"#312E81"},
+ {name:"Ocean",bg1:"#082F49",bg2:"#155E75"},
+ {name:"Sunset",bg1:"#431407",bg2:"#9A3412"},
+ {name:"Forest",bg1:"#052E16",bg2:"#166534"},
+ {name:"Berry",bg1:"#3B0764",bg2:"#86198F"},
+ {name:"Mono",bg1:"#111827",bg2:"#374151"}
+];
+var design=clone(DEFAULT_DESIGN);
+var designTab="host", selectedEl=null, designDirty=false;
+
+function stageBgStyle(d){
+  var bg;
+  if(d.bgMode==="image"&&d.bgImage) bg="background-image:url('"+d.bgImage.replace(/'/g,"%27")+"')";
+  else if(d.bgMode==="color") bg="background:"+d.bgColor;
+  else bg="background:linear-gradient(135deg,"+d.bg1+","+d.bg2+")";
+  return bg;
+}
+function elStyle(e){return "left:"+e.x+"%;top:"+e.y+"%;font-size:"+(e.s/100)+"em;"+(e.show?"":"display:none")}
+function applyAccent(stageEl,d){stageEl.style.setProperty("--amber",d.accent);stageEl.style.color=d.text}
+
+/* ================= GAME STATE ================= */
 var state={
-  questions: JSON.parse(JSON.stringify(DEFAULT_QS)),
+  questions:clone(DEFAULT_QS), active:[],
   players:[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}],
-  phase:"lobby",
-  idx:0,
-  answers:[null,null],
-  lastGain:[0,0],
-  timerDur:15, timeLeft:15, points:100,
-  newAnswer:true
+  phase:"lobby", idx:0, answers:[null,null], lastGain:[0,0],
+  timerDur:15, timeLeft:15, points:100, orderMode:"sequence", newAnswer:true
 };
 var timerId=null;
-/* ---------- LIVE (Supabase Realtime Broadcast) ---------- */
+function getTotal(){return state.active.length||state.questions.length}
+function getQ(){return state.active[state.idx]||state.questions[state.idx]||null}
+
+/* ================= LIVE (Supabase Realtime Broadcast) ================= */
 var supa=null;
-var live={
-  mode:"offline", // offline | host | player
-  code:null, channel:null, connected:false,
-  mySlot:null, myName:"",
-  clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),
-  occupied:[null,null], // host only: clientId per slot
-  joinRetry:null, assigned:false
-};
-var lastHostState=null;   // player only: last state payload from host
-var liveMyAnswer=null;    // player only: my locked answer for current question
-var liveMyIdx=-1;
-var broadcastQueued=false;
-function getSupa(){
-  if(supa) return supa;
-  if(!window.supabase || !window.supabase.createClient) return null;
-  try{ supa=window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }catch(e){ supa=null; }
-  return supa;
-}
-function normalizeCode(s){ return String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,"").replace(/^QUIZ/,""); }
-function genCode(){ return String(Math.floor(1000+Math.random()*9000)); }
-function channelName(code){ return "quiz-room-"+code; }
-
+var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],joinRetry:null,assigned:false};
+var lastHostState=null, liveMyAnswer=null, liveMyIdx=-1, broadcastQueued=false;
+function getSupa(){ if(supa) return supa; if(!window.supabase||!window.supabase.createClient) return null; try{supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);}catch(e){supa=null;} return supa; }
+function normalizeCode(s){return String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,"").replace(/^QUIZ/,"")}
+function genCode(){return String(Math.floor(1000+Math.random()*9000))}
+function channelName(code){return "quiz-room-"+code}
 function broadcastState(){
-  if(live.mode!=="host" || !live.channel || !live.connected) return;
-  var q=state.questions[state.idx]||null;
-  var payload={
-    phase:state.phase, idx:state.idx, total:state.questions.length,
-    questionText: (state.phase==="playing"||state.phase==="reveal") && q ? q.text : null,
-    // Correct answer is ONLY sent after reveal/finish — never while a question is open.
-    correctAnswer: (state.phase==="reveal"||state.phase==="finished") && q ? q.answer : null,
-    players: state.players.map(function(p){return {name:p.name,score:p.score,correct:p.correct,streak:p.streak}}),
-    answersLocked:[state.answers[0]!==null, state.answers[1]!==null],
-    playerAnswers: state.phase==="reveal" ? state.answers.slice() : [null,null],
-    lastGain: state.lastGain.slice(),
-    timeLeft: state.timeLeft, timerDur: state.timerDur, points: state.points,
-    ts: Date.now()
-  };
-  try{ live.channel.send({type:"broadcast",event:"state",payload:payload}); }catch(e){}
+  if(live.mode!=="host"||!live.channel||!live.connected) return;
+  var q=getQ();
+  var payload={phase:state.phase,idx:state.idx,total:getTotal(),
+    questionText:(state.phase==="playing"||state.phase==="reveal")&&q?q.text:null,
+    correctAnswer:(state.phase==="reveal"||state.phase==="finished")&&q?q.answer:null,
+    players:state.players.map(function(p){return{name:p.name,score:p.score,correct:p.correct,streak:p.streak}}),
+    answersLocked:[state.answers[0]!==null,state.answers[1]!==null],
+    playerAnswers:state.phase==="reveal"?state.answers.slice():[null,null],
+    lastGain:state.lastGain.slice(),timeLeft:state.timeLeft,timerDur:state.timerDur,points:state.points,
+    orderMode:state.orderMode, design:clone(design), ts:Date.now()};
+  try{live.channel.send({type:"broadcast",event:"state",payload:payload});}catch(e){}
 }
-function queueBroadcast(){
-  if(broadcastQueued) return; broadcastQueued=true;
-  setTimeout(function(){ broadcastQueued=false; broadcastState(); },60);
-}
-function broadcastTick(){
-  if(live.mode!=="host" || !live.channel || !live.connected) return;
-  try{ live.channel.send({type:"broadcast",event:"tick",payload:{timeLeft:state.timeLeft,timerDur:state.timerDur}}); }catch(e){}
-}
-
+function queueBroadcast(){ if(broadcastQueued) return; broadcastQueued=true; setTimeout(function(){broadcastQueued=false;broadcastState();},60); }
+function broadcastTick(){ if(live.mode!=="host"||!live.channel||!live.connected) return; try{live.channel.send({type:"broadcast",event:"tick",payload:{timeLeft:state.timeLeft,timerDur:state.timerDur}});}catch(e){} }
 function hostCreateRoom(){
   var s=getSupa();
-  var st=$("hostCreateStatus");
-  if(!s){ if(st){st.textContent="⚠ Live connection unavailable in this browser — demo mode still works below."; st.className="statusline wait";} toast("Live unavailable — demo mode still works"); return; }
-  if(live.mode!=="offline"){ toast("Already in a live room"); return; }
+  if(!s){toast("Live unavailable in this browser — demo mode still works");return;}
+  if(live.mode!=="offline"){toast("Already in a live room");return;}
   live.code=genCode(); live.mode="host"; live.connected=false; live.occupied=[null,null];
-  var ch=s.channel(channelName(live.code),{config:{broadcast:{self:false}}});
-  live.channel=ch;
-  ch.on("broadcast",{event:"join"},function(msg){ handleHostJoin(msg.payload||{}); });
-  ch.on("broadcast",{event:"answer"},function(msg){ handleHostAnswer(msg.payload||{}); });
-  ch.on("broadcast",{event:"request-sync"},function(){ queueBroadcast(); });
+  var ch=s.channel(channelName(live.code),{config:{broadcast:{self:false}}}); live.channel=ch;
+  ch.on("broadcast",{event:"join"},function(m){handleHostJoin(m.payload||{})});
+  ch.on("broadcast",{event:"answer"},function(m){handleHostAnswer(m.payload||{})});
+  ch.on("broadcast",{event:"request-sync"},function(){queueBroadcast()});
   ch.subscribe(function(status){
-    if(status==="SUBSCRIBED"){ live.connected=true; updateLiveUI(); queueBroadcast(); toast("Live room "+live.code+" is open — players can join!"); }
-    else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){ live.connected=false; updateLiveUI(); if(st){} toast("Live connection problem — demo mode still works"); }
-    updateLiveUI();
+    if(status==="SUBSCRIBED"){live.connected=true;queueBroadcast();toast("Live room "+live.code+" is open — players can join!");}
+    else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){live.connected=false;toast("Live connection problem — demo mode still works");}
+    updateLiveUI(); render();
   });
   updateLiveUI(); render();
 }
 function handleHostJoin(p){
-  if(live.mode!=="host" || !p.clientId) return;
+  if(live.mode!=="host"||!p.clientId) return;
   var name=String(p.name||"Player").trim().slice(0,18)||"Player";
   var slot=live.occupied.indexOf(p.clientId);
   if(slot===-1){
-    slot= live.occupied[0]===null ? 0 : live.occupied[1]===null ? 1 : -1;
-    if(slot===-1){
-      try{ live.channel.send({type:"broadcast",event:"join-rejected",payload:{clientId:p.clientId,reason:"Room is full — two players are already in."}}); }catch(e){}
-      return;
-    }
+    slot=live.occupied[0]===null?0:live.occupied[1]===null?1:-1;
+    if(slot===-1){try{live.channel.send({type:"broadcast",event:"join-rejected",payload:{clientId:p.clientId,reason:"Room is full — two players are already in."}});}catch(e){} return;}
     live.occupied[slot]=p.clientId;
   }
   state.players[slot].name=name;
-  try{ live.channel.send({type:"broadcast",event:"joined",payload:{clientId:p.clientId,slot:slot,name:name,code:live.code}}); }catch(e){}
-  render(); queueBroadcast(); updateLiveUI();
-  toast(name+" joined as Player "+(slot+1)+" 📱");
+  try{live.channel.send({type:"broadcast",event:"joined",payload:{clientId:p.clientId,slot:slot,name:name,code:live.code}});}catch(e){}
+  render(); queueBroadcast(); updateLiveUI(); toast(name+" joined as Player "+(slot+1)+" 📱");
 }
 function handleHostAnswer(p){
-  if(live.mode!=="host" || state.phase!=="playing") return;
-  var slot=+p.slot;
-  if(slot!==0 && slot!==1) return;
-  if(live.occupied[slot]!==p.clientId) return;
-  if(state.answers[slot]!==null) return;
-  state.answers[slot]= !!p.value;
-  render(); queueBroadcast();
-  if(state.answers[0]!==null && state.answers[1]!==null) toast("Both iPads locked in — you can reveal!");
-  else toast(state.players[slot].name+" locked in ✓");
+  if(live.mode!=="host"||state.phase!=="playing") return;
+  var slot=+p.slot; if(slot!==0&&slot!==1) return;
+  if(live.occupied[slot]!==p.clientId||state.answers[slot]!==null) return;
+  state.answers[slot]=!!p.value; render(); queueBroadcast();
+  toast(state.answers[0]!==null&&state.answers[1]!==null?"Both iPads locked in — you can reveal!":state.players[slot].name+" locked in ✓");
 }
-
 function playerJoinFrom(prefix){
-  var codeEl=$(prefix==="join2"?"joinCode2":"joinCode"), nameEl=$(prefix==="join2"?"joinName2":"joinName");
-  var code=normalizeCode(codeEl?codeEl.value:"");
-  var name=(nameEl?nameEl.value:"").trim();
-  var statusIds=["joinStatus","joinStatus2"];
-  function setStatus(msg,cls){ statusIds.forEach(function(id){var el=$(id); if(el){el.textContent=msg; el.className="statusline "+(cls||"wait");}}); }
-  if(code.length<3){ setStatus("Enter the room code from the main screen first."); return; }
-  if(!name){ setStatus("Enter your name so the host knows who you are."); if(nameEl) nameEl.focus(); return; }
-  var s=getSupa();
-  if(!s){ setStatus("⚠ Live connection unavailable in this browser — ask the host to check their connection, or use the demo Player tabs."); return; }
-  if(live.mode==="player" && live.code===code){ switchView("join"); return; }
-  if(live.mode!=="offline"){ disconnectLive(true); }
+  var code=normalizeCode($("joinCode2").value), name=$("joinName2").value.trim();
+  function setStatus(m,c){var el=$("joinStatus2");if(el){el.textContent=m;el.className="statusline "+(c||"wait")}}
+  if(code.length<3){setStatus("Enter the room code from the host screen first.");return;}
+  if(!name){setStatus("Enter your name so the host knows who you are.");$("joinName2").focus();return;}
+  var s=getSupa(); if(!s){setStatus("⚠ Live connection unavailable in this browser.");return;}
+  if(live.mode==="player"&&live.code===code){switchView(live.mySlot===1?"p2":"p1");return;}
+  if(live.mode!=="offline") disconnectLive(true);
   live.mode="player"; live.code=code; live.myName=name.slice(0,18); live.connected=false; live.assigned=false; live.mySlot=null; lastHostState=null; liveMyAnswer=null; liveMyIdx=-1;
-  var ch=s.channel(channelName(code),{config:{broadcast:{self:false}}});
-  live.channel=ch;
-  ch.on("broadcast",{event:"state"},function(msg){ applyRemoteState(msg.payload||{}); });
-  ch.on("broadcast",{event:"tick"},function(msg){ var pl=msg.payload||{}; state.timeLeft=pl.timeLeft; state.timerDur=pl.timerDur; var el=$("lpTimer"); if(el) el.textContent= state.timerDur===0?"∞":state.timeLeft; });
-  ch.on("broadcast",{event:"joined"},function(msg){ var pl=msg.payload||{}; if(pl.clientId!==live.clientId) return; live.mySlot=+pl.slot; live.assigned=true; if(live.joinRetry){clearInterval(live.joinRetry); live.joinRetry=null;} setStatus(""); updateLiveUI(); renderLivePlayer(); toast("You're in as Player "+(live.mySlot+1)+" 🎉"); try{ live.channel.send({type:"broadcast",event:"request-sync",payload:{clientId:live.clientId}}); }catch(e){} });
-  ch.on("broadcast",{event:"join-rejected"},function(msg){ var pl=msg.payload||{}; if(pl.clientId!==live.clientId) return; if(live.joinRetry){clearInterval(live.joinRetry); live.joinRetry=null;} setStatus("✕ "+(pl.reason||"Could not join this room.")); toast(pl.reason||"Room full"); disconnectLive(true); });
-  ch.on("broadcast",{event:"kicked"},function(msg){ var pl=msg.payload||{}; if(pl.clientId!==live.clientId) return; toast("The host reset your player slot — join again to keep playing"); disconnectLive(true); switchView("join"); });
-  ch.on("broadcast",{event:"room-closed"},function(){ toast("The host closed the room"); disconnectLive(true); switchView("join"); });
+  var ch=s.channel(channelName(code),{config:{broadcast:{self:false}}}); live.channel=ch;
+  ch.on("broadcast",{event:"state"},function(m){applyRemoteState(m.payload||{})});
+  ch.on("broadcast",{event:"tick"},function(m){var pl=m.payload||{};state.timeLeft=pl.timeLeft;state.timerDur=pl.timerDur;render();});
+  ch.on("broadcast",{event:"joined"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;live.mySlot=+pl.slot;live.assigned=true;if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}setStatus("");updateLiveUI();toast("You're in as Player "+(live.mySlot+1)+" 🎉");switchView(live.mySlot===1?"p2":"p1");try{live.channel.send({type:"broadcast",event:"request-sync",payload:{clientId:live.clientId}});}catch(e){}});
+  ch.on("broadcast",{event:"join-rejected"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}setStatus("✕ "+(pl.reason||"Could not join."));disconnectLive(true);});
+  ch.on("broadcast",{event:"kicked"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;toast("The host reset your player slot — join again to keep playing");disconnectLive(true);switchView("join");});
+  ch.on("broadcast",{event:"room-closed"},function(){toast("The host closed the room");disconnectLive(true);switchView("join");});
   ch.subscribe(function(status){
     if(status==="SUBSCRIBED"){
       live.connected=true; updateLiveUI();
-      var sendJoin=function(){ try{ ch.send({type:"broadcast",event:"join",payload:{clientId:live.clientId,name:live.myName}}); }catch(e){} };
-      sendJoin();
-      if(live.joinRetry) clearInterval(live.joinRetry);
+      var sendJoin=function(){try{ch.send({type:"broadcast",event:"join",payload:{clientId:live.clientId,name:live.myName}});}catch(e){}};
+      sendJoin(); if(live.joinRetry)clearInterval(live.joinRetry);
       var tries=0;
-      live.joinRetry=setInterval(function(){ if(live.assigned || tries++>6){ clearInterval(live.joinRetry); live.joinRetry=null; if(!live.assigned) setStatus("Still waiting for the host… check the code, and that the host screen is open with this room created."); return; } sendJoin(); },2500);
+      live.joinRetry=setInterval(function(){if(live.assigned||tries++>6){clearInterval(live.joinRetry);live.joinRetry=null;if(!live.assigned)setStatus("Still waiting for the host… check the code, and that the host screen is open with this room created.");return;}sendJoin();},2500);
       setStatus("Connected — waiting for the host to let you in…");
-      switchView("join");
-    } else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"){ setStatus("⚠ Couldn't connect — check your internet and try again."); }
+    } else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"){setStatus("⚠ Couldn't connect — check your internet and try again.");}
     updateLiveUI();
   });
   updateLiveUI();
 }
 function applyRemoteState(pl){
   lastHostState=pl;
-  var newIdx=pl.idx, newPhase=pl.phase;
-  if(newIdx!==liveMyIdx || newPhase==="playing" && state.phase!=="playing"){ if(newPhase==="playing"){ liveMyAnswer=null; } }
-  if(newIdx!==liveMyIdx) liveMyIdx=newIdx;
-  state.phase=newPhase; state.idx=newIdx; state.timeLeft=pl.timeLeft; state.timerDur=pl.timerDur; state.points=pl.points;
+  if(pl.design){design=pl.design;}
+  if(pl.idx!==liveMyIdx||(pl.phase==="playing"&&state.phase!=="playing")){if(pl.phase==="playing")liveMyAnswer=null;}
+  if(pl.idx!==liveMyIdx)liveMyIdx=pl.idx;
+  state.phase=pl.phase; state.idx=pl.idx; state.timeLeft=pl.timeLeft; state.timerDur=pl.timerDur; state.points=pl.points;
+  if(pl.orderMode)state.orderMode=pl.orderMode;
   state.lastGain=pl.lastGain||[0,0];
-  state.players=(pl.players||state.players).map(function(p){return {name:p.name,score:p.score||0,correct:p.correct||0,streak:p.streak||0}});
-  // Rebuild a minimal questions array: only the current question text is ever sent.
-  var qs=[]; for(var i=0;i<(pl.total||0);i++) qs.push({text:"",answer:false});
-  if(pl.questionText!=null && qs[newIdx]) qs[newIdx]={text:pl.questionText, answer: pl.correctAnswer===null?false:pl.correctAnswer};
-  if(qs.length) state.questions=qs;
-  if(newPhase==="reveal" && live.mySlot!==null && pl.playerAnswers){ var mine=pl.playerAnswers[live.mySlot]; if(mine!==null && mine!==undefined) liveMyAnswer=mine; }
-  if(newPhase==="lobby"){ liveMyAnswer=null; }
-  state.answers=[ pl.answersLocked && pl.answersLocked[0]? (live.mySlot===0?liveMyAnswer:true) : null, pl.answersLocked && pl.answersLocked[1]? (live.mySlot===1?liveMyAnswer:true) : null ];
-  // For host-status dots on the player device we only need locked booleans:
-  state.answers=[ (pl.answersLocked&&pl.answersLocked[0])?true:null, (pl.answersLocked&&pl.answersLocked[1])?true:null ];
-  if(live.mySlot!==null && liveMyAnswer!==null) state.answers[live.mySlot]=liveMyAnswer;
-  render(); renderLivePlayer(); updateLiveUI();
+  state.players=(pl.players||state.players).map(function(p){return{name:p.name,score:p.score||0,correct:p.correct||0,streak:p.streak||0}});
+  var qs=[]; for(var i=0;i<(pl.total||0);i++)qs.push({text:"",answer:false});
+  if(pl.questionText!=null&&qs[pl.idx])qs[pl.idx]={text:pl.questionText,answer:pl.correctAnswer===null?false:pl.correctAnswer};
+  if(qs.length)state.active=qs;
+  if(pl.phase==="reveal"&&live.mySlot!==null&&pl.playerAnswers){var mine=pl.playerAnswers[live.mySlot];if(mine!==null&&mine!==undefined)liveMyAnswer=mine;}
+  if(pl.phase==="lobby")liveMyAnswer=null;
+  state.answers=[(pl.answersLocked&&pl.answersLocked[0])?true:null,(pl.answersLocked&&pl.answersLocked[1])?true:null];
+  if(live.mySlot!==null&&liveMyAnswer!==null)state.answers[live.mySlot]=liveMyAnswer;
+  render(); updateLiveUI();
 }
 function playerSendAnswer(val){
-  if(live.mode!=="player" || live.mySlot===null || !live.channel) return;
-  if(state.phase!=="playing" || liveMyAnswer!==null) return;
+  if(live.mode!=="player"||live.mySlot===null||!live.channel)return;
+  if(state.phase!=="playing"||liveMyAnswer!==null)return;
   liveMyAnswer=val;
-  try{ live.channel.send({type:"broadcast",event:"answer",payload:{clientId:live.clientId,slot:live.mySlot,value:val}}); }catch(e){}
-  renderLivePlayer(); render();
+  try{live.channel.send({type:"broadcast",event:"answer",payload:{clientId:live.clientId,slot:live.mySlot,value:val}});}catch(e){}
+  render();
 }
 function disconnectLive(silent){
-  var wasPlayer= live.mode==="player";
-  if(live.mode==="host" && live.channel && live.connected){ try{ live.channel.send({type:"broadcast",event:"room-closed",payload:{}}); }catch(e){} }
-  if(live.joinRetry){ clearInterval(live.joinRetry); live.joinRetry=null; }
-  if(live.channel){ var ch=live.channel; live.channel=null; try{ var s=getSupa(); if(s) s.removeChannel(ch); }catch(e){} }
-  live.mode="offline"; live.code=null; live.connected=false; live.mySlot=null; live.assigned=false; live.occupied=[null,null]; lastHostState=null; liveMyAnswer=null;
-  if(wasPlayer){ // player device only ever held a mirror of the host's questions — restore the full local set for demo mode
-    state.questions=JSON.parse(JSON.stringify(DEFAULT_QS)); state.phase="lobby"; state.idx=0; state.answers=[null,null]; state.lastGain=[0,0];
-    state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];
-  }
+  var wasPlayer=live.mode==="player";
+  if(live.mode==="host"&&live.channel&&live.connected){try{live.channel.send({type:"broadcast",event:"room-closed",payload:{}});}catch(e){}}
+  if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}
+  if(live.channel){var ch=live.channel;live.channel=null;try{var s=getSupa();if(s)s.removeChannel(ch);}catch(e){}}
+  live.mode="offline";live.code=null;live.connected=false;live.mySlot=null;live.assigned=false;live.occupied=[null,null];lastHostState=null;liveMyAnswer=null;
+  if(wasPlayer){state.questions=clone(DEFAULT_QS);state.active=[];state.phase="lobby";state.idx=0;state.answers=[null,null];state.lastGain=[0,0];state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];}
   updateLiveUI(); render();
-  if(!silent) toast("Left the live room — demo mode is on");
+  if(!silent)toast("Left the live room — demo mode is on");
 }
+function countJoined(){return live.occupied.filter(function(x){return !!x}).length}
 function updateLiveUI(){
   var isHost=live.mode==="host", isPlayer=live.mode==="player";
-  $("liveOffline").hidden= isHost||isPlayer;
-  $("liveHost").hidden= !isHost;
-  $("livePlayerInfo").hidden= !isPlayer;
-  $("joinOfflineBox").hidden= isPlayer;
-  $("livePlayerRoot").hidden= !isPlayer;
-  $("joinHint").hidden= !isPlayer;
+  $("joinOfflineBox").hidden=isPlayer;
+  $("livePlayerNote").hidden=!isPlayer;
   var dot=$("connDot");
   dot.className="conn-dot "+(live.connected?"on":(live.mode!=="offline"?"wait":""));
-  $("roomCodeDisplay").textContent= live.code? ("QUIZ-"+live.code) : "—";
-  $("connStatus").textContent= isHost? (live.connected?"Live host • "+countJoined()+" joined":"Connecting…") : isPlayer? (live.assigned?("Live • Player "+(live.mySlot+1)):(live.connected?"Joining…":"Connecting…")) : "Demo mode";
-  if(isHost){
-    $("hostCodeBig").textContent=live.code;
-    var chips="";
-    for(var i=0;i<2;i++){ chips+='<span class="slot-chip '+(live.occupied[i]?"filled":"")+'">'+(live.occupied[i]?("✓ Player "+(i+1)+": "+esc(state.players[i].name)):("○ Player "+(i+1)+" — waiting…"))+'</span>'; }
-    $("hostSlots").innerHTML=chips;
-    $("hostConnStatus").textContent= live.connected? "● Live — iPads can join now" : "Connecting to live…";
-    $("hostConnStatus").className="statusline "+(live.connected?"ok":"wait");
-  }
-  if(isPlayer){
-    $("playerInfoTitle").textContent= live.assigned? ("You're Player "+(live.mySlot+1)+" — "+live.myName) : "Joining room QUIZ-"+live.code+"…";
-    $("playerInfoSub").textContent= live.assigned? ("Room QUIZ-"+live.code+" • "+state.players[live.mySlot].score+" points so far. Your controller is on the 📱 iPad Join tab.") : "Waiting for the host to let you in — keep this screen open.";
-  }
-  var ali=$("adminLiveInfo"); if(ali) ali.textContent= isHost? ("Live room QUIZ-"+live.code+" is open • "+countJoined()+" of 2 players joined. Admin changes broadcast to the iPads.") : isPlayer? ("This device joined room QUIZ-"+live.code+" as a player. Admin lives on the host screen.") : "No live room — you're in one-screen demo mode. Create a room from the Stage tab to connect iPads.";
+  $("roomCodeDisplay").textContent=live.code?("QUIZ-"+live.code):"—";
+  $("connStatus").textContent=isHost?(live.connected?"Live host · "+countJoined()+" joined":"Connecting…"):isPlayer?(live.assigned?("Live · Player "+(live.mySlot+1)):(live.connected?"Joining…":"Connecting…")):"Demo mode";
+  var ali=$("adminLiveInfo"); if(ali)ali.textContent=isHost?("Live room QUIZ-"+live.code+" is open · "+countJoined()+" of 2 players joined. Admin changes and screen designs broadcast to the iPads."):isPlayer?("This device joined room QUIZ-"+live.code+" as a player. Admin lives on the host screen."):"No live room — you're in one-screen demo mode. Create a room from the Host screen to connect iPads.";
 }
-function countJoined(){ return live.occupied.filter(function(x){return !!x}).length; }
 
-function livePlayerHTML(){
-  if(live.mode!=="player") return "";
-  if(!live.assigned || live.mySlot===null){
-    return '<div class="pcard"><div class="waiting"><div><b style="color:var(--text);font-size:17px">Joining room QUIZ-'+esc(live.code||"")+'…</b><br>Waiting for the host screen to accept you.<br><span style="font-size:13px">Check the code matches the main screen, and that the host created the room.</span></div></div></div>';
-  }
-  var i=live.mySlot, p=state.players[i], other=state.players[1-i];
-  var pl=lastHostState;
-  var head='<div class="pcard"><div class="pcard-head"><div class="avatar '+(i===0?"av1":"av2")+'">'+esc(initials(p.name))+'</div><div><b>'+esc(p.name)+' — Player '+(i+1)+'</b><span>Room QUIZ-'+esc(live.code)+' • vs '+esc(other.name)+' ('+other.score+' pts)</span></div><div class="pcard-score"><strong>'+p.score+'</strong><span>Points</span></div></div>';
-  var timerChip=' <span class="pill">⏱ <span id="lpTimer">'+(state.timerDur===0?"∞":state.timeLeft)+'</span>s</span>';
-  var body="";
-  if(!pl || state.phase==="lobby"){
-    body='<div class="waiting"><div><b style="color:var(--text);font-size:17px">You\'re in, '+esc(p.name)+' 👋</b><br>Waiting for the host to start the game…<br><span style="font-size:13px">Keep this screen open — your buttons appear with the first question.</span></div></div>';
-  } else if(state.phase==="finished"){
-    var win= state.players[0].score===state.players[1].score ? "It's a tie!" : (p.score>other.score ? "🏆 You win!" : esc(other.name)+" wins — good game!");
-    body='<div class="waiting"><div><b style="color:var(--text);font-size:18px">Game over — '+win+'</b><br>You scored <b style="color:var(--text)">'+p.score+' points</b> with '+p.correct+' correct.<br>'+esc(other.name)+': '+other.score+' points.<br><span style="font-size:13px">Full final scoreboard is on the main screen.</span></div></div>';
-  } else if(state.phase==="playing"){
-    var qtext= pl.questionText||"";
-    var qh='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px"><span style="font-size:13px;color:var(--muted)">Q'+(state.idx+1)+' of '+(pl.total||"")+'</span>'+timerChip+'</div><div style="font-weight:700;line-height:1.45;margin-bottom:14px">'+esc(qtext)+'</div>';
-    if(liveMyAnswer===null){
-      body=qh+'<div class="tf"><button class="tbtn" onclick="playerSendAnswer(true)">✓<span style="font-size:30px;line-height:1">TRUE</span><small>Tap if you think it\'s true</small></button><button class="fbtn" onclick="playerSendAnswer(false)">✕<span style="font-size:30px;line-height:1">FALSE</span><small>Tap if you think it\'s false</small></button></div>';
+/* ================= HOST STAGE ================= */
+function scoreTile(i,e){
+  var p=state.players[i], a=state.answers[i], q=getQ();
+  var lock="";
+  if(state.phase==="playing")lock='<span class="lock '+(a!==null?"done":"")+'">'+(a!==null?"🔒 Locked in":"Thinking…")+'</span>';
+  if(state.phase==="reveal"&&q)lock='<span class="lock '+(a!==null&&a===q.answer?"done":"")+'">'+(a===null?"No answer":a===q.answer?("Correct +"+state.lastGain[i]):"Wrong")+'</span>';
+  return '<div class="stage-el" style="'+elStyle(e)+'"><div class="score-tile" style="transform:scale('+(e.s/100)+')"><small>'+esc(p.name)+'</small><strong>'+p.score+'</strong><span>points · '+p.correct+' correct</span>'+lock+'</div></div>';
+}
+function hostStageHTML(){
+  var d=design.host, total=getTotal(), q=getQ();
+  var timerPct=state.timerDur===0?100:Math.max(0,state.timeLeft/state.timerDur*100);
+  var badgeTxt=state.phase==="lobby"?"● Lobby":state.phase==="playing"?"● Live — question open":state.phase==="reveal"?"Answer revealed":"Final result";
+  var h='<div class="stage-bg" style="'+stageBgStyle(d)+'"></div><div class="stage-shade" style="opacity:'+(d.overlay/100)+'"></div>';
+  h+='<div class="stage-el" style="'+elStyle(d.els.badge)+'"><span class="stage-badge '+(state.phase==="playing"?"live":"")+'">'+badgeTxt+" · Q "+(state.phase==="lobby"?0:Math.min(state.idx+1,total))+" / "+total+(state.orderMode==="random"?" · 🔀 Random":"")+'</span></div>';
+  h+='<div class="stage-el" style="'+elStyle(d.els.timer)+'"><div style="transform:scale('+(d.els.timer.s/100)+')"><div class="timer-ring" style="--p:'+timerPct+'"><b>'+(state.timerDur===0?"∞":state.timeLeft)+'</b></div><div class="timer-cap">'+(state.timerDur===0?"No timer":"Seconds left")+'</div></div></div>';
+  /* centre element: lobby panel / question / winner */
+  var centre="";
+  if(state.phase==="lobby"){
+    var liveBit="";
+    if(live.mode==="host"){
+      var chips=""; for(var i=0;i<2;i++)chips+='<span class="slot-chip '+(live.occupied[i]?"filled":"")+'">'+(live.occupied[i]?("✓ Player "+(i+1)+": "+esc(state.players[i].name)):("○ Player "+(i+1)+" — waiting…"))+'</span>';
+      liveBit='<div style="margin-top:16px"><div style="font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.8">Room code — players enter this on their iPads</div><div class="codebig">'+esc(live.code)+'</div><div>'+chips+'</div><div class="statusline '+(live.connected?"ok":"wait")+'">'+(live.connected?"● Live — iPads can join now":"Connecting to live…")+'</div></div>';
+    } else if(live.mode==="player"){
+      liveBit='<p>You joined as a player on this device — the host runs the game from the main screen.</p>';
     } else {
-      body=qh+'<div class="tf"><button class="tbtn '+(liveMyAnswer===true?"selected":"")+'" disabled>✓<br>TRUE</button><button class="fbtn '+(liveMyAnswer===false?"selected":"")+'" disabled>✕<br>FALSE</button></div><div class="locked">🔒 Locked in — you picked <b>'+(liveMyAnswer?"TRUE":"FALSE")+'</b>. Waiting for the host to reveal…</div>';
+      liveBit='<div style="margin-top:16px"><button class="btn primary" onclick="hostCreateRoom()">● Create Live Room for iPads</button><div class="join-mini"><input id="joinCode" placeholder="ROOM CODE" maxlength="10" autocapitalize="characters" autocomplete="off"><input id="joinName" placeholder="Your name (to join as player)" maxlength="18"><button class="btn dark" onclick="joinFromHost()">Join →</button></div><div class="statusline" id="joinStatus"></div></div>';
+    }
+    centre='<div class="lobby-panel"><h2>'+esc(state.players[0].name)+' vs '+esc(state.players[1].name)+'</h2><p>'+total+' questions · '+state.points+' points each · '+(state.timerDur===0?"no timer":state.timerDur+"s per question")+' · '+(state.orderMode==="random"?"🔀 random order":"➡ in sequence")+'. Tap Start when both players are ready.</p>'+liveBit+'</div>';
+  } else if(state.phase==="finished"){
+    var a=state.players[0],b=state.players[1];
+    var title=a.score===b.score?"It's a tie!":((a.score>b.score?a.name:b.name)+" wins!");
+    centre='<div class="winner-box"><div class="trophy">'+(a.score===b.score?"🤝":"🏆")+'</div><h2>'+esc(title)+'</h2><p>'+esc(a.name)+': <b>'+a.score+' pts</b> ('+a.correct+' correct) &nbsp;·&nbsp; '+esc(b.name)+': <b>'+b.score+' pts</b> ('+b.correct+' correct)<br>Out of '+total+' questions.</p></div>';
+  } else if(q){
+    var banner=state.phase==="reveal"?'<div><span class="answer-banner '+(q.answer?"true":"false")+'">Correct answer: '+(q.answer?"✓ TRUE":"✕ FALSE")+'</span></div>':"";
+    centre='<div><div class="q-kicker">Question '+(state.idx+1)+' of '+total+'</div><div class="q-text">'+esc(q.text)+'</div>'+banner+'</div>';
+  }
+  h+='<div class="stage-el" style="'+elStyle(d.els.question)+'"><div style="transform:scale('+(d.els.question.s/100)+')">'+centre+'</div></div>';
+  h+=scoreTile(0,d.els.score1)+scoreTile(1,d.els.score2);
+  /* controls */
+  var answered=state.answers.filter(function(x){return x!==null}).length, c="";
+  if(live.mode==="player")c='<span style="color:#fff;font-size:13.5px;padding:8px 10px">The host controls the game from the main screen.</span>';
+  else if(state.phase==="lobby")c='<button class="btn primary" onclick="startGame()">▶ Start Game</button><button class="btn" onclick="switchView(\'admin\')">⚙ Admin</button>'+(live.mode==="host"?'<button class="btn" onclick="disconnectLive(true)">Close Room</button>':"");
+  else if(state.phase==="playing")c='<button class="btn primary" onclick="revealAnswer()" '+(answered===0?"disabled":"")+'>Reveal Answer ('+answered+'/2 in)</button><button class="btn" onclick="revealAnswer()">Reveal Anyway</button><button class="btn" onclick="resetGame()">Reset</button>';
+  else if(state.phase==="reveal")c=(state.idx<total-1)?'<button class="btn primary" onclick="nextQuestion()">Next Question →</button><button class="btn" onclick="resetGame()">Reset</button>':'<button class="btn primary" onclick="finishGame()">See Final Results 🏆</button>';
+  else if(state.phase==="finished")c='<button class="btn primary" onclick="startGame()">↺ Play Again</button><button class="btn" onclick="resetGame()">Back to Lobby</button>';
+  if(live.mode!=="player")c+='<button class="btn" onclick="switchView(\'p1\')">Player 1</button><button class="btn" onclick="switchView(\'p2\')">Player 2</button>'+(state.phase!=="lobby"?'<button class="btn" onclick="switchView(\'admin\')">⚙ Admin</button>':"");
+  c+='<button class="btn" onclick="goFullscreen(\'hostStage\')">⛶ Full screen</button>';
+  h+='<div class="stage-controls">'+c+'</div>';
+  return h;
+}
+function playerJoinAs(i){
+  /* Join a live room straight from a Player screen — values are handed to the
+     shared join flow, which lands this device on its assigned player screen. */
+  var code=$("pJoinCode"+i), name=$("pJoinName"+i);
+  var cv=code?code.value.trim():"", nv=name?name.value.trim():"";
+  if(cv.length<3){toast("Enter the room code from the host screen first");if(code)code.focus();return;}
+  if(!nv){toast("Enter your name so the host knows who you are");if(name)name.focus();return;}
+  $("joinCode2").value=cv; $("joinName2").value=nv;
+  playerJoinFrom("join2");
+}
+function joinFromHost(){
+  var code=$("joinCode"),name=$("joinName");
+  switchView("join");
+  $("joinCode2").value=code?code.value:""; $("joinName2").value=name?name.value:"";
+  if(code&&name&&code.value.trim()&&name.value.trim())playerJoinFrom("join2");
+  else toast("Enter the room code + your name on the Join screen");
+}
+function goFullscreen(id){var el=$(id);if(!el)return;try{if(document.fullscreenElement)document.exitFullscreen();else if(el.requestFullscreen)el.requestFullscreen();}catch(e){}}
+
+/* ================= PLAYER STAGES ================= */
+function playerStageHTML(i){
+  var key=i===0?"player1":"player2", d=design[key], p=state.players[i], other=state.players[1-i];
+  var isLiveMine=live.mode==="player"&&live.mySlot===i;
+  var isLiveOther=live.mode==="player"&&live.mySlot!==null&&live.mySlot!==i;
+  var myAnswer=isLiveMine?liveMyAnswer:state.answers[i];
+  var q=getQ();
+  var h='<div class="stage-bg" style="'+stageBgStyle(d)+'"></div><div class="stage-shade" style="opacity:'+(d.overlay/100)+'"></div>';
+  h+='<div class="stage-el" style="'+elStyle(d.els.header)+'"><div class="p-head" style="transform:scale('+(d.els.header.s/100)+')"><b>'+esc(p.name)+'</b><span>Player '+(i+1)+' · vs '+esc(other.name)+' ('+other.score+' pts)'+(live.code?" · Room QUIZ-"+esc(live.code):"")+'</span><div><strong>'+p.score+'</strong> <span>points · '+p.correct+' correct · streak '+p.streak+'</span></div></div></div>';
+  var body="";
+  if(isLiveOther){
+    body='<div class="p-wait">This device is playing as <b>Player '+(live.mySlot+1)+'</b>.<br>Open the Player '+(live.mySlot+1)+' tab to use your controller.</div>';
+  } else if(state.phase==="lobby"){
+    var joinBit="";
+    if(live.mode==="offline"){
+      joinBit='<div class="join-mini" style="text-align:left"><input id="pJoinCode'+i+'" placeholder="ROOM CODE" maxlength="10" autocapitalize="characters" autocomplete="off"><input id="pJoinName'+i+'" placeholder="Your name" maxlength="18" autocomplete="off"><button class="btn primary" onclick="playerJoinAs('+i+')">Join →</button></div><div style="font-size:13px;opacity:.85;margin-top:8px">Joining a live room? Enter the code from the host screen — or just play on this device in demo mode.</div>';
+    } else if(live.mode==="host"){
+      joinBit='<div style="font-size:13.5px;opacity:.85;margin-top:8px">This device is the host — players join from their own iPads with the room code.</div>';
+    }
+    body='<div class="p-wait"><b style="font-size:18px">'+(live.mode==="player"?"You're in, "+esc(p.name)+" 👋":"Player "+(i+1)+" screen")+'</b><br>Waiting for the host to start the game…<br><span style="font-size:13.5px;opacity:.85">Keep this screen open — your TRUE / FALSE buttons appear with the first question.</span>'+joinBit+'</div>';
+  } else if(state.phase==="finished"){
+    var win=state.players[0].score===state.players[1].score?"It's a tie! 🤝":(p.score>other.score?"🏆 You win!":esc(other.name)+" wins — good game!");
+    body='<div class="p-wait"><b style="font-size:19px">Game over — '+win+'</b><br>You scored <b>'+p.score+' points</b> with '+p.correct+' correct.<br><span style="font-size:13.5px;opacity:.85">Full final scoreboard is on the Host screen.</span></div>';
+  } else if(state.phase==="playing"){
+    var qh=q&&q.text?'<div class="p-q">Q'+(state.idx+1)+': '+esc(q.text)+'</div>':"";
+    if(myAnswer===null){
+      var click=isLiveMine?"playerSendAnswer":"answer";
+      body=qh+'<div class="tf"><button class="tbtn" onclick="'+click+'('+(isLiveMine?"true":i+",true")+')">✓ TRUE<small>Tap if it\'s true</small></button><button class="fbtn" onclick="'+click+'('+(isLiveMine?"false":i+",false")+')">✕ FALSE<small>Tap if it\'s false</small></button></div>';
+    } else {
+      body=qh+'<div class="tf"><button class="tbtn '+(myAnswer===true?"selected":"")+'" disabled>✓ TRUE</button><button class="fbtn '+(myAnswer===false?"selected":"")+'" disabled>✕ FALSE</button></div>';
     }
   } else if(state.phase==="reveal"){
-    var correctAns=pl.correctAnswer;
-    var correct= liveMyAnswer!==null && correctAns!==null && liveMyAnswer===correctAns;
-    var cls= liveMyAnswer===null?"": correct?"good":"bad";
-    var msg= liveMyAnswer===null? "No answer this round — 0 points." : correct? "🎉 Correct! +"+(pl.lastGain?pl.lastGain[i]:0)+" points" : "Not this time — the correct answer was "+(correctAns?"TRUE":"FALSE")+".";
-    body='<div style="font-size:13px;color:var(--muted);margin-bottom:12px">Q'+(state.idx+1)+': '+esc(pl.questionText||"")+'</div><div class="tf"><button class="tbtn '+(liveMyAnswer===true?"selected":"")+'" disabled>✓<br>TRUE</button><button class="fbtn '+(liveMyAnswer===false?"selected":"")+'" disabled>✕<br>FALSE</button></div><div class="locked '+cls+'">'+msg+'</div><div class="locked">Correct answer: <b>'+(correctAns?"✓ TRUE":"✕ FALSE")+'</b> • Your score: <b>'+p.score+'</b></div>';
+    body='<div class="tf"><button class="tbtn '+(myAnswer===true?"selected":"")+'" disabled>✓ TRUE</button><button class="fbtn '+(myAnswer===false?"selected":"")+'" disabled>✕ FALSE</button></div>';
   }
-  return head+body+'</div>';
+  h+='<div class="stage-el" style="'+elStyle(d.els.buttons)+'"><div style="transform:scale('+(d.els.buttons.s/100)+')">'+body+'</div></div>';
+  var status="",sCls="";
+  if(!isLiveOther){
+    if(state.phase==="playing"&&myAnswer!==null){status='🔒 Locked in — you picked '+(myAnswer?"TRUE":"FALSE")+'. Waiting for the host to reveal…';}
+    else if(state.phase==="playing"){status='⏱ '+(state.timerDur===0?"Take your time":state.timeLeft+"s left")+' — tap TRUE or FALSE';}
+    else if(state.phase==="reveal"&&q){
+      if(myAnswer===null){status="No answer this round — 0 points. Correct answer: "+(q.answer?"TRUE":"FALSE");}
+      else if(myAnswer===q.answer){status="🎉 Correct! +"+state.lastGain[i]+" points";sCls="good";}
+      else{status="Not this time — correct answer was "+(q.answer?"TRUE":"FALSE")+".";sCls="bad";}
+    }
+    else if(state.phase==="lobby"){status="Waiting for the host to start…";}
+    else if(state.phase==="finished"){status="Game over — check the Host screen for the winner 🏆";}
+  }
+  if(status)h+='<div class="stage-el" style="'+elStyle(d.els.status)+'"><div class="p-status '+sCls+'" style="transform:scale('+(d.els.status.s/100)+')">'+esc(status)+'</div></div>';
+  h+='<div class="stage-controls"><button class="btn" onclick="switchView(\'host\')">🖥 Host screen</button><button class="btn" onclick="goFullscreen(\'p'+(i+1)+'Stage\')">⛶ Full screen</button>'+(live.mode==="player"?'<button class="btn" onclick="disconnectLive(false)">Leave Room</button>':"")+'</div>';
+  return h;
 }
-function renderLivePlayer(){ var r=$("livePlayerRoot"); if(r) r.innerHTML=livePlayerHTML(); }
 
-/* ---------- CORE GAME (v1, kept) ---------- */
-function $(id){return document.getElementById(id)}
-function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
-function toast(msg){var t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},2400)}
-function initials(n){return String(n||"P").trim().split(/\s+/).map(function(w){return w[0]}).join("").slice(0,2).toUpperCase()||"P"}
+/* ================= RENDER ================= */
+function render(){
+  var hs=$("hostStage"); hs.innerHTML=hostStageHTML(); applyAccent(hs,design.host);
+  var s1=$("p1Stage"); s1.innerHTML=playerStageHTML(0); applyAccent(s1,design.player1);
+  var s2=$("p2Stage"); s2.innerHTML=playerStageHTML(1); applyAccent(s2,design.player2);
+  renderAdmin();
+  if(live.mode==="host")queueBroadcast();
+}
+function stopTimer(){if(timerId){clearInterval(timerId);timerId=null;}}
+function startTimer(){
+  stopTimer();
+  if(state.timerDur===0||state.phase!=="playing")return;
+  state.timeLeft=state.timerDur;
+  timerId=setInterval(function(){
+    state.timeLeft--;
+    if(state.timeLeft<=0){state.timeLeft=0;revealAnswer();return;}
+    var hs=$("hostStage");hs.innerHTML=hostStageHTML();applyAccent(hs,design.host);
+    var s1=$("p1Stage");s1.innerHTML=playerStageHTML(0);applyAccent(s1,design.player1);
+    var s2=$("p2Stage");s2.innerHTML=playerStageHTML(1);applyAccent(s2,design.player2);
+    broadcastTick();
+  },1000);
+}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a}
+function startGame(){
+  if(live.mode==="player"){toast("Only the host can start the game");return;}
+  if(!state.questions.length){toast("Add at least one question in Admin first");switchView("admin");return;}
+  state.active=clone(state.questions);
+  if(state.orderMode==="random")shuffle(state.active);
+  state.players.forEach(function(p){p.score=0;p.streak=0;p.correct=0});
+  state.idx=0;state.answers=[null,null];state.lastGain=[0,0];state.phase="playing";state.timeLeft=state.timerDur;
+  render(); startTimer();
+  toast(state.orderMode==="random"?"Game started — questions shuffled 🔀":"Game started — Question 1 is live!");
+}
+function answer(i,val){
+  if(live.mode==="player"){if(i===live.mySlot)playerSendAnswer(val);return;}
+  if(state.phase!=="playing"||state.answers[i]!==null)return;
+  state.answers[i]=val; render();
+  if(state.answers[0]!==null&&state.answers[1]!==null)toast("Both players locked in — host can reveal!");
+}
+function revealAnswer(){
+  if(live.mode==="player"||state.phase!=="playing")return;
+  stopTimer(); var q=getQ(); if(!q)return;
+  state.lastGain=[0,0];
+  state.answers.forEach(function(a,i){
+    if(a!==null&&a===q.answer){state.lastGain[i]=state.points;state.players[i].score+=state.points;state.players[i].streak++;state.players[i].correct++;}
+    else state.players[i].streak=0;
+  });
+  state.phase="reveal"; render();
+}
+function nextQuestion(){if(live.mode==="player")return;state.idx++;state.answers=[null,null];state.lastGain=[0,0];state.phase="playing";state.timeLeft=state.timerDur;render();startTimer();}
+function finishGame(){if(live.mode==="player")return;state.phase="finished";stopTimer();render();}
+function resetGame(){if(live.mode==="player")return;stopTimer();state.phase="lobby";state.idx=0;state.answers=[null,null];state.lastGain=[0,0];state.timeLeft=state.timerDur;render();toast("Back to lobby — scores kept. Start Game resets scores.");}
+function resetPlayer(i){
+  var kicked=live.mode==="host"?live.occupied[i]:null;
+  if(live.mode==="host"){live.occupied[i]=null;if(kicked&&live.channel){try{live.channel.send({type:"broadcast",event:"kicked",payload:{clientId:kicked}});}catch(e){}}state.players[i].name="Player "+(i+1);}
+  state.players[i].score=0;state.players[i].streak=0;state.players[i].correct=0;if(state.answers)state.answers[i]=null;
+  render(); toast("Player "+(i+1)+" reset to 0 — slot freed");
+}
 
-function hostHTML(){
-  var total=state.questions.length;
-  var q=state.questions[state.idx];
-  var answered=state.answers.filter(function(a){return a!==null}).length;
-  var pct= total? Math.round(((state.phase==="finished"?total:state.idx)/total)*100):0;
-  if(state.phase==="playing"||state.phase==="reveal") pct=Math.round(((state.idx)/total)*100);
-  var timerPct= state.timerDur===0?100: Math.max(0, state.timeLeft/state.timerDur*100);
-  var banner="";
-  if(state.phase==="reveal" && q){ banner='<div class="answer-banner show '+(q.answer?"true":"false")+'">Correct answer: '+(q.answer?"✓ TRUE":"✕ FALSE")+'</div>'; }
-  var qBody="";
-  if(state.phase==="lobby"){ qBody='<div class="qnum">Ready to play • '+total+' questions</div><h2>Tap Start Game when both players are ready</h2><p>Players: '+esc(state.players[0].name)+' and '+esc(state.players[1].name)+'. Each question is worth '+state.points+' points. Fast, simple, no typing — just TRUE or FALSE.</p>'; }
-  else if(state.phase==="finished"){ qBody='<div class="qnum">Game over</div><h2>Final scores are in!</h2><p>See the winner below — or hit Play Again to run it back with the same questions.</p>'; }
-  else if(q){ qBody='<div class="qnum">Question '+(state.idx+1)+' of '+total+'</div><h2>'+esc(q.text)+'</h2>'+banner; }
-  function pStatus(i){
-    var p=state.players[i]; var a=state.answers[i];
-    var label= state.phase==="lobby"?"Ready": state.phase==="finished"?"Finished": a===null?"Thinking…":"Locked in ✓";
-    if(state.phase==="reveal" && q && a!==null){ label= (a===q.answer)? "Correct +"+state.lastGain[i] : "Wrong — it was "+(q.answer?"TRUE":"FALSE"); }
-    if(state.phase==="reveal" && a===null){ label="No answer"; }
-    return '<div class="player-status"><div class="avatar '+(i===0?"av1":"av2")+'">'+esc(initials(p.name))+'</div><div><b>'+esc(p.name)+'</b><span>'+p.score+' pts • '+p.correct+' correct • Streak '+p.streak+'</span></div><span class="dot '+(a!==null?"done":"")+'">'+label+'</span></div>';
-  }
-  var controls="";
-  var isLivePlayer= live.mode==="player";
-  if(isLivePlayer) controls='<span style="font-size:13.5px;color:var(--muted)">The host controls the game from the main screen.</span>';
-  else if(state.phase==="lobby") controls='<button class="btn primary" onclick="startGame()">▶ Start Game</button><button class="btn" onclick="goAdmin()">Edit Questions</button>';
-  else if(state.phase==="playing") controls='<button class="btn primary" onclick="revealAnswer()" '+(answered===0?"disabled":"")+'>Reveal Answer ('+answered+'/2 in)</button><button class="btn" onclick="revealAnswer()">Skip / Reveal Anyway</button><button class="btn ghost" onclick="resetGame()">Reset</button>';
-  else if(state.phase==="reveal") controls= (state.idx < total-1) ? '<button class="btn primary" onclick="nextQuestion()">Next Question →</button><button class="btn ghost" onclick="resetGame()">Reset Game</button>' : '<button class="btn primary" onclick="finishGame()">See Final Results 🏆</button>';
-  else if(state.phase==="finished") controls='<button class="btn primary" onclick="startGame()">↺ Play Again</button><button class="btn" onclick="resetGame()">Back to Lobby</button>';
-  return '<div class="host"><div class="host-top"><span class="pill '+(state.phase==="playing"?"live":"")+'">'+(state.phase==="lobby"?"● Lobby":state.phase==="playing"?"● Live — Question Open":state.phase==="reveal"?"Answer Revealed":"Final")+'</span><div class="timer"><span style="font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--muted)">'+(state.timerDur===0?"NO TIMER":"TIME")+'</span><div class="timer-ring" style="--p:'+timerPct+'"><b>'+(state.timerDur===0?"∞":state.timeLeft)+'</b></div></div></div>'
-    +'<div class="progress"><i style="width:'+pct+'%"></i></div>'
-    +'<div class="qarea">'+qBody+'</div>'
-    +'<div class="status-row">'+pStatus(0)+pStatus(1)+'</div>'
-    +'<div class="score-strip"><div class="score-card"><small>'+esc(state.players[0].name)+'</small><strong>'+state.players[0].score+'</strong><span>points</span></div><div class="vs">VS</div><div class="score-card"><small>'+esc(state.players[1].name)+'</small><strong>'+state.players[1].score+'</strong><span>points</span></div></div>'
-    +'<div class="host-controls">'+controls+'</div></div>';
-}
-function finalHTML(){
-  if(state.phase!=="finished") return "";
-  var a=state.players[0], b=state.players[1];
-  var title= a.score===b.score ? "It's a tie! 🤝" : (a.score>b.score? esc(a.name)+" wins! 🏆" : esc(b.name)+" wins! 🏆");
-  return '<div class="final" style="margin-top:14px"><div style="font-size:13px;letter-spacing:.12em;font-weight:800;color:var(--amber)">FINAL RESULT</div><h2>'+title+'</h2><p>'+esc(a.name)+' got '+a.correct+' correct • '+esc(b.name)+' got '+b.correct+' correct — out of '+state.questions.length+' questions.</p><div class="podium"><div><span style="color:#CBD5E1;font-size:12px;font-weight:800;letter-spacing:.08em">'+esc(a.name.toUpperCase())+'</span><strong>'+a.score+'</strong><span style="color:#CBD5E1">points</span></div><div><span style="color:#CBD5E1;font-size:12px;font-weight:800;letter-spacing:.08em">'+esc(b.name.toUpperCase())+'</span><strong>'+b.score+'</strong><span style="color:#CBD5E1">points</span></div></div></div>';
-}
-function playerHTML(i, solo){
-  var p=state.players[i]; var q=state.questions[state.idx]; var a=state.answers[i];
-  var body="";
-  if(state.phase==="lobby"){ body='<div class="waiting"><div><b style="color:var(--text);font-size:16px">You\'re in, '+esc(p.name)+' 👋</b><br>Waiting for the host to start the game…<br><span style="font-size:13px">Keep this screen open.</span></div></div>'; }
-  else if(state.phase==="finished"){ body='<div class="waiting"><div><b style="color:var(--text);font-size:16px">Game over!</b><br>You scored <b style="color:var(--text)">'+p.score+' points</b> with '+p.correct+' correct.<br><span style="font-size:13px">Check the main screen for the winner.</span></div></div>'; }
-  else if(state.phase==="playing"){
-    if(a===null){ body='<div class="tf"><button class="tbtn" onclick="answer('+i+',true)">✓<span style="font-size:28px;line-height:1">TRUE</span><small>Tap if you think it\'s true</small></button><button class="fbtn" onclick="answer('+i+',false)">✕<span style="font-size:28px;line-height:1">FALSE</span><small>Tap if you think it\'s false</small></button></div>'; }
-    else{ body='<div class="tf"><button class="tbtn '+(a===true?"selected":"")+'" disabled>✓<br>TRUE</button><button class="fbtn '+(a===false?"selected":"")+'" disabled>✕<br>FALSE</button></div><div class="locked">🔒 Locked in — you picked <b>'+(a?"TRUE":"FALSE")+'</b>. Waiting for the other player…</div>'; }
-  } else if(state.phase==="reveal"){
-    var correct= a!==null && q && a===q.answer;
-    var cls= a===null?"": correct?"good":"bad";
-    var msg= a===null? "No answer this round — 0 points." : correct? "🎉 Correct! +"+state.lastGain[i]+" points" : "Not this time — correct answer was "+(q.answer?"TRUE":"FALSE")+".";
-    body='<div class="tf"><button class="tbtn '+(a===true?"selected":"")+'" disabled>✓<br>TRUE</button><button class="fbtn '+(a===false?"selected":"")+'" disabled>✕<br>FALSE</button></div><div class="locked '+cls+'">'+msg+'</div>';
-  }
-  var qHint= (state.phase==="playing"||state.phase==="reveal") && q && q.text ? '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">Q'+(state.idx+1)+': '+esc(q.text)+'</div>' : '';
-  return '<div class="pcard"><div class="pcard-head"><div class="avatar '+(i===0?"av1":"av2")+'">'+esc(initials(p.name))+'</div><div><b>'+esc(p.name)+'</b><span>'+(solo?"Demo Controller • ":"")+'Streak '+p.streak+' • '+p.correct+' correct</span></div><div class="pcard-score"><strong>'+p.score+'</strong><span>Points</span></div></div>'+qHint+body+'</div>';
-}
+/* ================= ADMIN ================= */
 function renderAdmin(){
-  var qc=$("qCount"); if(!qc) return;
-  // Don't rebuild the question list while the admin is typing in it — that would lose focus.
-  var adminVisible= !$("view-admin").hidden;
+  /* Game-settings controls ALWAYS mirror the live game state — even while the
+     Admin screen is hidden — so the slider/points can never show stale defaults. */
+  var trEl=$("timerRange"); if(trEl)trEl.value=String(state.timerDur);
+  var tvEl=$("timerVal"); if(tvEl)tvEl.textContent=state.timerDur===0?"off (no timer)":state.timerDur+"s";
+  var psEl=$("pointsSel"); if(psEl)psEl.value=String(state.points);
+  if($("view-admin").hidden)return;
   var active=document.activeElement;
-  var typingInAdmin= adminVisible && active && (active.getAttribute && (active.getAttribute("data-qi")!==null || active.id==="name1" || active.id==="name2" || active.id==="newQ"));
+  var typing=active&&(active.getAttribute&&(active.getAttribute("data-qi")!==null)||active.id==="name1"||active.id==="name2"||active.id==="newQ"||active.id==="bgImage");
   $("qCount").textContent="— "+state.questions.length+" questions";
-  if(!typingInAdmin){
+  if(!typing){
     $("name1").value=state.players[0].name; $("name2").value=state.players[1].name;
-  }
-  $("scoreLabel1").textContent=state.players[0].name+" score"; $("scoreLabel2").textContent=state.players[1].name+" score";
-  $("scoreVal1").textContent=state.players[0].score; $("scoreVal2").textContent=state.players[1].score;
-  if(!typingInAdmin){
-    $("timerSel").value=String(state.timerDur); $("pointsSel").value=String(state.points);
     var html="";
     state.questions.forEach(function(q,i){
       html+='<div class="qitem"><div class="qnum-badge">'+(i+1)+'</div><textarea data-qi="'+i+'" aria-label="Question '+(i+1)+'">'+esc(q.text)+'</textarea>'
         +'<div class="seg"><button data-set="true" data-i="'+i+'" class="'+(q.answer?"on-true":"")+'">✓ TRUE</button><button data-set="false" data-i="'+i+'" class="'+(!q.answer?"on-false":"")+'">✕ FALSE</button></div>'
         +'<button class="del" data-del="'+i+'" aria-label="Delete question '+(i+1)+'">×</button></div>';
     });
-    if(!state.questions.length) html='<p style="color:var(--muted)">No questions yet — add one below.</p>';
+    if(!state.questions.length)html='<p style="color:var(--muted)">No questions yet — add one below.</p>';
     $("qList").innerHTML=html;
-    document.querySelectorAll("[data-qi]").forEach(function(el){ el.addEventListener("change",function(){ state.questions[+el.getAttribute("data-qi")].text=el.value; render(); toast("Question updated"); }); });
-    document.querySelectorAll("[data-set]").forEach(function(el){ el.addEventListener("click",function(){ state.questions[+el.getAttribute("data-i")].answer= el.getAttribute("data-set")==="true"; render(); }); });
-    document.querySelectorAll("[data-del]").forEach(function(el){ el.addEventListener("click",function(){ state.questions.splice(+el.getAttribute("data-del"),1); if(state.idx>=state.questions.length) state.idx=Math.max(0,state.questions.length-1); render(); toast("Question deleted"); }); });
+    document.querySelectorAll("[data-qi]").forEach(function(el){el.addEventListener("change",function(){state.questions[+el.getAttribute("data-qi")].text=el.value;render();toast("Question updated");});});
+    document.querySelectorAll("[data-set]").forEach(function(el){el.addEventListener("click",function(){state.questions[+el.getAttribute("data-i")].answer=el.getAttribute("data-set")==="true";render();});});
+    document.querySelectorAll("[data-del]").forEach(function(el){el.addEventListener("click",function(){state.questions.splice(+el.getAttribute("data-del"),1);if(state.idx>=state.questions.length)state.idx=Math.max(0,state.questions.length-1);render();toast("Question deleted");});});
   }
+  $("scoreLabel1").textContent=state.players[0].name+" score"; $("scoreLabel2").textContent=state.players[1].name+" score";
+  $("scoreVal1").textContent=state.players[0].score; $("scoreVal2").textContent=state.players[1].score;
+  document.querySelectorAll("#orderSeg button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-order")===state.orderMode);});
+  $("orderHint").textContent=state.orderMode==="random"?"Questions are shuffled fresh every time you press Start Game.":"Questions play in the order listed on the left, 1 → "+state.questions.length+".";
+  renderLinks();
 }
-function render(){
-  $("stageHost").innerHTML=hostHTML();
-  $("soloHost").innerHTML=hostHTML();
-  $("stageFinal").innerHTML=finalHTML();
-  $("soloFinal").innerHTML=finalHTML();
-  $("stageP1").innerHTML=playerHTML(0,false);
-  $("stageP2").innerHTML=playerHTML(1,false);
-  $("soloP1").innerHTML=playerHTML(0,true);
-  $("soloP2").innerHTML=playerHTML(1,true);
-  var answered=state.answers.filter(function(a){return a!==null}).length;
-  $("answeredPill").textContent= state.phase==="playing"? answered+" / 2 answered" : state.phase==="reveal"? "Answer revealed" : state.phase==="finished"? "Game finished" : "In lobby — not started";
-  $("topActions").innerHTML= live.mode==="player" ? '<button class="btn" onclick="switchView(\'join\')">📱 My Controller</button>' : state.phase==="lobby"? '<button class="btn primary" onclick="startGame()">▶ Start Game</button><button class="btn" onclick="goAdmin()">⚙️ Edit Questions</button>' : '<button class="btn" onclick="resetGame()">↺ Reset Game</button>';
-  renderAdmin(); updateLiveUI();
-  if(live.mode==="player") renderLivePlayer();
-  if(live.mode==="host") queueBroadcast();
+function renderLinks(){
+  var here=""; try{here=location.href.split("#")[0];}catch(e){}
+  var items=[
+    ["🖥 Host — main screen","host","https://quizgame26.vercel.app/"],
+    ["Player 1 screen","player1","https://quizgame26.vercel.app/Player1"],
+    ["Player 2 screen","player2","https://quizgame26.vercel.app/Player2"],
+    ["⚙ Admin screen","admin","https://quizgame26.vercel.app/Admin"]
+  ];
+  $("linkList").innerHTML=items.map(function(it){
+    return '<div class="linkrow"><div><b style="font-size:14px">'+it[0]+'</b><br><code>'+esc(it[2])+'</code></div><span style="display:flex;gap:6px;flex-wrap:wrap"><a class="btn small" href="'+esc(it[2])+'" target="_blank" rel="noopener">Open live ↗</a><a class="btn small" href="'+esc(here)+"#/"+it[1]+'">Open here →</a></span></div>';
+  }).join("");
 }
-function stopTimer(){ if(timerId){clearInterval(timerId); timerId=null;} }
-function startTimer(){
-  stopTimer();
-  if(state.timerDur===0 || state.phase!=="playing") return;
-  state.timeLeft=state.timerDur;
-  timerId=setInterval(function(){
-    state.timeLeft--;
-    if(state.timeLeft<=0){ state.timeLeft=0; revealAnswer(); return; }
-    $("stageHost").innerHTML=hostHTML(); $("soloHost").innerHTML=hostHTML();
-    broadcastTick();
-  },1000);
+
+/* ================= DESIGNER ================= */
+function miniElHTML(screen,key,e){
+  var sample="";
+  if(screen==="host"){
+    if(key==="badge")sample='<span class="mini-badge">● LIVE · Q1</span>';
+    else if(key==="timer")sample='<div class="mini-timer">15</div>';
+    else if(key==="question")sample='<div class="mini-q">'+esc((getQ()&&state.phase!=="lobby"?getQ().text:"Your question appears here"))+'</div>';
+    else sample='<div class="mini-score"><small>'+esc(state.players[key==="score1"?0:1].name)+'</small><b>'+state.players[key==="score1"?0:1].score+'</b></div>';
+  } else {
+    var idx=screen==="player1"?0:1;
+    if(key==="header")sample='<div class="mini-score"><small>'+esc(state.players[idx].name)+' · Player '+(idx+1)+'</small><b>'+state.players[idx].score+' pts</b></div>';
+    else if(key==="buttons")sample='<div class="mini-tf"><span style="background:var(--green)">✓ TRUE</span><span style="background:var(--red)">✕ FALSE</span></div>';
+    else sample='<span class="mini-badge">Status message</span>';
+  }
+  return '<div class="d-el '+(selectedEl===key?"sel":"")+'" data-el="'+key+'" style="left:'+e.x+'%;top:'+e.y+'%;font-size:'+(e.s/100)+'em;'+(e.show?"":"opacity:.35")+'">'+sample+'<div style="font-size:9px;font-weight:800;letter-spacing:.08em;margin-top:4px;color:#FFB020;text-transform:uppercase">'+esc(e.label)+'</div></div>';
 }
-function startGame(){
-  if(live.mode==="player"){ toast("Only the host can start the game"); return; }
-  if(!state.questions.length){ toast("Add at least one question in Admin first"); goAdmin(); return; }
-  state.players.forEach(function(p){p.score=0;p.streak=0;p.correct=0});
-  state.idx=0; state.answers=[null,null]; state.lastGain=[0,0]; state.phase="playing"; state.timeLeft=state.timerDur;
-  render(); startTimer(); toast("Game started — Question 1 is live!");
+function renderDesigner(){
+  var d=design[designTab], cv=$("designCanvas");
+  cv.className="canvas"+(designTab==="host"?"":" portrait");
+  cv.style.color=d.text; cv.style.setProperty("--amber",d.accent);
+  var h='<div class="canvas-bg" style="'+stageBgStyle(d)+'"></div><div class="canvas-shade" style="opacity:'+(d.overlay/100)+'"></div>';
+  Object.keys(d.els).forEach(function(k){h+=miniElHTML(designTab,k,d.els[k]);});
+  cv.innerHTML=h;
+  cv.querySelectorAll(".d-el").forEach(function(el){attachDrag(el,cv);el.addEventListener("pointerdown",function(){selectedEl=el.getAttribute("data-el");renderInspector();cv.querySelectorAll(".d-el").forEach(function(x){x.classList.toggle("sel",x.getAttribute("data-el")===selectedEl)});});});
+  /* background controls */
+  $("bgMode").value=d.bgMode; $("bg1").value=d.bg1; $("bg2").value=d.bg2;
+  if(document.activeElement!==$("bgImage"))$("bgImage").value=d.bgImage&&d.bgImage.indexOf("data:")===0?"(uploaded image)":(d.bgImage||"");
+  $("bgOverlay").value=d.overlay; $("overlayVal").textContent=d.overlay+"%";
+  $("accentCol").value=d.accent; $("textCol").value=d.text;
+  $("presetRow").innerHTML=PRESETS.map(function(p,i){return '<button class="preset" title="'+p.name+'" data-preset="'+i+'" style="background:linear-gradient(135deg,'+p.bg1+','+p.bg2+')"></button>';}).join("");
+  document.querySelectorAll("[data-preset]").forEach(function(b){b.addEventListener("click",function(){var p=PRESETS[+b.getAttribute("data-preset")];var dd=design[designTab];dd.bg1=p.bg1;dd.bg2=p.bg2;dd.bgColor=p.bg1;if(dd.bgMode==="color")dd.bgMode="gradient";designChanged();toast(p.name+" background applied to "+designTabLabel());});});
+  renderInspector();
 }
-function answer(i, val){
-  if(live.mode==="player"){ if(i===live.mySlot) playerSendAnswer(val); return; }
-  if(state.phase!=="playing" || state.answers[i]!==null) return;
-  state.answers[i]=val; render();
-  if(state.answers[0]!==null && state.answers[1]!==null){ toast("Both players locked in — host can reveal!"); }
+function designTabLabel(){return designTab==="host"?"Host screen":designTab==="player1"?"Player 1 screen":"Player 2 screen"}
+function renderInspector(){
+  var box=$("elInspector"), d=design[designTab];
+  if(!selectedEl||!d.els[selectedEl]){box.innerHTML='<p style="color:var(--muted);font-size:13.5px;margin:0">👆 Tap an element on the canvas to select it — then drag it, or fine-tune it here.</p>';return;}
+  var e=d.els[selectedEl];
+  box.innerHTML='<h3 style="font-size:15px">Selected: '+esc(e.label)+'</h3>'
+   +'<div class="row3" style="margin-top:10px">'
+   +'<div class="field"><label>Left ↔ — '+Math.round(e.x)+'%</label><input type="range" id="elX" min="4" max="96" value="'+e.x+'"></div>'
+   +'<div class="field"><label>Top ↕ — '+Math.round(e.y)+'%</label><input type="range" id="elY" min="5" max="95" value="'+e.y+'"></div>'
+   +'<div class="field"><label>Size — '+e.s+'%</label><input type="range" id="elS" min="60" max="170" step="5" value="'+e.s+'"></div></div>'
+   +'<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap"><span style="font-weight:700;font-size:14px">Show this element on the screen:</span><span class="seg"><button id="elShowOn">Shown</button><button id="elShowOff">Hidden</button></span></div>';
+  $("elX").addEventListener("input",function(ev){e.x=+ev.target.value;syncCanvasEl();});
+  $("elY").addEventListener("input",function(ev){e.y=+ev.target.value;syncCanvasEl();});
+  $("elS").addEventListener("input",function(ev){e.s=+ev.target.value;syncCanvasEl();});
+  $("elShowOn").className=e.show?"on":""; $("elShowOff").className=!e.show?"on":"";
+  $("elShowOn").addEventListener("click",function(){e.show=true;designChanged();});
+  $("elShowOff").addEventListener("click",function(){e.show=false;designChanged();});
+  function syncCanvasEl(){var el=$("designCanvas").querySelector('[data-el="'+selectedEl+'"]');if(el){el.style.left=e.x+"%";el.style.top=e.y+"%";el.style.fontSize=(e.s/100)+"em";}renderInspectorLabels();queueDesignRender();}
+  function renderInspectorLabels(){/* keep slider drag smooth: labels update on release via designChanged */}
 }
-function revealAnswer(){
-  if(live.mode==="player" || state.phase!=="playing") return;
-  stopTimer(); var q=state.questions[state.idx]; if(!q) return;
-  state.lastGain=[0,0];
-  state.answers.forEach(function(a,i){
-    if(a!==null && a===q.answer){ state.lastGain[i]=state.points; state.players[i].score+=state.points; state.players[i].streak++; state.players[i].correct++; }
-    else { state.players[i].streak=0; }
+var designRenderTimer=null;
+function queueDesignRender(){if(designRenderTimer)clearTimeout(designRenderTimer);designRenderTimer=setTimeout(function(){render();queueBroadcast();},350);}
+function designChanged(){renderDesigner();render();queueBroadcast();}
+function attachDrag(el,cv){
+  el.addEventListener("pointerdown",function(ev){
+    ev.preventDefault();
+    var key=el.getAttribute("data-el"), e=design[designTab].els[key];
+    var rect=cv.getBoundingClientRect();
+    function move(me){
+      var x=((me.clientX-rect.left)/rect.width)*100, y=((me.clientY-rect.top)/rect.height)*100;
+      e.x=Math.max(4,Math.min(96,x)); e.y=Math.max(5,Math.min(95,y));
+      el.style.left=e.x+"%"; el.style.top=e.y+"%";
+    }
+    function up(){window.removeEventListener("pointermove",move);window.removeEventListener("pointerup",up);renderInspector();render();queueBroadcast();}
+    window.addEventListener("pointermove",move); window.addEventListener("pointerup",up);
   });
-  state.phase="reveal"; render();
 }
-function nextQuestion(){ if(live.mode==="player") return; state.idx++; state.answers=[null,null]; state.lastGain=[0,0]; state.phase="playing"; state.timeLeft=state.timerDur; render(); startTimer(); }
-function finishGame(){ if(live.mode==="player") return; state.phase="finished"; stopTimer(); render(); }
-function resetGame(){ if(live.mode==="player") return; stopTimer(); state.phase="lobby"; state.idx=0; state.answers=[null,null]; state.lastGain=[0,0]; state.timeLeft=state.timerDur; render(); toast("Back to lobby — scores kept. Start Game resets scores."); }
-function resetPlayer(i){
-  var kickedClient= live.mode==="host" ? live.occupied[i] : null;
-  if(live.mode==="host"){ live.occupied[i]=null; if(kickedClient && live.channel){ try{ live.channel.send({type:"broadcast",event:"kicked",payload:{clientId:kickedClient}}); }catch(e){} } state.players[i].name="Player "+(i+1); }
-  state.players[i].score=0; state.players[i].streak=0; state.players[i].correct=0; if(state.answers) state.answers[i]=null;
-  render(); toast(state.players[i].name+" reset to 0 — slot freed");
-}
-function goAdmin(){ switchView("admin"); }
-function switchView(v){
-  ["stage","host","join","p1","p2","admin"].forEach(function(k){ var el=$("view-"+k); if(el) el.hidden = k!==v; });
-  document.querySelectorAll("#tabs button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-view")===v); });
-  window.scrollTo({top:0,behavior:"smooth"});
-  if(v==="join") renderLivePlayer();
-}
-document.querySelectorAll("#tabs button").forEach(function(b){ b.addEventListener("click",function(){ switchView(b.getAttribute("data-view")); }); });
-$("name1").addEventListener("change",function(e){ state.players[0].name=e.target.value.trim()||"Player 1"; render(); });
-$("name2").addEventListener("change",function(e){ state.players[1].name=e.target.value.trim()||"Player 2"; render(); });
-$("timerSel").addEventListener("change",function(e){ state.timerDur=+e.target.value; state.timeLeft=state.timerDur||15; render(); toast("Timer set to "+(state.timerDur===0?"off":state.timerDur+"s")); });
-$("pointsSel").addEventListener("change",function(e){ state.points=+e.target.value; render(); });
-document.querySelectorAll("[data-adj]").forEach(function(b){ b.addEventListener("click",function(){ var parts=b.getAttribute("data-adj").split(","); var i=+parts[0], d=+parts[1]; state.players[i].score=Math.max(0, state.players[i].score+d); render(); toast(state.players[i].name+" score: "+state.players[i].score); }); });
-$("resetScoresBtn").addEventListener("click",function(){ state.players.forEach(function(p){p.score=0;p.correct=0;p.streak=0}); render(); toast("Scores reset to 0"); });
-$("resetP1Btn").addEventListener("click",function(){ resetPlayer(0); });
-$("resetP2Btn").addEventListener("click",function(){ resetPlayer(1); });
-$("resetPlayersBtn").addEventListener("click",function(){
-  if(live.mode==="host"){ live.occupied.forEach(function(cid){ if(cid && live.channel){ try{ live.channel.send({type:"broadcast",event:"kicked",payload:{clientId:cid}}); }catch(e){} } }); live.occupied=[null,null]; }
-  state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}]; state.answers=[null,null]; render(); toast("Both players reset — iPad slots freed");
+document.querySelectorAll("#designTabs button").forEach(function(b){b.addEventListener("click",function(){designTab=b.getAttribute("data-dt");selectedEl=null;document.querySelectorAll("#designTabs button").forEach(function(x){x.classList.toggle("on",x===b)});renderDesigner();});});
+$("bgMode").addEventListener("change",function(e){design[designTab].bgMode=e.target.value;designChanged();});
+$("bg1").addEventListener("input",function(e){var d=design[designTab];d.bg1=e.target.value;d.bgColor=e.target.value;designChangedSoft();});
+$("bg2").addEventListener("input",function(e){design[designTab].bg2=e.target.value;designChangedSoft();});
+$("accentCol").addEventListener("input",function(e){design[designTab].accent=e.target.value;designChangedSoft();});
+$("textCol").addEventListener("input",function(e){design[designTab].text=e.target.value;designChangedSoft();});
+$("bgOverlay").addEventListener("input",function(e){design[designTab].overlay=+e.target.value;$("overlayVal").textContent=e.target.value+"%";designChangedSoft();});
+$("bgImage").addEventListener("change",function(e){var v=e.target.value.trim();if(v&&v!=="(uploaded image)"){design[designTab].bgImage=v;design[designTab].bgMode="image";designChanged();toast("Background image set — check the Host/Player screen");}});
+$("bgFile").addEventListener("change",function(e){
+  var f=e.target.files&&e.target.files[0]; if(!f)return;
+  var r=new FileReader();
+  r.onload=function(){design[designTab].bgImage=String(r.result);design[designTab].bgMode="image";designChanged();toast("Background image uploaded for "+designTabLabel());};
+  r.readAsDataURL(f);
 });
-$("resetGameBtn").addEventListener("click",function(){ state.players.forEach(function(p){p.score=0;p.streak=0;p.correct=0}); resetGame(); toast("Whole game reset"); });
-$("restoreBtn").addEventListener("click",function(){ state.questions=JSON.parse(JSON.stringify(DEFAULT_QS)); state.idx=0; render(); toast("Example questions restored"); });
-$("newTrue").addEventListener("click",function(){ state.newAnswer=true; $("newTrue").className="on-true"; $("newFalse").className=""; });
-$("newFalse").addEventListener("click",function(){ state.newAnswer=false; $("newFalse").className="on-false"; $("newTrue").className=""; });
-$("addQBtn").addEventListener("click",function(){ var v=$("newQ").value.trim(); if(!v){ toast("Type a question first"); return; } state.questions.push({text:v,answer:state.newAnswer}); $("newQ").value=""; render(); toast("Question added — "+state.questions.length+" total"); });
-// Deep link: ?room=4821 opens the Join tab pre-filled
-try{
-  var params=new URLSearchParams(window.location.search);
-  var r=params.get("room")||params.get("code");
-  if(r){ var nc=normalizeCode(r); if($("joinCode")) $("joinCode").value=nc; if($("joinCode2")) $("joinCode2").value=nc; switchView("join"); }
-}catch(e){}
+var softTimer=null;
+function designChangedSoft(){if(softTimer)clearTimeout(softTimer);softTimer=setTimeout(function(){renderDesigner();render();queueBroadcast();},200);}
+$("resetLayoutBtn").addEventListener("click",function(){design[designTab].els=clone(designTab==="host"?HOST_ELS:PLAYER_ELS);selectedEl=null;designChanged();toast(designTabLabel()+" layout reset");});
+$("resetAllDesignBtn").addEventListener("click",function(){design=clone(DEFAULT_DESIGN);selectedEl=null;designChanged();toast("All screen designs reset");});
+
+/* ================= NAV / ROUTING ================= */
+var VIEWS=["host","p1","p2","join","admin"];
+function switchView(v){
+  /* One screen at a time — the URL hash always names the screen being shown. */
+  VIEWS.forEach(function(k){var el=$("view-"+k);if(el)el.hidden=k!==v;});
+  try{history.replaceState(null,"","#/"+(v==="p1"?"player1":v==="p2"?"player2":v));}catch(e){}
+  window.scrollTo({top:0});
+  if(v==="admin"){renderAdmin();renderDesigner();}
+  render();
+}
+function routeFromURL(){
+  /* Each screen has its own route: /Player1, /Player2, /Admin (path),
+     #/player1, #/player2, #/admin (hash), or ?screen=player1. Root = Host. */
+  var v=null;
+  try{
+    var seg=function(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");};
+    var hashSeg=seg((location.hash||"").replace(/^#\/?/,"").split(/[?/]/)[0]);
+    var pathSegs=location.pathname.split("/").map(seg).filter(function(x){return !!x;});
+    var lastPath=pathSegs.length?pathSegs[pathSegs.length-1]:"";
+    var q=new URLSearchParams(location.search);
+    var querySeg=seg(q.get("screen")||q.get("view")||"");
+    var cand=[hashSeg,querySeg,lastPath];
+    for(var i=0;i<cand.length&&!v;i++){
+      var c=cand[i];
+      if(c==="player1"||c==="p1")v="p1";
+      else if(c==="player2"||c==="p2")v="p2";
+      else if(c==="admin")v="admin";
+      else if(c==="join"||c==="ipadjoin")v="join";
+      else if(c==="host"||c==="stage"||c==="main")v="host";
+    }
+    var r=q.get("room")||q.get("code");
+    if(r){var nc=normalizeCode(r);if($("joinCode2"))$("joinCode2").value=nc;if(!v)v="join";}
+  }catch(e){}
+  return v;
+}
+window.addEventListener("hashchange",function(){var v=routeFromURL();if(v)switchView(v);});
+
+/* ================= ADMIN WIRING ================= */
+$("name1").addEventListener("change",function(e){state.players[0].name=e.target.value.trim()||"Player 1";render();});
+$("name2").addEventListener("change",function(e){state.players[1].name=e.target.value.trim()||"Player 2";render();});
+document.querySelectorAll("#orderSeg button").forEach(function(b){b.addEventListener("click",function(){state.orderMode=b.getAttribute("data-order");render();toast(state.orderMode==="random"?"🔀 Random order — questions shuffle at Start":"➡ Sequence order — questions play in list order");});});
+$("timerRange").addEventListener("input",function(e){state.timerDur=+e.target.value;if(state.phase!=="playing")state.timeLeft=state.timerDur;$("timerVal").textContent=state.timerDur===0?"off (no timer)":state.timerDur+"s";render();});
+$("timerRange").addEventListener("change",function(){render();toast("Timer set to "+(state.timerDur===0?"off":state.timerDur+"s"));});
+$("pointsSel").addEventListener("change",function(e){state.points=+e.target.value;render();toast("Points per correct answer: "+state.points);});
+document.querySelectorAll("[data-adj]").forEach(function(b){b.addEventListener("click",function(){var parts=b.getAttribute("data-adj").split(",");var i=+parts[0];state.players[i].score=Math.max(0,state.players[i].score+(+parts[1]));render();toast(state.players[i].name+" score: "+state.players[i].score);});});
+$("resetScoresBtn").addEventListener("click",function(){state.players.forEach(function(p){p.score=0;p.correct=0;p.streak=0;});render();toast("Scores reset to 0");});
+$("resetP1Btn").addEventListener("click",function(){resetPlayer(0);});
+$("resetP2Btn").addEventListener("click",function(){resetPlayer(1);});
+$("resetPlayersBtn").addEventListener("click",function(){
+  if(live.mode==="host"){live.occupied.forEach(function(cid){if(cid&&live.channel){try{live.channel.send({type:"broadcast",event:"kicked",payload:{clientId:cid}});}catch(e){}}});live.occupied=[null,null];}
+  state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];state.answers=[null,null];render();toast("Both players reset — iPad slots freed");
+});
+$("resetGameBtn").addEventListener("click",function(){state.players.forEach(function(p){p.score=0;p.correct=0;p.streak=0;});state.active=[];resetGame();toast("Whole game reset");});
+$("restoreBtn").addEventListener("click",function(){state.questions=clone(DEFAULT_QS);state.idx=0;render();toast("Example questions restored");});
+$("newTrue").addEventListener("click",function(){state.newAnswer=true;$("newTrue").className="on-true";$("newFalse").className="";});
+$("newFalse").addEventListener("click",function(){state.newAnswer=false;$("newFalse").className="on-false";$("newTrue").className="";});
+$("addQBtn").addEventListener("click",function(){var v=$("newQ").value.trim();if(!v){toast("Type a question first");return;}state.questions.push({text:v,answer:state.newAnswer});$("newQ").value="";render();toast("Question added — "+state.questions.length+" total");});
+
+/* ================= INIT ================= */
 render(); updateLiveUI();
+var initialView=routeFromURL();
+if(initialView&&initialView!=="host")switchView(initialView);
+else{render();}
 </script>
 </body>
 </html>
