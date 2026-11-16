@@ -346,7 +346,13 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <div class="field"><label>When time runs out</label>
           <div class="seg" id="timeoutSeg"><button data-timeout="reveal">Auto-reveal answer</button><button data-timeout="wait">Wait for Admin</button></div>
         </div>
-        <div class="field"><label>Points per correct answer</label><select id="pointsSel"><option value="50">50 points</option><option value="100" selected>100 points</option><option value="150">150 points</option><option value="200">200 points</option><option value="250">250 points</option><option value="500">500 points</option></select></div>
+        <div class="field"><label>Points per correct answer — <span id="pointsVal">100 points</span></label>
+          <input type="number" id="pointsInput" min="0" max="10000" step="5" value="100" inputmode="numeric" aria-label="Points per correct answer">
+          <div class="seg" id="pointsPresets" style="margin-top:8px">
+            <button type="button" data-points-preset="10">10</button><button type="button" data-points-preset="25">25</button><button type="button" data-points-preset="50">50</button><button type="button" data-points-preset="100">100</button><button type="button" data-points-preset="200">200</button><button type="button" data-points-preset="500">500</button><button type="button" data-points-preset="1000">1000</button>
+          </div>
+          <p style="font-size:12.5px;color:var(--muted);margin:7px 0 0">Type <b style="color:var(--text)">any number</b> you want — that's how many points a player earns for <b style="color:var(--text)">one correct answer</b>. Tap a preset for a quick pick. It applies from the next reveal (a question already revealed keeps the points it was scored with), shows on the Host lobby as “X points each”, broadcasts live to the iPads, and is included when you Save. Set it to 0 for a no-score round. The − / + buttons in the Players panel below also step by this amount, so you can fix a score by the same value.</p>
+        </div>
         <div class="divider"></div>
         <div class="field"><label>TRUE / FALSE button style</label>
           <div class="seg" id="btnStyleSeg"><button data-bstyle="classic">Classic blocks</button><button data-bstyle="pill">Pill</button><button data-bstyle="soft">Soft 3D</button><button data-bstyle="outline">Outline</button><button data-bstyle="sharp">Sharp</button></div>
@@ -368,8 +374,9 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <p>Rename players, adjust scores, or reset a player. Resetting a live player also frees their iPad slot so they can rejoin.</p>
         <div class="field"><label>Player 1 name</label><input id="name1" maxlength="18"></div>
         <div class="field"><label>Player 2 name</label><input id="name2" maxlength="18"></div>
-        <div class="kv"><span id="scoreLabel1">Player 1 score</span><span class="scoreadj"><button data-adj="0,-100" aria-label="Player 1 minus 100">−</button><b id="scoreVal1">0</b><button data-adj="0,100" aria-label="Player 1 plus 100">+</button></span></div>
-        <div class="kv"><span id="scoreLabel2">Player 2 score</span><span class="scoreadj"><button data-adj="1,-100" aria-label="Player 2 minus 100">−</button><b id="scoreVal2">0</b><button data-adj="1,100" aria-label="Player 2 plus 100">+</button></span></div>
+        <div class="kv"><span id="scoreLabel1">Player 1 score</span><span class="scoreadj"><button data-adj="0,-100" aria-label="Player 1 minus points per answer">−</button><b id="scoreVal1">0</b><button data-adj="0,100" aria-label="Player 1 plus points per answer">+</button></span></div>
+        <div class="kv"><span id="scoreLabel2">Player 2 score</span><span class="scoreadj"><button data-adj="1,-100" aria-label="Player 2 minus points per answer">−</button><b id="scoreVal2">0</b><button data-adj="1,100" aria-label="Player 2 plus points per answer">+</button></span></div>
+        <p style="font-size:12.5px;color:var(--muted);margin:8px 0 0" id="scoreStepHint">− / + step: 100 points (matches “Points per correct answer” above — change that value and this step changes too).</p>
         <div class="divider"></div>
         <div class="stack">
           <button class="btn" id="resetScoresBtn">↺ Reset scores only</button>
@@ -811,7 +818,11 @@ function renderAdmin(){
      Admin screen is hidden — so the slider/points can never show stale defaults. */
   var trEl=$("timerRange"); if(trEl)trEl.value=String(state.timerDur);
   var tvEl=$("timerVal"); if(tvEl)tvEl.textContent=state.timerDur===0?"off (no timer)":state.timerDur+"s";
-  var psEl=$("pointsSel"); if(psEl)psEl.value=String(state.points);
+  var psEl=$("pointsInput"); if(psEl&&document.activeElement!==psEl)psEl.value=String(state.points);
+  var pvEl=$("pointsVal"); if(pvEl)pvEl.textContent=state.points+" point"+(state.points===1?"":"s");
+  document.querySelectorAll("[data-points-preset]").forEach(function(b){b.classList.toggle("on",+b.getAttribute("data-points-preset")===state.points);});
+  document.querySelectorAll("[data-adj]").forEach(function(b){var parts=b.getAttribute("data-adj").split(",");var pi=+parts[0];var dir=(+parts[1])<0?-1:1;var step=state.points===0?10:state.points;b.setAttribute("data-adj",pi+","+(dir*step));b.setAttribute("aria-label","Player "+(pi+1)+(dir<0?" minus ":" plus ")+step+" points");b.title=(dir<0?"−":"+")+step+" points";});
+  var sshEl=$("scoreStepHint"); if(sshEl)sshEl.textContent="− / + step: "+(state.points===0?10:state.points)+" points (matches “Points per correct answer” above — change that value and this step changes too).";
   var plEl=$("phaseLabel"); if(plEl)plEl.textContent="Phase: "+state.phase.charAt(0).toUpperCase()+state.phase.slice(1)+(state.paused?" · ⏸ Paused":"")+" · Q "+Math.min(state.idx+1,getTotal())+" / "+getTotal();
   var cpEl=$("ctlPause"); if(cpEl)cpEl.textContent=state.paused?"▶ Resume Timer":"⏸ Pause Timer";
   document.querySelectorAll("#timerStyleSeg button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-tstyle")===state.timerStyle);});
@@ -1003,7 +1014,30 @@ $("name2").addEventListener("change",function(e){state.players[1].name=e.target.
 document.querySelectorAll("#orderSeg button").forEach(function(b){b.addEventListener("click",function(){state.orderMode=b.getAttribute("data-order");render();toast(state.orderMode==="random"?"🔀 Random order — questions shuffle at Start":"➡ Sequence order — questions play in list order");});});
 $("timerRange").addEventListener("input",function(e){state.timerDur=+e.target.value;if(state.phase!=="playing")state.timeLeft=state.timerDur;$("timerVal").textContent=state.timerDur===0?"off (no timer)":state.timerDur+"s";render();});
 $("timerRange").addEventListener("change",function(){render();toast("Timer set to "+(state.timerDur===0?"off":state.timerDur+"s"));});
-$("pointsSel").addEventListener("change",function(e){state.points=+e.target.value;render();toast("Points per correct answer: "+state.points);});
+function setPoints(v,announce){
+  var n=Math.round(Number(v));
+  if(isNaN(n))n=100;
+  n=Math.max(0,Math.min(10000,n));
+  state.points=n;
+  var inp=$("pointsInput"); if(inp&&document.activeElement!==inp)inp.value=String(n);
+  var pv=$("pointsVal"); if(pv)pv.textContent=n+" point"+(n===1?"":"s");
+  render();
+  if(announce)toast(n===0?"Points per correct answer: 0 — correct answers score nothing this round":"Points per correct answer set to "+n+" — one correct answer = "+n+" points");
+}
+$("pointsInput").addEventListener("input",function(e){
+  var n=Math.round(Number(e.target.value));
+  if(isNaN(n))return;
+  n=Math.max(0,Math.min(10000,n));
+  state.points=n;
+  var pv=$("pointsVal"); if(pv)pv.textContent=n+" point"+(n===1?"":"s");
+  document.querySelectorAll("[data-points-preset]").forEach(function(b){b.classList.toggle("on",+b.getAttribute("data-points-preset")===n);});
+  var ssh=$("scoreStepHint"); if(ssh)ssh.textContent="− / + step: "+(n===0?10:n)+" points (matches “Points per correct answer” above — change that value and this step changes too).";
+  /* update host lobby text + broadcast without stealing focus from the input */
+  var hs=$("hostStage"); if(hs){hs.innerHTML=hostStageHTML();applyAccent(hs,design.host);}
+  queueBroadcast();
+});
+$("pointsInput").addEventListener("change",function(e){setPoints(e.target.value,true);});
+document.querySelectorAll("[data-points-preset]").forEach(function(b){b.addEventListener("click",function(){setPoints(+b.getAttribute("data-points-preset"),true);var inp=$("pointsInput");if(inp)inp.value=String(state.points);});});
 document.querySelectorAll("[data-adj]").forEach(function(b){b.addEventListener("click",function(){var parts=b.getAttribute("data-adj").split(",");var i=+parts[0];state.players[i].score=Math.max(0,state.players[i].score+(+parts[1]));render();toast(state.players[i].name+" score: "+state.players[i].score);});});
 $("resetScoresBtn").addEventListener("click",function(){state.players.forEach(function(p){p.score=0;p.correct=0;p.streak=0;});render();toast("Scores reset to 0");});
 $("resetP1Btn").addEventListener("click",function(){resetPlayer(0);});
