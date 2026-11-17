@@ -193,7 +193,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
 .tf.style-outline button{background:transparent !important;border:3px solid currentColor;backdrop-filter:blur(6px)}
 .tf.style-outline button.tbtn{color:var(--green)} .tf.style-outline button.fbtn{color:var(--red)}
 .tf.style-soft button{box-shadow:inset 0 -6px 0 rgba(0,0,0,.22),0 10px 28px rgba(0,0,0,.3)}
-.savebar{position:sticky;top:66px;z-index:30;display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--text);color:var(--bg);border-radius:16px;padding:12px 14px;margin-bottom:14px;box-shadow:0 10px 30px rgba(0,0,0,.22)}
+.savebar{position:sticky;bottom:14px;z-index:30;display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--text);color:var(--bg);border-radius:16px;padding:14px;margin-top:16px;margin-bottom:0;box-shadow:0 12px 34px rgba(0,0,0,.30)}
 .savebar b{font-family:Archivo;font-size:15px;margin-right:auto}
 .savebar .btn{background:transparent;color:var(--bg);border-color:color-mix(in srgb,var(--bg) 35%,transparent)}
 .savebar .btn.primary{background:var(--amber);border-color:var(--amber);color:#111}
@@ -303,13 +303,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
 <div class="wrap">
   <div class="intro">
     <h1>Admin — design every screen, run the quiz</h1>
-    <p>You have full control here: start, end, restart and reset the game, design every screen with logos and text, then save. The Host screen itself has no tabs or buttons — it is a clean full-screen display only.</p>
-  </div>
-  <div class="savebar">
-    <b>💾 Save = publish live</b>
-    <button class="btn small primary" id="saveAllBtn">Save All Screens &amp; Settings</button>
-    <button class="btn small" id="saveScreenBtn">Save This Screen Only</button>
-    <span id="saveStatus" style="font-size:12.5px;font-weight:700;opacity:.85">Screen edits stay drafts until you Save — Save publishes them live to the Host &amp; Player screens. No file is downloaded.</span>
+    <p>You have full control here: start, end, restart and reset the game, design every screen with logos and text, then use <b style="color:var(--text)">Go Live at the bottom</b> to publish. The Host screen itself has no tabs or buttons — it is a clean full-screen display only.</p>
   </div>
   <div class="admin-shell">
     <nav class="admin-menu" id="adminMenu" aria-label="Admin sections">
@@ -324,7 +318,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <!-- DESIGNER -->
       <div class="panel">
         <h3>🎨 Screen designer</h3>
-        <p>Drag elements on the canvas to move them; tap one to resize or hide it. The canvas previews every change live — the real screens only update when you press <b style="color:var(--text)">Save</b>.</p>
+        <p>Drag elements on the canvas to move them; tap one to resize or hide it. The canvas previews every change live — the real screens only update when you tap <b style="color:var(--text)">Go Live at the bottom of Admin</b>.</p>
         <p id="publishStatus" style="font-weight:700;font-size:13px;margin:0 0 10px"></p>
         <div class="design-tabs" id="designTabs">
           <button data-dt="host" class="on">🖥 Host screen</button>
@@ -490,11 +484,17 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <h3>About this app</h3>
         <p><b style="color:var(--text)">True or False Quiz Game</b> — a two-player quiz for one big screen and two iPads. The Host screen shows the question, timer, scores and the winner; each player gets their own screen with just two big TRUE / FALSE buttons.</p>
         <p><b style="color:var(--text)">How a live game runs:</b> in <b style="color:var(--text)">Live</b>, press “Create Live Room for iPads”, then give the players the room code (it only ever appears here in Admin). Players open their Player link, enter the code and their name, and their taps count live on the Host screen. Start, reveal, end and reset are all controlled from Live. The <b style="color:var(--text)">Live monitor</b> at the top of Live shows each player's screen link, Connected / Disconnected status, score, correct count, streak, current answer, answer time, recent answers, plus the current question and the timer.</p>
-        <p><b style="color:var(--text)">Designing:</b> in <b style="color:var(--text)">Screens</b> you edit a draft of each screen — the canvas previews every change as you make it, but the Host and Player screens keep showing the last saved design until you press <b style="color:var(--text)">Save</b>. Save means one thing only: it publishes the design live to all screens at once. There is no download or file export.</p>
+        <p><b style="color:var(--text)">Designing:</b> in <b style="color:var(--text)">Screens</b> you edit a draft of each screen — the canvas previews every change as you make it, but the Host and Player screens keep showing the last published design until you tap <b style="color:var(--text)">Go Live at the bottom of Admin</b>. Go Live means one thing only: it publishes the design live to all screens at once.</p>
         <p style="margin-bottom:0"><b style="color:var(--text)">Screens:</b> Host (main address) · Player 1 (/Player1) · Player 2 (/Player2) · Admin (/Admin). No accounts or installs — everything runs in the browser.</p>
       </div>
       </div>
     </div>
+  </div>
+  <div class="savebar" id="saveBarBottom">
+    <b>🚀 Go Live — publish to screens</b>
+    <button class="btn small primary" id="saveAllBtn">Publish All — Go Live</button>
+    <button class="btn small" id="saveScreenBtn">Publish This Screen — Go Live</button>
+    <span id="saveStatus" style="font-size:12.5px;font-weight:700;opacity:.9">Edits are drafts until you Go Live. Tapping Go Live sends them straight to the Host &amp; Player screens instantly — no file, no download.</span>
   </div>
 </div>
 </section>
@@ -582,10 +582,16 @@ function getQ(){return state.active[state.idx]||state.questions[state.idx]||null
 
 /* ================= LIVE (Supabase Realtime Broadcast) ================= */
 var supa=null;
-var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null};
+var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,lobbyChannel:null,lobbyTimer:null};
 var lastHostState=null, liveMyAnswer=null, liveMyIdx=-1, broadcastQueued=false;
+var designPublished=false, hasRemoteDesign=false; /* set when THIS tab has pressed Save, or has received a published design — such tabs can answer design requests from freshly opened screens */
 function getSupa(){ if(supa) return supa; if(!window.supabase||!window.supabase.createClient) return null; try{supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);}catch(e){supa=null;} return supa; }
 function normalizeCode(s){return String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,"").replace(/^QUIZ/,"")}
+/* Capture the room code from the address the moment the page loads, before any
+   routing or view switching can touch the URL. A standalone Host screen uses
+   this to join its room — the code itself is never shown on that screen. */
+var earlyRoomCode=null;
+try{var _q0=new URLSearchParams(location.search);var _r0=_q0.get("room")||_q0.get("code");if(_r0){var _n0=normalizeCode(_r0);if(_n0.length>=3)earlyRoomCode=_n0;}}catch(e){}
 function genCode(){return String(Math.floor(1000+Math.random()*9000))}
 function channelName(code){return "quiz-room-"+code}
 function broadcastState(){
@@ -630,6 +636,42 @@ function hostCreateRoom(){
     updateLiveUI(); render();
   });
   updateLiveUI(); render();
+  stopHostDiscovery(); hostAnnounceStart();
+}
+/* ================= ROOM DISCOVERY (standalone Host finds the game) =================
+   The host announces its room on a well-known lobby channel. A Host screen
+   opened on its own — even from the bare root address, with no room in its
+   link — asks on that channel, learns the code internally, and joins the room
+   as a display viewer. The code is never printed on the Host screen. */
+function hostAnnounceStart(){
+  var s=getSupa(); if(!s||live.lobbyChannel)return;
+  var ch=s.channel("quiz-host-lobby",{config:{broadcast:{self:false}}}); live.lobbyChannel=ch;
+  var announce=function(){ if(live.mode==="host"&&live.code){try{ch.send({type:"broadcast",event:"room-announce",payload:{code:live.code,clientId:live.clientId}});}catch(e){}} };
+  ch.on("broadcast",{event:"host-discover"},function(){announce();});
+  ch.subscribe(function(status){
+    if(status==="SUBSCRIBED"){ announce(); if(live.lobbyTimer)clearInterval(live.lobbyTimer); live.lobbyTimer=setInterval(announce,8000); }
+  });
+}
+var discovery={channel:null,timer:null,active:false};
+function startHostDiscovery(){
+  if(discovery.active||live.mode!=="offline")return;
+  var s=getSupa(); if(!s)return;
+  discovery.active=true;
+  var ch=s.channel("quiz-host-lobby",{config:{broadcast:{self:false}}}); discovery.channel=ch;
+  ch.on("broadcast",{event:"room-announce"},function(m){var pl=m.payload||{};var code=normalizeCode(pl.code||"");if(code.length>=3&&live.mode==="offline"){stopHostDiscovery();hostViewerJoin(code);}});
+  ch.subscribe(function(status){
+    if(status==="SUBSCRIBED"){
+      var ask=function(){try{ch.send({type:"broadcast",event:"host-discover",payload:{clientId:live.clientId}});}catch(e){}};
+      ask();
+      if(discovery.timer)clearInterval(discovery.timer);
+      discovery.timer=setInterval(function(){if(live.mode!=="offline"){stopHostDiscovery();return;}ask();},5000);
+    }
+  });
+}
+function stopHostDiscovery(){
+  discovery.active=false;
+  if(discovery.timer){clearInterval(discovery.timer);discovery.timer=null;}
+  if(discovery.channel){var ch=discovery.channel;discovery.channel=null;try{var s=getSupa();if(s)s.removeChannel(ch);}catch(e){}}
 }
 function handleHostJoin(p){
   if(live.mode!=="host"||!p.clientId) return;
@@ -688,10 +730,19 @@ function playerJoinFrom(prefix){
   });
   updateLiveUI();
 }
+function rejoinViewer(code){
+  /* Rebuild the viewer connection after a channel error, keeping the room. */
+  if(live.syncTimer){clearInterval(live.syncTimer);live.syncTimer=null;}
+  if(live.channel){var ch=live.channel;live.channel=null;try{var s=getSupa();if(s)s.removeChannel(ch);}catch(e){}}
+  live.mode="offline"; live.connected=false;
+  hostViewerJoin(code);
+}
 function hostViewerJoin(code){
   /* A Host screen opened on its own device: silently follow the room as a
-     display-only viewer. The code comes from the link (?room=) and is never
-     shown on this screen. */
+     display-only viewer. The code comes from the link (?room=) or from room
+     discovery and is never shown on this screen. After subscribing it keeps
+     asking the host for a sync until the host's state arrives, and rebuilds
+     the connection if the channel drops. */
   var s=getSupa(); if(!s)return;
   if(live.mode!=="offline")return;
   live.mode="viewer"; live.code=code; live.connected=false; live.mySlot=null; live.assigned=false; lastHostState=null; liveMyAnswer=null; liveMyIdx=-1;
@@ -700,11 +751,24 @@ function hostViewerJoin(code){
   ch.on("broadcast",{event:"tick"},function(m){var pl=m.payload||{};state.timeLeft=pl.timeLeft;state.timerDur=pl.timerDur;var hs=$("hostStage");if(hs){hs.innerHTML=hostStageHTML();applyAccent(hs,liveDesign.host);}});
   ch.on("broadcast",{event:"room-closed"},function(){disconnectLive(true);toast("Admin closed the room — this screen is back to demo mode");});
   ch.subscribe(function(status){
+    if(live.channel!==ch)return; /* a stale channel replaced by a rejoin must not tear down the healthy one */
     if(status==="SUBSCRIBED"){
-      live.connected=true;
+      live.connected=true; live.viewerRetries=0;
       var ask=function(){try{ch.send({type:"broadcast",event:"request-sync",payload:{clientId:live.clientId}});}catch(e){}};
-      ask(); setTimeout(function(){if(!lastHostState)ask();},2500);
-    } else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){live.connected=false;}
+      ask();
+      if(live.syncTimer)clearInterval(live.syncTimer);
+      live.syncTimer=setInterval(function(){
+        if(lastHostState){clearInterval(live.syncTimer);live.syncTimer=null;return;}
+        ask();
+      },2500);
+    } else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){
+      live.connected=false;
+      if(live.viewerRetries<8){
+        live.viewerRetries++;
+        var c=live.code;
+        setTimeout(function(){if(live.mode==="viewer")rejoinViewer(c);},3500);
+      }
+    }
     updateLiveUI(); render();
   });
   updateLiveUI();
@@ -712,16 +776,20 @@ function hostViewerJoin(code){
 function maybeHostViewer(){
   try{
     if(routeFromURL()!=="host"||live.mode!=="offline")return;
-    var q=new URLSearchParams(location.search);
-    var r=q.get("room")||q.get("code");
-    if(!r)return;
-    var code=normalizeCode(r);
-    if(code.length>=3)hostViewerJoin(code);
+    var code=earlyRoomCode;
+    if(!code){
+      var q=new URLSearchParams(location.search);
+      var r=q.get("room")||q.get("code");
+      if(r){var nc=normalizeCode(r);if(nc.length>=3)code=nc;}
+    }
+    if(code){earlyRoomCode=code;stopHostDiscovery();hostViewerJoin(code);}
+    else startHostDiscovery();
   }catch(e){}
 }
 function applyRemoteState(pl){
   lastHostState=pl;
-  if(pl.design){liveDesign=pl.design;design=clone(pl.design);ensureDesign();if(!$("view-admin").hidden)renderDesigner();}
+  if(live.syncTimer){clearInterval(live.syncTimer);live.syncTimer=null;}
+  if(pl.design){liveDesign=pl.design;design=clone(pl.design);ensureDesign();hasRemoteDesign=true;if(!$("view-admin").hidden)renderDesigner();}
   if(pl.timerStyle)state.timerStyle=pl.timerStyle;
   if(pl.timeoutMode)state.timeoutMode=pl.timeoutMode;
   if(pl.paused!==undefined)state.paused=!!pl.paused;
@@ -764,12 +832,20 @@ function disconnectLive(silent){
   if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}
   if(live.pingTimer){clearInterval(live.pingTimer);live.pingTimer=null;}
   if(live.presenceTimer){clearInterval(live.presenceTimer);live.presenceTimer=null;}
+  if(live.syncTimer){clearInterval(live.syncTimer);live.syncTimer=null;}
+  if(live.lobbyTimer){clearInterval(live.lobbyTimer);live.lobbyTimer=null;}
+  if(live.lobbyChannel){var lch=live.lobbyChannel;live.lobbyChannel=null;try{var ls=getSupa();if(ls)ls.removeChannel(lch);}catch(e){}}
+  stopHostDiscovery();
+  live.viewerRetries=0;
   live.lastSeen=[0,0]; live.stale=[false,false];
   if(live.channel){var ch=live.channel;live.channel=null;try{var s=getSupa();if(s)s.removeChannel(ch);}catch(e){}}
   live.mode="offline";live.code=null;live.connected=false;live.mySlot=null;live.assigned=false;live.occupied=[null,null];lastHostState=null;liveMyAnswer=null;
   if(wasPlayer){state.questions=clone(DEFAULT_QS);state.active=[];state.phase="lobby";state.idx=0;state.answers=[null,null];state.lastGain=[0,0];state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];}
   updateLiveUI(); render();
   if(!silent)toast("Left the live room — demo mode is on");
+  /* A Host screen whose room closed goes back to watching for the next room,
+     so a fresh game started from Admin appears on it by itself. */
+  try{if(routeFromURL()==="host"&&live.mode==="offline")setTimeout(maybeHostViewer,700);}catch(e){}
 }
 function countJoined(){return live.occupied.filter(function(x){return !!x}).length}
 function updateLiveUI(){
@@ -827,6 +903,8 @@ function hostStageHTML(){
       liveBit='<p style="margin-top:14px">● Live — this screen is following the game run from Admin.<br><span style="font-size:13.5px;opacity:.85">Players join from their iPads with the room code shown in Admin.</span></p>';
     } else if(live.mode==="player"){
       liveBit='<p>You joined as a player on this device — the host runs the game from the main screen.</p>';
+    } else if(discovery.active){
+      liveBit='<p style="margin-top:14px">● Looking for the live game — this screen joins on its own as soon as Admin creates the room and starts.<br><span style="font-size:13.5px;opacity:.85">No code or buttons needed on this screen.</span></p>';
     } else {
       liveBit='<p style="margin-top:14px">Waiting for Admin to start the game…<br><span style="font-size:13.5px;opacity:.85">Admin: create the live room and press Start Game from the Admin screen.</span></p>';
     }
@@ -1173,7 +1251,7 @@ function renderDesigner(){
   if(document.activeElement!==$("headlineInput"))$("headlineInput").value=d.headline||"";
   if(document.activeElement!==$("subtextInput"))$("subtextInput").value=d.subtext||"";
   $("globalScale").value=d.globalScale||100; $("globalScaleVal").textContent=(d.globalScale||100)+"%"; document.querySelectorAll("#globalScalePresets [data-gs]").forEach(function(b){b.classList.toggle("on",+b.getAttribute("data-gs")===(d.globalScale||100));});
-  var ps=$("publishStatus"); if(ps){var dirty=designIsDirty();ps.textContent=dirty?"● Draft edits — not on the screens yet. Press Save (top of Admin) to publish live.":"✓ Published — the screens are showing this design.";ps.style.color=dirty?"var(--amber)":"#4ADE80";}
+  var ps=$("publishStatus"); if(ps){var dirty=designIsDirty();ps.textContent=dirty?"● Draft edits — not on the screens yet. Tap Go Live at the bottom of Admin to publish live.":"✓ Live — the screens are showing this design.";ps.style.color=dirty?"var(--amber)":"#4ADE80";}
   $("presetRow").innerHTML=PRESETS.map(function(p,i){return '<button class="preset" title="'+p.name+'" data-preset="'+i+'" style="background:linear-gradient(135deg,'+p.bg1+','+p.bg2+')"></button>';}).join("");
   document.querySelectorAll("[data-preset]").forEach(function(b){b.addEventListener("click",function(){var p=PRESETS[+b.getAttribute("data-preset")];var dd=design[designTab];dd.bg1=p.bg1;dd.bg2=p.bg2;dd.bgColor=p.bg1;if(dd.bgMode==="color")dd.bgMode="gradient";designChanged();toast(p.name+" background applied to "+designTabLabel());});});
   renderInspector();
@@ -1357,19 +1435,50 @@ $("logoFile").addEventListener("change",function(e){var f=e.target.files&&e.targ
 $("headlineInput").addEventListener("change",function(e){design[designTab].headline=e.target.value.trim();if(design[designTab].headline&&design[designTab].els.headline)design[designTab].els.headline.show=true;designChanged();});
 $("subtextInput").addEventListener("change",function(e){design[designTab].subtext=e.target.value.trim();if(design[designTab].subtext&&design[designTab].els.subtext)design[designTab].els.subtext.show=true;designChanged();});
 $("globalScale").addEventListener("input",function(e){design[designTab].globalScale=+e.target.value;$("globalScaleVal").textContent=e.target.value+"%";document.querySelectorAll("#globalScalePresets [data-gs]").forEach(function(b){b.classList.toggle("on",+b.getAttribute("data-gs")===design[designTab].globalScale);});designChangedSoft();});
-document.querySelectorAll("#globalScalePresets [data-gs]").forEach(function(b){b.addEventListener("click",function(){design[designTab].globalScale=+b.getAttribute("data-gs");var s=$("globalScale");if(s)s.value=design[designTab].globalScale;$("globalScaleVal").textContent=design[designTab].globalScale+"%";document.querySelectorAll("#globalScalePresets [data-gs]").forEach(function(x){x.classList.toggle("on",x===b);});designChangedSoft();render();toast("Overall screen scale: "+design[designTab].globalScale+"% — press Save to publish");});});
+document.querySelectorAll("#globalScalePresets [data-gs]").forEach(function(b){b.addEventListener("click",function(){design[designTab].globalScale=+b.getAttribute("data-gs");var s=$("globalScale");if(s)s.value=design[designTab].globalScale;$("globalScaleVal").textContent=design[designTab].globalScale+"%";document.querySelectorAll("#globalScalePresets [data-gs]").forEach(function(x){x.classList.toggle("on",x===b);});designChangedSoft();render();toast("Overall screen scale: "+design[designTab].globalScale+"% — tap Go Live at the bottom to publish");});});
 /* Save = publish live ONLY. No JSON download, no file export, no import.
    Pressing Save copies the draft design into liveDesign (what the Host/Player
-   screens render from) and broadcasts it, so every connected screen updates. */
-function markSaved(what){var el=$("saveStatus");if(el)el.textContent="✓ Saved & live — "+what+" · "+new Date().toLocaleTimeString();toast("💾 Saved & published live — "+what+" is now showing on the Host & Player screens.");queueBroadcast();}
-$("saveAllBtn").addEventListener("click",function(){ensureDesign();liveDesign=clone(design);render();renderDesigner();markSaved("all screens & settings");});
-$("saveScreenBtn").addEventListener("click",function(){ensureDesign();liveDesign[designTab]=clone(design[designTab]);render();renderDesigner();markSaved(designTabLabel()+" only");});
+   screens render from) and publishes it on every live path at once:
+   1. an immediate full state broadcast to the live room (Host & iPad screens),
+   2. a same-browser channel message, so screens open in other tabs of this
+      browser update instantly even before/without a room.
+   Screens opened later pull the published design from the host's sync reply
+   (the room state always carries it) or by asking on the browser channel. */
+var designChannel=null;
+try{
+  if("BroadcastChannel" in window){
+    designChannel=new BroadcastChannel("tf-quiz-design");
+    designChannel.onmessage=function(ev){
+      var m=ev.data||{};
+      if(m.type==="design"&&m.design){
+        if(designIsDirty())return; /* never clobber unsaved edits in this tab */
+        liveDesign=clone(m.design); design=clone(m.design); ensureDesign(); hasRemoteDesign=true;
+        render(); if(!$("view-admin").hidden)renderDesigner();
+      } else if(m.type==="design-request"){
+        if(live.mode==="host"||designPublished||hasRemoteDesign){try{designChannel.postMessage({type:"design",design:clone(liveDesign)});}catch(e){}}
+      }
+    };
+  }
+}catch(e){designChannel=null;}
+function markSaved(what){var el=$("saveStatus");if(el)el.textContent="✓ Live now — "+what+" · "+new Date().toLocaleTimeString();toast("🚀 Live now — "+what+" is showing on the Host & Player screens.");}
+function publishDesignLive(what){
+  designPublished=true;
+  broadcastState(); /* immediate — not just queued — when this tab hosts the room */
+  queueBroadcast();
+  if(designChannel){try{designChannel.postMessage({type:"design",design:clone(liveDesign)});}catch(e){}}
+  markSaved(what);
+}
+$("saveAllBtn").addEventListener("click",function(){ensureDesign();liveDesign=clone(design);render();renderDesigner();publishDesignLive("all screens & settings");});
+$("saveScreenBtn").addEventListener("click",function(){ensureDesign();liveDesign[designTab]=clone(design[designTab]);render();renderDesigner();publishDesignLive(designTabLabel()+" only");});
 
 /* ================= INIT ================= */
 render(); updateLiveUI();
 var initialView=routeFromURL();
 switchView(initialView||"host");
 maybeHostViewer();
+/* A freshly opened screen asks any other open tab that has a published design
+   (the room host, or a tab where Save was pressed) to send it over. */
+if(designChannel){try{designChannel.postMessage({type:"design-request"});}catch(e){}}
 </script>
 </body>
 </html>
