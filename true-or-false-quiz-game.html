@@ -535,8 +535,9 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <h3>About this app</h3>
         <p><b style="color:var(--text)">True or False Quiz Game</b> — a two-player quiz for one big screen and two iPads. The Host screen shows the question, timer, scores and the winner; each player gets their own screen with just two big TRUE / FALSE buttons.</p>
         <p><b style="color:var(--text)">How a live game runs:</b> in <b style="color:var(--text)">Live</b>, press “Create Live Room for iPads”, then give the players the room code (it only ever appears here in Admin). Players open their Player link, enter the code and their name, and their taps count live on the Host screen. Start, reveal, end and reset are all controlled from Live. The <b style="color:var(--text)">Live monitor</b> at the top of Live shows each player's screen link, Connected / Disconnected status, score, correct count, streak, current answer, answer time, recent answers, plus the current question and the timer.</p>
-        <p><b style="color:var(--text)">Designing:</b> in <b style="color:var(--text)">Screens</b> you edit a draft of each screen — the canvas previews every change as you make it, but the Host and Player screens keep showing the last published design until you tap <b style="color:var(--text)">Go Live at the bottom of Admin</b>. Go Live means one thing only: it publishes the design live to all screens at once.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Screens:</b> Host (main address) · Player 1 (/Player1) · Player 2 (/Player2) · Admin (/Admin). No accounts or installs — everything runs in the browser.</p>
+        <p><b style="color:var(--text)">Designing:</b> in <b style="color:var(--text)">Screens</b> you edit a draft of each screen — the canvas previews every change as you make it, but the Host and Player screens keep showing the last published design until you tap <b style="color:var(--text)">Go Live at the bottom of Admin</b>. Go Live means one thing only: it publishes the design live to all screens at once — no file, no download — and saves it in this browser, so it is still here after you reload Admin. Screens on other devices receive it through the live room.</p>
+        <p><b style="color:var(--text)">Screens:</b> Host (main address) · Player 1 (/Player1) · Player 2 (/Player2) · Admin (/Admin). No accounts or installs — everything runs in the browser.</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v16</b> · 17 Nov 2026 — Go Live persistence + Host auto-join from the clean main address. Read this tag back to confirm you are on the new build; if it says anything else, you are looking at an older one.</p>
       </div>
       </div>
     </div>
@@ -633,7 +634,7 @@ function getQ(){return state.active[state.idx]||state.questions[state.idx]||null
 
 /* ================= LIVE (Supabase Realtime Broadcast) ================= */
 var supa=null;
-var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,lobbyChannel:null,lobbyTimer:null};
+var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,lobbyChannel:null,lobbyTimer:null,joinedAt:0,heartbeatTimer:null};
 var lastHostState=null, liveMyAnswer=null, liveMyIdx=-1, broadcastQueued=false;
 var designPublished=false, hasRemoteDesign=false; /* set when THIS tab has pressed Save, or has received a published design — such tabs can answer design requests from freshly opened screens */
 function getSupa(){ if(supa) return supa; if(!window.supabase||!window.supabase.createClient) return null; try{supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);}catch(e){supa=null;} return supa; }
@@ -688,6 +689,11 @@ function hostCreateRoom(){
   });
   updateLiveUI(); render();
   stopHostDiscovery(); hostAnnounceStart();
+  /* Heartbeat: re-send the full state every 10s so a display screen that
+     missed a broadcast (or whose request-sync raced) still converges on the
+     live game within seconds instead of sitting in the lobby. */
+  if(live.heartbeatTimer)clearInterval(live.heartbeatTimer);
+  live.heartbeatTimer=setInterval(function(){if(live.mode==="host"&&live.connected)broadcastState();},10000);
 }
 /* ================= ROOM DISCOVERY (standalone Host finds the game) =================
    The host announces its room on a well-known lobby channel. A Host screen
@@ -796,7 +802,7 @@ function hostViewerJoin(code){
      the connection if the channel drops. */
   var s=getSupa(); if(!s)return;
   if(live.mode!=="offline")return;
-  live.mode="viewer"; live.code=code; live.connected=false; live.mySlot=null; live.assigned=false; lastHostState=null; liveMyAnswer=null; liveMyIdx=-1;
+  live.mode="viewer"; live.code=code; live.connected=false; live.mySlot=null; live.assigned=false; lastHostState=null; liveMyAnswer=null; liveMyIdx=-1; live.joinedAt=Date.now();
   var ch=s.channel(channelName(code),{config:{broadcast:{self:false}}}); live.channel=ch;
   ch.on("broadcast",{event:"state"},function(m){applyRemoteState(m.payload||{});});
   ch.on("broadcast",{event:"tick"},function(m){var pl=m.payload||{};state.timeLeft=pl.timeLeft;state.timerDur=pl.timerDur;var hs=$("hostStage");if(hs){hs.innerHTML=hostStageHTML();applyAccent(hs,liveDesign.host);}});
@@ -826,7 +832,12 @@ function hostViewerJoin(code){
 }
 function maybeHostViewer(){
   try{
-    if(routeFromURL()!=="host"||live.mode!=="offline")return;
+    /* Gate on the screen actually being shown, NOT on a fresh parse of the
+       address: routeFromURL() returns null for the bare root address even
+       though the Host screen is what is displayed (init defaults null ->
+       "host"). The old strict check made a root-URL Host show the lobby
+       while never joining or discovering the room — the v3.6 live failure. */
+    if(currentView!=="host"||live.mode!=="offline")return;
     var code=earlyRoomCode;
     if(!code){
       var q=new URLSearchParams(location.search);
@@ -840,7 +851,7 @@ function maybeHostViewer(){
 function applyRemoteState(pl){
   lastHostState=pl;
   if(live.syncTimer){clearInterval(live.syncTimer);live.syncTimer=null;}
-  if(pl.design){liveDesign=pl.design;design=clone(pl.design);ensureDesign();hasRemoteDesign=true;if(!$("view-admin").hidden)renderDesigner();}
+  if(pl.design){liveDesign=pl.design;design=clone(pl.design);ensureDesign();hasRemoteDesign=true;persistPublishedDesign();if(!$("view-admin").hidden)renderDesigner();}
   if(pl.timerStyle)state.timerStyle=pl.timerStyle;
   if(pl.timeoutMode)state.timeoutMode=pl.timeoutMode;
   if(pl.paused!==undefined)state.paused=!!pl.paused;
@@ -884,6 +895,7 @@ function disconnectLive(silent){
   if(live.pingTimer){clearInterval(live.pingTimer);live.pingTimer=null;}
   if(live.presenceTimer){clearInterval(live.presenceTimer);live.presenceTimer=null;}
   if(live.syncTimer){clearInterval(live.syncTimer);live.syncTimer=null;}
+  if(live.heartbeatTimer){clearInterval(live.heartbeatTimer);live.heartbeatTimer=null;}
   if(live.lobbyTimer){clearInterval(live.lobbyTimer);live.lobbyTimer=null;}
   if(live.lobbyChannel){var lch=live.lobbyChannel;live.lobbyChannel=null;try{var ls=getSupa();if(ls)ls.removeChannel(lch);}catch(e){}}
   stopHostDiscovery();
@@ -896,7 +908,7 @@ function disconnectLive(silent){
   if(!silent)toast("Left the live room — demo mode is on");
   /* A Host screen whose room closed goes back to watching for the next room,
      so a fresh game started from Admin appears on it by itself. */
-  try{if(routeFromURL()==="host"&&live.mode==="offline")setTimeout(maybeHostViewer,700);}catch(e){}
+  try{if(currentView==="host"&&live.mode==="offline")setTimeout(maybeHostViewer,700);}catch(e){}
 }
 function countJoined(){return live.occupied.filter(function(x){return !!x}).length}
 function updateLiveUI(){
@@ -1404,7 +1416,9 @@ $("resetAllDesignBtn").addEventListener("click",function(){design=clone(DEFAULT_
 
 /* ================= NAV / ROUTING ================= */
 var VIEWS=["host","p1","p2","join","admin"];
+var currentView="host"; /* the screen actually on display — set by switchView, read by the Host auto-join gate */
 function switchView(v){
+  currentView=v;
   /* One screen at a time — Host/Player screens are true full-screen: no top bar, no tabs. */
   VIEWS.forEach(function(k){var el=$("view-"+k);if(el)el.hidden=k!==v;});
   var tb=$("topbar"); if(tb)tb.hidden=(v==="host"||v==="p1"||v==="p2");
@@ -1444,7 +1458,19 @@ function routeFromURL(){
   }catch(e){}
   return v;
 }
-window.addEventListener("hashchange",function(){var v=routeFromURL();if(v)switchView(v);maybeHostViewer();});
+function cleanHashRoute(){
+  /* The clean link stays clean: if this page was opened through an old hash
+     address (/#/host, /Admin#/admin, …), drop the hash from the address bar
+     once the route has been read, so the Host link shows as the plain main
+     address instead of rewriting itself to /#/host. Path and ?room= stay. */
+  try{
+    var h=location.hash||"";
+    if(h.indexOf("#/")===0||/^#(host|admin|player1|player2|p1|p2|join)$/i.test(h)){
+      history.replaceState(null,"",location.pathname+location.search);
+    }
+  }catch(e){}
+}
+window.addEventListener("hashchange",function(){var v=routeFromURL();if(v)switchView(v);cleanHashRoute();maybeHostViewer();});
 
 /* ================= ADMIN WIRING ================= */
 $("name1").addEventListener("change",function(e){state.players[0].name=e.target.value.trim()||"Player 1";render();});
@@ -1529,7 +1555,7 @@ try{
       var m=ev.data||{};
       if(m.type==="design"&&m.design){
         if(designIsDirty())return; /* never clobber unsaved edits in this tab */
-        liveDesign=clone(m.design); design=clone(m.design); ensureDesign(); hasRemoteDesign=true;
+        liveDesign=clone(m.design); design=clone(m.design); ensureDesign(); hasRemoteDesign=true; persistPublishedDesign();
         render(); if(!$("view-admin").hidden)renderDesigner();
       } else if(m.type==="design-request"){
         if(live.mode==="host"||designPublished||hasRemoteDesign){try{designChannel.postMessage({type:"design",design:clone(liveDesign)});}catch(e){}}
@@ -1538,8 +1564,40 @@ try{
   }
 }catch(e){designChannel=null;}
 function markSaved(what){var el=$("saveStatus");if(el)el.textContent="✓ Live now — "+what+" · "+new Date().toLocaleTimeString();toast("🚀 Live now — "+what+" is showing on the Host & Player screens.");}
+/* ================= PUBLISHED-DESIGN STORE (browser) =================
+   v3.5/v3.6 kept the published design only in page memory plus two ephemeral
+   broadcasts, so an Admin reload fell back to the factory defaults and a
+   freshly opened screen had nothing to receive — the first v3.6 defect.
+   Go Live now also writes the published design into this browser's storage:
+   it survives reloads on this device, and any screen opened in this browser
+   (Admin, Host, players) restores it before first paint. Screens on OTHER
+   devices still receive it live through the room broadcast / design pull. */
+var DESIGN_STORE_KEY="tfq-live-design-v16";
+var lastDesignStoreStr="";
+function persistPublishedDesign(){
+  try{
+    if(!window.localStorage)return;
+    var str=JSON.stringify({design:liveDesign,style:{timerStyle:state.timerStyle,timeoutMode:state.timeoutMode,buttonStyle:state.buttonStyle,buttonScale:state.buttonScale,trueColor:state.trueColor,falseColor:state.falseColor,trueLabel:state.trueLabel,falseLabel:state.falseLabel},ts:Date.now()});
+    if(str===lastDesignStoreStr)return;
+    lastDesignStoreStr=str;
+    localStorage.setItem(DESIGN_STORE_KEY,str);
+  }catch(e){}
+}
+function restorePublishedDesign(){
+  try{
+    if(!window.localStorage)return false;
+    var raw=localStorage.getItem(DESIGN_STORE_KEY); if(!raw)return false;
+    lastDesignStoreStr=raw;
+    var saved=JSON.parse(raw); if(!saved||!saved.design||!saved.design.host||!saved.design.player1||!saved.design.player2)return false;
+    liveDesign=clone(saved.design); design=clone(saved.design); ensureDesign();
+    if(saved.style){["timerStyle","timeoutMode","buttonStyle","buttonScale","trueColor","falseColor","trueLabel","falseLabel"].forEach(function(k){if(saved.style[k]!==undefined)state[k]=saved.style[k];});}
+    designPublished=true; hasRemoteDesign=true;
+    return true;
+  }catch(e){return false;}
+}
 function publishDesignLive(what){
   designPublished=true;
+  persistPublishedDesign(); /* survives an Admin reload — see store note above */
   broadcastState(); /* immediate — not just queued — when this tab hosts the room */
   queueBroadcast();
   if(designChannel){try{designChannel.postMessage({type:"design",design:clone(liveDesign)});}catch(e){}}
@@ -1549,10 +1607,24 @@ $("saveAllBtn").addEventListener("click",function(){ensureDesign();liveDesign=cl
 $("saveScreenBtn").addEventListener("click",function(){ensureDesign();liveDesign[designTab]=clone(design[designTab]);render();renderDesigner();publishDesignLive(designTabLabel()+" only");});
 
 /* ================= INIT ================= */
+restorePublishedDesign(); /* last Go Live design, restored before first paint so a reload keeps it */
 render(); updateLiveUI();
 var initialView=routeFromURL();
 switchView(initialView||"host");
+cleanHashRoute();
 maybeHostViewer();
+/* Host watchdog: a display screen left open must end up following the game
+   even if its first join attempt raced or silently stalled. Every 6s — if
+   this tab shows the Host screen and is offline, (re)start the join /
+   discovery; if it joined as a viewer but no game state has arrived within
+   15s, rebuild the viewer connection. Stops mattering once state flows. */
+setInterval(function(){
+  try{
+    if(currentView!=="host")return;
+    if(live.mode==="offline"){maybeHostViewer();}
+    else if(live.mode==="viewer"&&!lastHostState&&live.joinedAt&&Date.now()-live.joinedAt>15000){var c=live.code;live.joinedAt=Date.now();rejoinViewer(c);}
+  }catch(e){}
+},6000);
 /* A freshly opened screen asks any other open tab that has a published design
    (the room host, or a tab where Save was pressed) to send it over. */
 if(designChannel){try{designChannel.postMessage({type:"design-request"});}catch(e){}}
