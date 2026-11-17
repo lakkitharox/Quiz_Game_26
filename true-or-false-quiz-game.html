@@ -169,6 +169,40 @@ a{color:inherit}
 .preset-row{display:flex;gap:7px;flex-wrap:wrap}
 .preset{width:52px;height:36px;border-radius:9px;border:2px solid var(--line);cursor:pointer;padding:0;min-height:36px}
 .preset.on{border-color:var(--amber)}
+/* --- Simplified designer: canvas left, all properties in right panel --- */
+.designer-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:start}
+@media(max-width:980px){.designer-layout{grid-template-columns:1fr}.props-panel{position:static !important;max-height:none !important}}
+.canvas-col{position:sticky;top:76px}
+@media(max-width:980px){.canvas-col{position:static}}
+.canvas-hint{font-size:12.5px;color:var(--muted);line-height:1.5;margin:9px 2px 0}
+.props-panel{position:sticky;top:76px;max-height:calc(100dvh - 92px);overflow-y:auto;background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:6px 14px 14px;scrollbar-width:thin}
+.props-sec{padding:12px 0 4px;border-bottom:1px solid var(--line)}
+.props-sec:last-child{border-bottom:0}
+.props-sec>h4{font-family:Archivo;font-size:13px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;margin:0 0 4px}
+.props-sec>p{font-size:12.5px;color:var(--muted);line-height:1.5;margin:0 0 10px}
+.props-panel .row2,.props-panel .row3{grid-template-columns:1fr}
+.props-panel .field{margin-bottom:10px}
+.props-panel .seg{display:flex;flex-wrap:wrap}
+.props-panel .seg button{flex:1 1 30%}
+.el-list{display:grid;gap:6px}
+.el-row{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--text);cursor:pointer;min-height:44px}
+.el-row:hover{border-color:var(--amber)}
+.el-row.sel{border-color:var(--amber);background:color-mix(in srgb,var(--amber) 12%, var(--card))}
+.el-row .el-name{font-weight:700;font-size:13.5px;line-height:1.25;flex:1;min-width:0}
+.el-row .el-state{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.el-row.is-hidden .el-name{color:var(--muted)}
+.vis-toggle{position:relative;flex:none;width:46px;height:26px;min-height:26px;border-radius:999px;border:1px solid var(--line);background:var(--bg);padding:0;cursor:pointer}
+.vis-toggle::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:left .15s,background .15s}
+.vis-toggle[aria-checked="true"]{background:var(--green);border-color:var(--green)}
+.vis-toggle[aria-checked="true"]::after{left:22px;background:#fff}
+.inspector-empty{font-size:13px;color:var(--muted);line-height:1.5;margin:0}
+/* Layers panel eye toggle — Photoshop/Figma style */
+.eye-toggle{width:38px;height:38px;min-height:38px;border-radius:9px;border:1px solid transparent;background:transparent;color:var(--text);display:grid;place-items:center;padding:0;flex:none;cursor:pointer}
+.eye-toggle:hover{background:var(--bg);border-color:var(--line)}
+.eye-toggle.off{color:var(--muted)}
+.eye-toggle svg{width:20px;height:20px;display:block}
+.el-select{flex:1;min-width:0;background:none;border:0;color:inherit;text-align:left;padding:2px 0;min-height:38px;cursor:pointer;display:flex;flex-direction:column;justify-content:center;gap:1px;font:inherit}
+.props-panel .canvas-hint{margin:0}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:12px 16px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.3);max-width:92vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);font-size:12.5px;line-height:1.6;text-align:center;color:var(--muted)}
@@ -318,18 +352,30 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <!-- DESIGNER -->
       <div class="panel">
         <h3>🎨 Screen designer</h3>
-        <p>Drag elements on the canvas to move them; tap one to resize or hide it. The canvas previews every change live — the real screens only update when you tap <b style="color:var(--text)">Go Live at the bottom of Admin</b>.</p>
+        <p>Canvas on the left, Layers &amp; Properties on the right — like Figma / Photoshop. Drag on the canvas, select a layer to edit it, use the eye to hide it. Real screens update only when you tap <b style="color:var(--text)">Go Live at the bottom of Admin</b>.</p>
         <p id="publishStatus" style="font-weight:700;font-size:13px;margin:0 0 10px"></p>
         <div class="design-tabs" id="designTabs">
           <button data-dt="host" class="on">🖥 Host screen</button>
           <button data-dt="player1">Player 1 screen</button>
           <button data-dt="player2">Player 2 screen</button>
         </div>
-        <div class="canvas-shell"><div class="canvas" id="designCanvas"></div></div>
-        <div class="divider"></div>
-        <div id="elInspector"></div>
-        <div class="divider"></div>
-        <h3 style="font-size:15px">Background &amp; colours</h3>
+        <div class="designer-layout">
+          <div class="canvas-col">
+            <div class="canvas-shell"><div class="canvas" id="designCanvas"></div></div>
+            <p class="canvas-hint">Drag an element to move it. Hidden layers are not drawn here, so the canvas only shows what the audience will see.</p>
+          </div>
+          <aside class="props-panel" aria-label="Layers and properties">
+            <div class="props-sec">
+              <h4>Layers</h4>
+              <p>Tap a layer to select it. Tap the eye to show or hide it.</p>
+              <div id="elList" class="el-list"></div>
+            </div>
+            <div class="props-sec">
+              <h4>Properties</h4>
+              <div id="elInspector"></div>
+            </div>
+            <div class="props-sec">
+              <h4>Background &amp; colours</h4>
         <div class="row3">
           <div class="field"><label>Type</label><select id="bgMode"><option value="gradient">Gradient</option><option value="color">Solid colour</option><option value="image">Image</option></select></div>
           <div class="field"><label>Colour 1</label><input type="color" id="bg1"></div>
@@ -345,8 +391,9 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
           <div class="field"><label>Text</label><input type="color" id="textCol"></div>
         </div>
         <div class="field"><label>Presets</label><div class="preset-row" id="presetRow"></div></div>
-        <div class="divider"></div>
-        <h3 style="font-size:15px">Logo &amp; text</h3>
+            </div>
+            <div class="props-sec">
+              <h4>Logo &amp; text</h4>
         <div class="row2">
           <div class="field"><label>Logo URL</label><input id="logoUrl" placeholder="https://…"></div>
           <div class="field"><label>…or upload logo</label><input type="file" id="logoFile" accept="image/*"></div>
@@ -357,9 +404,10 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
           <div class="field"><label>Overall screen scale — <span id="globalScaleVal"></span></label><input type="range" id="globalScale" min="25" max="300" step="5"><div class="scale-presets" id="globalScalePresets"><button type="button" data-gs="25">25%</button><button type="button" data-gs="50">50%</button><button type="button" data-gs="75">75%</button><button type="button" data-gs="100">100%</button><button type="button" data-gs="150">150%</button><button type="button" data-gs="200">200%</button><button type="button" data-gs="250">250%</button><button type="button" data-gs="300">300%</button></div><p style="font-size:12.5px;color:var(--muted);margin:7px 0 0">Scales the whole screen — 25% tiny up to 300% huge.</p></div>
           <div class="field"><label>Layout</label><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="resetLayoutBtn">↺ Reset this screen</button><button class="btn small" id="resetAllDesignBtn">Reset all</button></div></div>
         </div>
-        <div class="divider"></div>
-        <h3 style="font-size:15px">Timer &amp; button styles</h3>
-        <p style="color:var(--muted);font-size:13.5px;line-height:1.5;margin:6px 0 14px">How the timer looks on the Host screen and how the TRUE / FALSE buttons look on the player screens. The canvas above previews every style as you tap — check the Host tab for the timer and a Player tab for the buttons.</p>
+            </div>
+            <div class="props-sec">
+              <h4>Timer &amp; button styles</h4>
+              <p>Timer on the Host screen; TRUE / FALSE buttons on the player screens. Check the Host tab for the timer, a Player tab for the buttons.</p>
         <div class="field"><label>Timer style (on Host screen)</label>
           <div class="seg" id="timerStyleSeg"><button data-tstyle="ring">◉ Ring</button><button data-tstyle="bar">▬ Bar</button><button data-tstyle="big">Big numbers</button><button data-tstyle="minimal">Minimal pill</button></div>
         </div>
@@ -374,6 +422,9 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <div class="row2">
           <div class="field"><label>TRUE button label</label><input id="trueLabelInput" maxlength="14"></div>
           <div class="field"><label>FALSE button label</label><input id="falseLabelInput" maxlength="14"></div>
+        </div>
+            </div>
+          </aside>
         </div>
       </div>
 
@@ -470,7 +521,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <!-- SCREEN LINKS -->
       <div class="panel">
         <h3>Players — screen links</h3>
-        <p>Give each player their own link — Player 1's iPad opens <b style="color:var(--text)">/Player1</b> only, Player 2's opens <b style="color:var(--text)">/Player2</b> only. Each link opens that screen directly, on its own. Use the <b style="color:var(--text)">live-site links</b> on real devices; <b style="color:var(--text)">Open here</b> opens the same screen in this tab. Connection status for both players is in the Live monitor above.</p>
+        <p>These are the only links — one clean address per screen. Give each player their own: Player 1's iPad opens <b style="color:var(--text)">/Player1</b> only, Player 2's opens <b style="color:var(--text)">/Player2</b> only. Each link opens that screen directly, on its own. Connection status for both players is in the Live monitor above.</p>
         <div id="linkList"></div>
         <div class="divider"></div>
         <h3 style="font-size:15px">Live room</h3>
@@ -1075,9 +1126,10 @@ function connFor(i){
   return{label:"Demo mode",cls:"demo",detail:"No live room — answers happen on this device"};
 }
 function screenLinksFor(i){
-  var here=""; try{here=location.href.split("#")[0];}catch(e){}
-  if(i===0)return{live:"https://quizgame26.vercel.app/Player1",here:here+"#/player1",path:"/Player1"};
-  return{live:"https://quizgame26.vercel.app/Player2",here:here+"#/player2",path:"/Player2"};
+  /* One working link per screen — the clean live-site address. No hash
+     (/#/…) duplicates are generated anywhere. */
+  if(i===0)return{live:"https://quizgame26.vercel.app/Player1",path:"/Player1"};
+  return{live:"https://quizgame26.vercel.app/Player2",path:"/Player2"};
 }
 function renderLiveMonitor(){
   var box=$("liveMonitor"); if(!box)return;
@@ -1134,7 +1186,7 @@ function renderLiveMonitor(){
         +'<div class="pstats"><div class="pstat"><b>'+p.score+'</b><small>Score</small></div><div class="pstat"><b>'+p.correct+'</b><small>Correct</small></div><div class="pstat"><b>'+p.streak+'</b><small>Streak</small></div><div class="pstat"><b>'+fmtSecs(at)+'</b><small>Answer time</small></div></div>'
         +'<div class="panswer '+ansCls+'">'+ansBox+'<div style="margin-top:6px;color:var(--muted);font-size:12.5px">'+esc(conn.detail)+'</div></div>'
         +histHtml
-        +'<div class="plinkrow"><code>'+esc(links.live)+'</code><a class="btn small" href="'+esc(links.live)+'" target="_blank" rel="noopener">Open Player '+(i+1)+' live ↗</a><a class="btn small" href="'+esc(links.here)+'">Open here →</a></div>'
+        +'<div class="plinkrow"><code>'+esc(links.live)+'</code><a class="btn small" href="'+esc(links.live)+'" target="_blank" rel="noopener">Open Player '+(i+1)+' ↗</a></div>'
         +'</div>';
     })(i);
   }
@@ -1190,28 +1242,28 @@ function renderAdmin(){
   renderLinks();
 }
 function renderLinks(){
-  var here=""; try{here=location.href.split("#")[0];}catch(e){}
-  /* While a room is open, the Host link carries the room in its address so a
+  /* Only the working links — one clean live-site address per screen:
+     Host = main address, /Player1, /Player2, /Admin. No hash (/#/…)
+     duplicates and no second “open here” copies are shown anymore.
+     While a room is open, the Host link carries the room in its address so a
      Host screen opened on its own device follows the live game by itself.
      The code stays in the link only — it is never printed on the Host screen. */
   var roomQ=(live.mode==="host"&&live.code)?("?screen=host&room="+live.code):"";
-  var hostLive="https://quizgame26.vercel.app/"+roomQ;
-  var hostHere=here+(roomQ?((here.indexOf("?")>=0?"&":"?")+"screen=host&room="+live.code):"")+"#/host";
   var items=[
-    ["🖥 Host — main screen","host",hostLive,hostHere],
-    ["Player 1 screen","player1","https://quizgame26.vercel.app/Player1",here+"#/player1"],
-    ["Player 2 screen","player2","https://quizgame26.vercel.app/Player2",here+"#/player2"],
-    ["⚙ Admin screen","admin","https://quizgame26.vercel.app/Admin",here+"#/admin"]
+    ["🖥 Host — main screen","https://quizgame26.vercel.app/"+roomQ],
+    ["Player 1 screen","https://quizgame26.vercel.app/Player1"],
+    ["Player 2 screen","https://quizgame26.vercel.app/Player2"],
+    ["⚙ Admin screen","https://quizgame26.vercel.app/Admin"]
   ];
   $("linkList").innerHTML=items.map(function(it){
-    return '<div class="linkrow"><div><b style="font-size:14px">'+it[0]+'</b><br><code>'+esc(it[2])+'</code></div><span style="display:flex;gap:6px;flex-wrap:wrap"><a class="btn small" href="'+esc(it[2])+'" target="_blank" rel="noopener">Open live ↗</a><a class="btn small" href="'+esc(it[3])+'">Open here →</a></span></div>';
+    return '<div class="linkrow"><div><b style="font-size:14px">'+it[0]+'</b><br><code>'+esc(it[1])+'</code></div><span style="display:flex;gap:6px;flex-wrap:wrap"><a class="btn small" href="'+esc(it[1])+'" target="_blank" rel="noopener">Open ↗</a></span></div>';
   }).join("");
 }
 
 /* ================= DESIGNER ================= */
 function miniElHTML(screen,key,e){
   var sample="", d=design[screen];
-  if(key==="logo")sample=d.logoUrl?'<img class="mini-logo" src="'+esc(d.logoUrl)+'" alt="Logo preview">':'<span class="mini-badge">🖼 LOGO — add below</span>';
+  if(key==="logo")sample=d.logoUrl?'<img class="mini-logo" src="'+esc(d.logoUrl)+'" alt="Logo preview">':'<span class="mini-badge">🖼 LOGO — add in Logo &amp; text →</span>';
   else if(key==="headline")sample='<div class="mini-headline">'+esc(d.headline||"Headline text")+'</div>';
   else if(key==="subtext")sample='<div class="mini-subtext">'+esc(d.subtext||"Sub-text / tagline")+'</div>';
   else if(screen==="host"){
@@ -1231,16 +1283,38 @@ function miniElHTML(screen,key,e){
     else sample='<span class="mini-badge">Status message</span>';
   }
   var gs=((d.globalScale||100)/100)*(e.s/100);
-  return '<div class="d-el '+(selectedEl===key?"sel":"")+'" data-el="'+key+'" data-s="'+e.s+'" style="left:'+e.x+'%;top:'+e.y+'%;transform:translate(-50%,-50%) scale('+gs+');'+(e.show?"":"opacity:.35")+'">'+sample+'<div style="font-size:9px;font-weight:800;letter-spacing:.08em;margin-top:4px;color:#FFB020;text-transform:uppercase">'+esc(e.label)+'</div></div>';
+  return '<div class="d-el '+(selectedEl===key?"sel":"")+'" data-el="'+key+'" data-s="'+e.s+'" style="left:'+e.x+'%;top:'+e.y+'%;transform:translate(-50%,-50%) scale('+gs+')">'+sample+'<div style="font-size:9px;font-weight:800;letter-spacing:.08em;margin-top:4px;color:#FFB020;text-transform:uppercase">'+esc(e.label)+'</div></div>';
+}
+var EYE_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+var EYE_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.6 10.6 0 0 1 12 19c-6.5 0-10-7-10-7a17.6 17.6 0 0 1 4.06-4.94M9.9 4.24A9.5 9.5 0 0 1 12 5c6.5 0 10 7 10 7a17.7 17.7 0 0 1-2.16 3.19M14.12 14.12A3 3 0 1 1 9.88 9.88"/><line x1="2" y1="2" x2="22" y2="22"/></svg>';
+function selectEl(key){
+  selectedEl=key;
+  var cv=$("designCanvas");
+  if(cv)cv.querySelectorAll(".d-el").forEach(function(x){x.classList.toggle("sel",x.getAttribute("data-el")===selectedEl);});
+  renderElList(); renderInspector();
+}
+function renderElList(){
+  var box=$("elList"); if(!box)return;
+  var d=design[designTab]; if(!d||!d.els){box.innerHTML="";return;}
+  box.innerHTML=Object.keys(d.els).map(function(k){
+    var e=d.els[k];
+    return '<div class="el-row '+(selectedEl===k?"sel":"")+(e.show?"":" is-hidden")+'" data-layer="'+k+'">'
+      +'<button type="button" class="el-select" data-select-layer="'+k+'"><span class="el-name">'+esc(e.label)+'</span><span class="el-state">'+(e.show?"Visible":"Hidden — not on canvas")+'</span></button>'
+      +'<button type="button" class="eye-toggle '+(e.show?"":"off")+'" data-eye="'+k+'" role="switch" aria-checked="'+(e.show?"true":"false")+'" aria-label="'+(e.show?"Hide ":"Show ")+esc(e.label)+'" title="'+(e.show?"Hide layer":"Show layer")+'">'+(e.show?EYE_ON:EYE_OFF)+'</button></div>';
+  }).join("");
+  box.querySelectorAll("[data-select-layer]").forEach(function(b){b.addEventListener("click",function(){selectEl(b.getAttribute("data-select-layer"));});});
+  box.querySelectorAll("[data-eye]").forEach(function(b){b.addEventListener("click",function(ev){ev.stopPropagation();var k=b.getAttribute("data-eye");design[designTab].els[k].show=!design[designTab].els[k].show;selectedEl=k;designChanged();});});
 }
 function renderDesigner(){
   var d=design[designTab], cv=$("designCanvas");
   cv.className="canvas"+(designTab==="host"?"":" portrait");
   cv.style.color=d.text; cv.style.setProperty("--amber",d.accent);
   var h='<div class="canvas-bg" style="'+stageBgStyle(d)+'"></div><div class="canvas-shade" style="opacity:'+(d.overlay/100)+'"></div>';
-  Object.keys(d.els).forEach(function(k){h+=miniElHTML(designTab,k,d.els[k]);});
+  /* Hidden layers are NOT drawn on the designer canvas at all — like Figma/Photoshop with the eye off. They stay listed in the Layers panel on the right, where the eye brings them back. */
+  Object.keys(d.els).forEach(function(k){if(d.els[k].show)h+=miniElHTML(designTab,k,d.els[k]);});
   cv.innerHTML=h;
-  cv.querySelectorAll(".d-el").forEach(function(el){attachDrag(el,cv);el.addEventListener("pointerdown",function(){selectedEl=el.getAttribute("data-el");renderInspector();cv.querySelectorAll(".d-el").forEach(function(x){x.classList.toggle("sel",x.getAttribute("data-el")===selectedEl)});});});
+  cv.querySelectorAll(".d-el").forEach(function(el){attachDrag(el,cv);el.addEventListener("pointerdown",function(){selectEl(el.getAttribute("data-el"));});});
+  renderElList();
   /* background controls */
   $("bgMode").value=d.bgMode; $("bg1").value=d.bg1; $("bg2").value=d.bg2;
   if(document.activeElement!==$("bgImage"))$("bgImage").value=d.bgImage&&d.bgImage.indexOf("data:")===0?"(uploaded image)":(d.bgImage||"");
@@ -1259,14 +1333,15 @@ function renderDesigner(){
 function designTabLabel(){return designTab==="host"?"Host screen":designTab==="player1"?"Player 1 screen":"Player 2 screen"}
 function renderInspector(){
   var box=$("elInspector"), d=design[designTab];
-  if(!selectedEl||!d.els[selectedEl]){box.innerHTML='<p style="color:var(--muted);font-size:13.5px;margin:0">👆 Tap an element on the canvas to select it — then drag it, or fine-tune it here.</p>';return;}
+  if(!selectedEl||!d.els[selectedEl]){box.innerHTML='<p class="inspector-empty">No layer selected. Tap a layer above, or tap an element on the canvas — its position, size and visibility appear here.</p>';return;}
   var e=d.els[selectedEl];
-  box.innerHTML='<h3 style="font-size:15px">Selected: '+esc(e.label)+'</h3>'
-   +'<div class="row3" style="margin-top:10px">'
-   +'<div class="field"><label>Left ↔ — <span id="elXVal">'+Math.round(e.x)+'%</span></label><input type="range" id="elX" min="4" max="96" value="'+e.x+'"></div>'
-   +'<div class="field"><label>Top ↕ — <span id="elYVal">'+Math.round(e.y)+'%</span></label><input type="range" id="elY" min="5" max="95" value="'+e.y+'"></div>'
-   +'<div class="field"><label>Size (scale) — <span id="elSVal">'+e.s+'%</span></label><input type="range" id="elS" min="10" max="400" step="5" value="'+e.s+'"><div style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="number" id="elSNum" min="10" max="400" step="5" value="'+e.s+'" aria-label="Scale percent" style="width:92px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-weight:700"><span style="font-size:12.5px;color:var(--muted)">% &nbsp;·&nbsp; 10% tiny → 400% huge</span></div><div class="scale-presets" id="elSPresets"><button type="button" data-es="10">10%</button><button type="button" data-es="25">25%</button><button type="button" data-es="50">50%</button><button type="button" data-es="75">75%</button><button type="button" data-es="100">100%</button><button type="button" data-es="150">150%</button><button type="button" data-es="200">200%</button><button type="button" data-es="300">300%</button><button type="button" data-es="400">400%</button></div></div></div>'
-   +'<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap"><span style="font-weight:700;font-size:14px">Show this element on the screen:</span><span class="seg"><button id="elShowOn">Shown</button><button id="elShowOff">Hidden</button></span></div>';
+  box.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><b style="font-family:Archivo;font-size:15px;flex:1;min-width:0">'+esc(e.label)+'</b>'
+   +'<button type="button" class="eye-toggle '+(e.show?"":"off")+'" id="elVisToggle" role="switch" aria-checked="'+(e.show?"true":"false")+'" aria-label="Toggle layer visibility" title="'+(e.show?"Hide layer":"Show layer")+'">'+(e.show?EYE_ON:EYE_OFF)+'</button>'
+   +'<span style="font-size:12px;font-weight:800;color:var(--muted)">'+(e.show?"Visible":"Hidden")+'</span></div>'
+   +(e.show?"":'<p style="font-size:12.5px;color:var(--muted);line-height:1.5;margin:0 0 10px">This layer is hidden — it is not drawn on the canvas or the real screen. Tap the eye to bring it back.</p>')
+   +'<div class="field"><label>Position X — <span id="elXVal">'+Math.round(e.x)+'%</span></label><input type="range" id="elX" min="4" max="96" value="'+e.x+'"></div>'
+   +'<div class="field"><label>Position Y — <span id="elYVal">'+Math.round(e.y)+'%</span></label><input type="range" id="elY" min="5" max="95" value="'+e.y+'"></div>'
+   +'<div class="field"><label>Size — <span id="elSVal">'+e.s+'%</span></label><input type="range" id="elS" min="10" max="400" step="5" value="'+e.s+'"><div style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="number" id="elSNum" min="10" max="400" step="5" value="'+e.s+'" aria-label="Scale percent" style="width:92px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-weight:700"><span style="font-size:12.5px;color:var(--muted)">% · 10% tiny → 400% huge</span></div><div class="scale-presets" id="elSPresets"><button type="button" data-es="10">10%</button><button type="button" data-es="25">25%</button><button type="button" data-es="50">50%</button><button type="button" data-es="75">75%</button><button type="button" data-es="100">100%</button><button type="button" data-es="150">150%</button><button type="button" data-es="200">200%</button><button type="button" data-es="300">300%</button><button type="button" data-es="400">400%</button></div></div>';
   $("elX").addEventListener("input",function(ev){e.x=+ev.target.value;syncCanvasEl();});
   $("elY").addEventListener("input",function(ev){e.y=+ev.target.value;syncCanvasEl();});
   $("elS").addEventListener("input",function(ev){e.s=+ev.target.value;var n=$("elSNum");if(n)n.value=e.s;syncCanvasEl();markElSPresets();});
@@ -1274,9 +1349,7 @@ function renderInspector(){
   function markElSPresets(){document.querySelectorAll("#elSPresets [data-es]").forEach(function(b){b.classList.toggle("on",+b.getAttribute("data-es")===e.s);});}
   document.querySelectorAll("#elSPresets [data-es]").forEach(function(b){b.addEventListener("click",function(){e.s=+b.getAttribute("data-es");var s=$("elS");if(s)s.value=e.s;var n=$("elSNum");if(n)n.value=e.s;syncCanvasEl();markElSPresets();});});
   markElSPresets();
-  $("elShowOn").className=e.show?"on":""; $("elShowOff").className=!e.show?"on":"";
-  $("elShowOn").addEventListener("click",function(){e.show=true;designChanged();});
-  $("elShowOff").addEventListener("click",function(){e.show=false;designChanged();});
+  $("elVisToggle").addEventListener("click",function(){e.show=!e.show;designChanged();});
   function syncCanvasEl(){
     var el=$("designCanvas").querySelector('[data-el="'+selectedEl+'"]');
     if(el){var gs=((design[designTab].globalScale||100)/100)*(e.s/100);el.style.left=e.x+"%";el.style.top=e.y+"%";el.style.transform="translate(-50%,-50%) scale("+gs+")";el.setAttribute("data-s",e.s);}
@@ -1337,14 +1410,18 @@ function switchView(v){
   var tb=$("topbar"); if(tb)tb.hidden=(v==="host"||v==="p1"||v==="p2");
   ["hostStage","p1Stage","p2Stage"].forEach(function(id){var s=$(id);if(s)s.classList.toggle("full",v==="host"||v==="p1"||v==="p2");});
   var ft=document.querySelector("footer"); if(ft)ft.hidden=(v==="host"||v==="p1"||v==="p2");
-  try{history.replaceState(null,"","#/"+(v==="p1"?"player1":v==="p2"?"player2":v));}catch(e){}
+  /* The address bar is left exactly as the screen was opened — switching
+     screens in this tab no longer appends a #/… hash, so a clean link like
+     /Admin stays /Admin instead of becoming /Admin#/admin. */
   window.scrollTo({top:0});
   if(v==="admin"){renderAdmin();renderDesigner();}
   render();
 }
 function routeFromURL(){
-  /* Each screen has its own route: /Player1, /Player2, /Admin (path),
-     #/player1, #/player2, #/admin (hash), or ?screen=player1. Root = Host. */
+  /* Working routes — the clean paths only: / = Host, /Player1, /Player2,
+     /Admin (the Host room link also uses ?screen=host&room=…). Old hash
+     addresses (/#/admin etc.) are still recognised here so a saved one
+     lands on the right screen, but no link in the app points to them. */
   var v=null;
   try{
     var seg=function(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");};
