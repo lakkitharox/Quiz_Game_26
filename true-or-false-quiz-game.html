@@ -296,6 +296,17 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
 .phistory{margin-top:11px;font-size:12.5px;color:var(--muted);line-height:1.6}
 .phistory b{color:var(--text)}
 .phistory div{padding:6px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
+/* --- v17 diagnostics (Host lobby + Admin → Live) --- */
+.diag-box{margin-top:14px;text-align:left;padding:11px 13px;border-radius:12px;background:rgba(0,0,0,.38);border:1px dashed rgba(255,255,255,.35);font-size:12px;line-height:1.65}
+.diag-box b.diag-t{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.85;margin-bottom:3px}
+.diag-line{display:flex;gap:7px;justify-content:space-between;border-top:1px solid rgba(127,127,127,.25);padding:2.5px 0}
+.diag-line:first-of-type{border-top:0}
+.diag-line span{opacity:.75;flex:none}
+.diag-line code{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;font-weight:700;text-align:right;word-break:break-word}
+.diag-wrap{margin-top:12px;background:var(--card2);border:1px dashed var(--line);border-radius:14px;padding:12px 14px;font-size:12.5px;line-height:1.65}
+.diag-wrap b.diag-t{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.diag-wrap .diag-line{border-top-color:var(--line)}
+.diag-wrap .diag-line span{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -449,6 +460,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <h3>● Live monitor</h3>
         <p>Everything happening right now — who is connected, each player's score, answer and answer time, the current question and the timer. Updates live as the game runs.</p>
         <div id="liveMonitor"></div>
+        <div id="adminDiag" class="diag-wrap"></div>
       </div>
       </div>
       <div class="admin-sec" data-sec="live" hidden>
@@ -537,7 +549,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <p><b style="color:var(--text)">How a live game runs:</b> in <b style="color:var(--text)">Live</b>, press “Create Live Room for iPads”, then give the players the room code (it only ever appears here in Admin). Players open their Player link, enter the code and their name, and their taps count live on the Host screen. Start, reveal, end and reset are all controlled from Live. The <b style="color:var(--text)">Live monitor</b> at the top of Live shows each player's screen link, Connected / Disconnected status, score, correct count, streak, current answer, answer time, recent answers, plus the current question and the timer.</p>
         <p><b style="color:var(--text)">Designing:</b> in <b style="color:var(--text)">Screens</b> you edit a draft of each screen — the canvas previews every change as you make it, but the Host and Player screens keep showing the last published design until you tap <b style="color:var(--text)">Go Live at the bottom of Admin</b>. Go Live means one thing only: it publishes the design live to all screens at once — no file, no download — and saves it in this browser, so it is still here after you reload Admin. Screens on other devices receive it through the live room.</p>
         <p><b style="color:var(--text)">Screens:</b> Host (main address) · Player 1 (/Player1) · Player 2 (/Player2) · Admin (/Admin). No accounts or installs — everything runs in the browser.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v16</b> · 17 Nov 2026 — Go Live persistence + Host auto-join from the clean main address. Read this tag back to confirm you are on the new build; if it says anything else, you are looking at an older one.</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v17</b> · 17 Nov 2026 — live diagnostics on the Host lobby and in Admin → Live (channel status, design read from storage, last sync, join gate), player links pin their slot, and screens publish independently. Read this tag back to confirm you are on the new build; if it says anything else, you are looking at an older one.</p>
       </div>
       </div>
     </div>
@@ -634,10 +646,49 @@ function getQ(){return state.active[state.idx]||state.questions[state.idx]||null
 
 /* ================= LIVE (Supabase Realtime Broadcast) ================= */
 var supa=null;
-var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,lobbyChannel:null,lobbyTimer:null,joinedAt:0,heartbeatTimer:null};
+var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,lobbyChannel:null,lobbyTimer:null,joinedAt:0,heartbeatTimer:null};
+var pendingWantSlot=null; /* set by a /PlayerN screen's own join form so the host pins that exact slot */
 var lastHostState=null, liveMyAnswer=null, liveMyIdx=-1, broadcastQueued=false;
 var designPublished=false, hasRemoteDesign=false; /* set when THIS tab has pressed Save, or has received a published design — such tabs can answer design requests from freshly opened screens */
-function getSupa(){ if(supa) return supa; if(!window.supabase||!window.supabase.createClient) return null; try{supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);}catch(e){supa=null;} return supa; }
+
+/* ================= VISIBLE DIAGNOSTICS (v17) =================
+   The v16 fixes passed a node harness but failed live twice, so v17 stops
+   guessing: every live path records what it actually did, and the result is
+   SHOWN on the Host lobby and in Admin → Live. If something breaks again,
+   the screens themselves say where. The room code is never printed on the
+   Host screen — its diagnostics only say whether a code was received. */
+var diag={restore:"not checked yet",gate:"not evaluated yet",channel:"no channel yet",sync:"no sync message received yet",syncCount:0,publish:"nothing published from this tab yet",join:"—",supa:"not checked yet"};
+var designScreenTs={host:0,player1:0,player2:0}; /* per-screen publish stamps — a screen only accepts a design for a screen if its stamp is not older than the one it already has, so publishing one screen can never roll another screen back */
+function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeString();}catch(e){return "—";}}
+function designFingerprint(k){var d=liveDesign[k];if(!d)return k+": —";var bg=d.bgMode==="image"?"image":d.bgMode==="color"?("solid "+(d.bgColor||"")):("grad "+(d.bg1||"")+" → "+(d.bg2||""));return bg+(d.headline?(" · headline “"+d.headline+"”"):" · no headline");}
+function diagLines(admin){
+  var L=[];
+  L.push(["Build","v17"]);
+  L.push(["Live library (Supabase)",diag.supa]);
+  L.push(["This screen's role",live.mode==="host"?"Host (room owner)":live.mode==="player"?("Player "+(live.mySlot!==null?live.mySlot+1:"?")):live.mode==="viewer"?"Host display (viewer)":"Offline / demo"]);
+  L.push(["Room channel",diag.channel]);
+  if(admin)L.push(["Room code",live.code?("QUIZ-"+live.code):"none"]);
+  else L.push(["Room code received",live.code?"yes (kept hidden on this screen)":(earlyRoomCode?"yes, from this screen's link (kept hidden)":"no — looking for the game by discovery")]);
+  L.push(["Join gate (last check)",diag.gate]);
+  L.push(["Design read from this browser's storage at load",diag.restore]);
+  L.push(["Last sync message received",diag.sync+(diag.syncCount?" · "+diag.syncCount+" state message"+(diag.syncCount===1?"":"s")+" so far":"")]);
+  L.push(["Last publish from this tab",diag.publish]);
+  if(diag.join&&diag.join!=="—")L.push(["Player join",diag.join]);
+  L.push(["Live design — Host screen",designFingerprint("host")]);
+  L.push(["Live design — Player 1 screen",designFingerprint("player1")]);
+  L.push(["Live design — Player 2 screen",designFingerprint("player2")]);
+  L.push(["Draft vs live (this tab)",designIsDirty()?"DIFFERENT — draft edits not published yet":"same — screens show this design"]);
+  return L;
+}
+function diagHTML(admin){
+  return '<b class="diag-t">🔎 Diagnostics — Build v17</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
+}
+function renderDiag(){
+  var hd=$("hostDiagBody"); if(hd)hd.innerHTML=diagHTML(false);
+  var ad=$("adminDiag"); if(ad)ad.innerHTML=diagHTML(true);
+}
+function diagNote(){renderDiag();}
+function getSupa(){ if(supa){diag.supa="loaded ✓";return supa;} if(!window.supabase||!window.supabase.createClient){diag.supa="NOT loaded — live play impossible in this tab (check connection / script blockers)";diagNote();return null;} try{supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);diag.supa="loaded ✓";}catch(e){supa=null;diag.supa="failed to start: "+e.message;} diagNote(); return supa; }
 function normalizeCode(s){return String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,"").replace(/^QUIZ/,"")}
 /* Capture the room code from the address the moment the page loads, before any
    routing or view switching can touch the URL. A standalone Host screen uses
@@ -659,7 +710,7 @@ function broadcastState(){
     lastGain:state.lastGain.slice(),timeLeft:state.timeLeft,timerDur:state.timerDur,points:state.points,
     orderMode:state.orderMode, timerStyle:state.timerStyle, timeoutMode:state.timeoutMode, paused:state.paused,
     buttonStyle:state.buttonStyle, buttonScale:state.buttonScale, trueColor:state.trueColor, falseColor:state.falseColor, trueLabel:state.trueLabel, falseLabel:state.falseLabel,
-    design:clone(liveDesign), ts:Date.now()};
+    design:clone(liveDesign), screenTs:clone(designScreenTs), ts:Date.now()};
   try{live.channel.send({type:"broadcast",event:"state",payload:payload});}catch(e){}
 }
 function queueBroadcast(){ if(broadcastQueued) return; broadcastQueued=true; setTimeout(function(){broadcastQueued=false;broadcastState();},60); }
@@ -683,6 +734,7 @@ function hostCreateRoom(){
     else if(!$("view-admin").hidden)renderLiveMonitor();
   },3000);
   ch.subscribe(function(status){
+    diag.channel="room channel (as host): "+status+" · "+diagTime(Date.now()); diagNote();
     if(status==="SUBSCRIBED"){live.connected=true;queueBroadcast();toast("Live room "+live.code+" is open — players can join!");}
     else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){live.connected=false;toast("Live connection problem — demo mode still works");}
     updateLiveUI(); render();
@@ -717,6 +769,7 @@ function startHostDiscovery(){
   var ch=s.channel("quiz-host-lobby",{config:{broadcast:{self:false}}}); discovery.channel=ch;
   ch.on("broadcast",{event:"room-announce"},function(m){var pl=m.payload||{};var code=normalizeCode(pl.code||"");if(code.length>=3&&live.mode==="offline"){stopHostDiscovery();hostViewerJoin(code);}});
   ch.subscribe(function(status){
+    diag.channel="discovery (host lobby) channel: "+status+" · "+diagTime(Date.now()); diagNote();
     if(status==="SUBSCRIBED"){
       var ask=function(){try{ch.send({type:"broadcast",event:"host-discover",payload:{clientId:live.clientId}});}catch(e){}};
       ask();
@@ -735,10 +788,20 @@ function handleHostJoin(p){
   var name=String(p.name||"Player").trim().slice(0,18)||"Player";
   var slot=live.occupied.indexOf(p.clientId);
   if(slot===-1){
-    slot=live.occupied[0]===null?0:live.occupied[1]===null?1:-1;
-    if(slot===-1){try{live.channel.send({type:"broadcast",event:"join-rejected",payload:{clientId:p.clientId,reason:"Room is full — two players are already in."}});}catch(e){} return;}
+    /* The /Player1 and /Player2 links PIN their slot: a Player 2 iPad gets
+       slot 2 even if it joins first — never the first free slot. Only the
+       generic join form (no pinned slot) takes the first free slot. */
+    var want=(p.wantSlot===0||p.wantSlot===1)?p.wantSlot:null;
+    if(want!==null){
+      if(live.occupied[want]===null)slot=want;
+      else { try{live.channel.send({type:"broadcast",event:"join-rejected",payload:{clientId:p.clientId,reason:"Player "+(want+1)+" is already taken on this device set — that iPad is already in. Use the other player's link, or reset Player "+(want+1)+" in Admin."}});}catch(e){} diag.join=name+" asked for Player "+(want+1)+" but that slot is taken — rejected · "+diagTime(Date.now()); diagNote(); return; }
+    } else {
+      slot=live.occupied[0]===null?0:live.occupied[1]===null?1:-1;
+      if(slot===-1){try{live.channel.send({type:"broadcast",event:"join-rejected",payload:{clientId:p.clientId,reason:"Room is full — two players are already in."}});}catch(e){} return;}
+    }
     live.occupied[slot]=p.clientId;
   }
+  diag.join=name+" joined as Player "+(slot+1)+(p.wantSlot===0||p.wantSlot===1?" (pinned by their /Player"+(p.wantSlot+1)+" link)":" (first free slot)")+" · "+diagTime(Date.now()); diagNote();
   live.lastSeen[slot]=Date.now(); live.stale[slot]=false;
   state.players[slot].name=name;
   try{live.channel.send({type:"broadcast",event:"joined",payload:{clientId:p.clientId,slot:slot,name:name,code:live.code}});}catch(e){}
@@ -762,7 +825,7 @@ function playerJoinFrom(prefix){
   var s=getSupa(); if(!s){setStatus("⚠ Live connection unavailable in this browser.");return;}
   if(live.mode==="player"&&live.code===code){switchView(live.mySlot===1?"p2":"p1");return;}
   if(live.mode!=="offline") disconnectLive(true);
-  live.mode="player"; live.code=code; live.myName=name.slice(0,18); live.connected=false; live.assigned=false; live.mySlot=null; lastHostState=null; liveMyAnswer=null; liveMyIdx=-1;
+  live.mode="player"; live.code=code; live.myName=name.slice(0,18); live.connected=false; live.assigned=false; live.mySlot=null; live.wantSlot=pendingWantSlot; pendingWantSlot=null; lastHostState=null; liveMyAnswer=null; liveMyIdx=-1;
   var ch=s.channel(channelName(code),{config:{broadcast:{self:false}}}); live.channel=ch;
   ch.on("broadcast",{event:"state"},function(m){applyRemoteState(m.payload||{})});
   ch.on("broadcast",{event:"tick"},function(m){var pl=m.payload||{};state.timeLeft=pl.timeLeft;state.timerDur=pl.timerDur;render();});
@@ -775,9 +838,10 @@ function playerJoinFrom(prefix){
   ch.on("broadcast",{event:"kicked"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;var myView=live.mySlot===1?"p2":"p1";toast("Admin reset your player slot — use the join form on this screen to rejoin");disconnectLive(true);switchView(myView);});
   ch.on("broadcast",{event:"room-closed"},function(){var myView=live.mySlot===1?"p2":"p1";toast("Admin closed the room — you can join a new room from this screen");disconnectLive(true);switchView(myView);});
   ch.subscribe(function(status){
+    diag.channel="room channel (as player): "+status+" · "+diagTime(Date.now()); diagNote();
     if(status==="SUBSCRIBED"){
       live.connected=true; updateLiveUI();
-      var sendJoin=function(){try{ch.send({type:"broadcast",event:"join",payload:{clientId:live.clientId,name:live.myName}});}catch(e){}};
+      var sendJoin=function(){try{ch.send({type:"broadcast",event:"join",payload:{clientId:live.clientId,name:live.myName,wantSlot:live.wantSlot}});}catch(e){}};
       sendJoin(); if(live.joinRetry)clearInterval(live.joinRetry);
       var tries=0;
       live.joinRetry=setInterval(function(){if(live.assigned||tries++>6){clearInterval(live.joinRetry);live.joinRetry=null;if(!live.assigned)setStatus("Still waiting for the host… check the code, and that the host screen is open with this room created.");return;}sendJoin();},2500);
@@ -809,6 +873,7 @@ function hostViewerJoin(code){
   ch.on("broadcast",{event:"room-closed"},function(){disconnectLive(true);toast("Admin closed the room — this screen is back to demo mode");});
   ch.subscribe(function(status){
     if(live.channel!==ch)return; /* a stale channel replaced by a rejoin must not tear down the healthy one */
+    diag.channel="room channel (as viewer): "+status+" · "+diagTime(Date.now()); diagNote();
     if(status==="SUBSCRIBED"){
       live.connected=true; live.viewerRetries=0;
       var ask=function(){try{ch.send({type:"broadcast",event:"request-sync",payload:{clientId:live.clientId}});}catch(e){}};
@@ -837,21 +902,35 @@ function maybeHostViewer(){
        though the Host screen is what is displayed (init defaults null ->
        "host"). The old strict check made a root-URL Host show the lobby
        while never joining or discovering the room — the v3.6 live failure. */
-    if(currentView!=="host"||live.mode!=="offline")return;
+    if(currentView!=="host"){diag.gate="BLOCKED — this tab is showing the “"+currentView+"” screen, not Host · "+diagTime(Date.now());diagNote();return;}
+    if(live.mode!=="offline"){diag.gate="already live — role is “"+live.mode+"”, no new join needed · "+diagTime(Date.now());diagNote();return;}
     var code=earlyRoomCode;
     if(!code){
       var q=new URLSearchParams(location.search);
       var r=q.get("room")||q.get("code");
       if(r){var nc=normalizeCode(r);if(nc.length>=3)code=nc;}
     }
-    if(code){earlyRoomCode=code;stopHostDiscovery();hostViewerJoin(code);}
-    else startHostDiscovery();
-  }catch(e){}
+    if(code){earlyRoomCode=code;diag.gate="PASS — room code found in this screen's link, joining as viewer · "+diagTime(Date.now());diagNote();stopHostDiscovery();hostViewerJoin(code);}
+    else {diag.gate="PASS (no code in link) — discovery started, listening for Admin's room announcement · "+diagTime(Date.now());diagNote();startHostDiscovery();}
+  }catch(e){diag.gate="ERROR — "+(e&&e.message?e.message:e)+" · "+diagTime(Date.now());diagNote();}
 }
 function applyRemoteState(pl){
   lastHostState=pl;
+  diag.syncCount++; diag.sync="state · phase “"+(pl.phase||"?")+"” · Q "+((pl.idx!==undefined?pl.idx+1:"?"))+" / "+(pl.total||"?")+" · scores "+(pl.players?pl.players.map(function(p){return p.score;}).join("–"):"?")+" · "+diagTime(Date.now()); diagNote();
   if(live.syncTimer){clearInterval(live.syncTimer);live.syncTimer=null;}
-  if(pl.design){liveDesign=pl.design;design=clone(pl.design);ensureDesign();hasRemoteDesign=true;persistPublishedDesign();if(!$("view-admin").hidden)renderDesigner();}
+  if(pl.design){
+    /* Per-screen merge with publish stamps: accept a screen's design only
+       if the sender's stamp for THAT screen is at least as new as ours.
+       A stale tab can therefore never roll one screen back, and a publish
+       of the Host screen carries no authority over the player screens. */
+    var merged=false;
+    ["host","player1","player2"].forEach(function(k){
+      var inc=pl.design[k]; if(!inc)return;
+      var incTs=pl.screenTs&&typeof pl.screenTs[k]==="number"?pl.screenTs[k]:null;
+      if(incTs===null||incTs>=designScreenTs[k]){liveDesign[k]=clone(inc);if(incTs!==null)designScreenTs[k]=incTs;merged=true;}
+    });
+    if(merged){design=clone(liveDesign);ensureDesign();hasRemoteDesign=true;persistPublishedDesign();if(!$("view-admin").hidden)renderDesigner();}
+  }
   if(pl.timerStyle)state.timerStyle=pl.timerStyle;
   if(pl.timeoutMode)state.timeoutMode=pl.timeoutMode;
   if(pl.paused!==undefined)state.paused=!!pl.paused;
@@ -902,7 +981,7 @@ function disconnectLive(silent){
   live.viewerRetries=0;
   live.lastSeen=[0,0]; live.stale=[false,false];
   if(live.channel){var ch=live.channel;live.channel=null;try{var s=getSupa();if(s)s.removeChannel(ch);}catch(e){}}
-  live.mode="offline";live.code=null;live.connected=false;live.mySlot=null;live.assigned=false;live.occupied=[null,null];lastHostState=null;liveMyAnswer=null;
+  live.mode="offline";live.code=null;live.connected=false;live.mySlot=null;live.wantSlot=null;live.assigned=false;live.occupied=[null,null];lastHostState=null;liveMyAnswer=null;
   if(wasPlayer){state.questions=clone(DEFAULT_QS);state.active=[];state.phase="lobby";state.idx=0;state.answers=[null,null];state.lastGain=[0,0];state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];}
   updateLiveUI(); render();
   if(!silent)toast("Left the live room — demo mode is on");
@@ -920,6 +999,7 @@ function updateLiveUI(){
   $("roomCodeDisplay").textContent=live.code?("QUIZ-"+live.code):"—";
   $("connStatus").textContent=isHost?(live.connected?"Live host · "+countJoined()+" joined":"Connecting…"):isPlayer?(live.assigned?("Live · Player "+(live.mySlot+1)):(live.connected?"Joining…":"Connecting…")):live.mode==="viewer"?(live.connected?"Live · following the game":"Connecting to the game…"):"Demo mode";
   var ali=$("adminLiveInfo"); if(ali)ali.textContent=isHost?("Live room QUIZ-"+live.code+" is open · "+countJoined()+" of 2 players joined. Saved designs and Admin changes broadcast to the screens. The Host link below carries the room, so the main screen follows the game on its own — the code itself only ever shows here in Admin."):isPlayer?("This device joined room QUIZ-"+live.code+" as a player. Admin lives on the host screen."):live.mode==="viewer"?("This screen is following the live game as a display. Run the game from Admin."):"No live room — you're in one-screen demo mode. Use Create Live Room in the Game Control panel to connect iPads.";
+  renderDiag();
 }
 
 /* ================= HOST STAGE ================= */
@@ -971,7 +1051,7 @@ function hostStageHTML(){
     } else {
       liveBit='<p style="margin-top:14px">Waiting for Admin to start the game…<br><span style="font-size:13.5px;opacity:.85">Admin: create the live room and press Start Game from the Admin screen.</span></p>';
     }
-    centre='<div class="lobby-panel"><h2>'+esc(state.players[0].name)+' vs '+esc(state.players[1].name)+'</h2><p>'+total+' questions · '+state.points+' points each · '+(state.timerDur===0?"no timer":state.timerDur+"s per question")+' · '+(state.orderMode==="random"?"🔀 random order":"➡ in sequence")+'.</p>'+liveBit+'</div>';
+    centre='<div class="lobby-panel"><h2>'+esc(state.players[0].name)+' vs '+esc(state.players[1].name)+'</h2><p>'+total+' questions · '+state.points+' points each · '+(state.timerDur===0?"no timer":state.timerDur+"s per question")+' · '+(state.orderMode==="random"?"🔀 random order":"➡ in sequence")+'.</p>'+liveBit+'<div class="diag-box" id="hostDiagBody">'+diagHTML(false)+'</div></div>';
   } else if(state.phase==="finished"){
     var a=state.players[0],b=state.players[1];
     var title=a.score===b.score?"It's a tie!":((a.score>b.score?a.name:b.name)+" wins!");
@@ -993,6 +1073,7 @@ function playerJoinAs(i){
   if(cv.length<3){toast("Enter the room code from Admin first");if(code)code.focus();return;}
   if(!nv){toast("Enter your name so the host knows who you are");if(name)name.focus();return;}
   $("joinCode2").value=cv; $("joinName2").value=nv;
+  pendingWantSlot=i; /* this screen IS Player (i+1) — its link pins the slot */
   playerJoinFrom("join2");
 }
 function goFullscreen(id){var el=$(id);if(!el)return;try{if(document.fullscreenElement)document.exitFullscreen();else if(el.requestFullscreen)el.requestFullscreen();}catch(e){}}
@@ -1204,6 +1285,7 @@ function renderLiveMonitor(){
   }
   h+='</div>';
   box.innerHTML=h;
+  renderDiag();
 }
 /* ================= ADMIN ================= */
 function renderAdmin(){
@@ -1553,12 +1635,20 @@ try{
     designChannel=new BroadcastChannel("tf-quiz-design");
     designChannel.onmessage=function(ev){
       var m=ev.data||{};
-      if(m.type==="design"&&m.design){
+      if(m.type==="design"&&(m.screens||m.design)){
         if(designIsDirty())return; /* never clobber unsaved edits in this tab */
-        liveDesign=clone(m.design); design=clone(m.design); ensureDesign(); hasRemoteDesign=true; persistPublishedDesign();
-        render(); if(!$("view-admin").hidden)renderDesigner();
+        /* Per-screen merge: only the screens the sender actually published,
+           and only when their publish stamp is not older than ours — so
+           publishing the Host screen can never change a player screen here. */
+        var incScreens=m.screens||m.design, changed=false;
+        ["host","player1","player2"].forEach(function(k){
+          if(!incScreens[k])return;
+          var incTs=m.screenTs&&typeof m.screenTs[k]==="number"?m.screenTs[k]:null;
+          if(incTs===null||incTs>=designScreenTs[k]){liveDesign[k]=clone(incScreens[k]);if(incTs!==null)designScreenTs[k]=incTs;changed=true;}
+        });
+        if(changed){design=clone(liveDesign);ensureDesign();hasRemoteDesign=true;persistPublishedDesign();render();if(!$("view-admin").hidden)renderDesigner();}
       } else if(m.type==="design-request"){
-        if(live.mode==="host"||designPublished||hasRemoteDesign){try{designChannel.postMessage({type:"design",design:clone(liveDesign)});}catch(e){}}
+        if(live.mode==="host"||designPublished||hasRemoteDesign){try{designChannel.postMessage({type:"design",screens:clone(liveDesign),screenTs:clone(designScreenTs)});}catch(e){}}
       }
     };
   }
@@ -1572,12 +1662,13 @@ function markSaved(what){var el=$("saveStatus");if(el)el.textContent="✓ Live n
    it survives reloads on this device, and any screen opened in this browser
    (Admin, Host, players) restores it before first paint. Screens on OTHER
    devices still receive it live through the room broadcast / design pull. */
-var DESIGN_STORE_KEY="tfq-live-design-v16";
+var DESIGN_STORE_KEY="tfq-live-design-v17";
+var DESIGN_STORE_KEY_OLD="tfq-live-design-v16"; /* v16 entries are migrated on first read, never just trusted */
 var lastDesignStoreStr="";
 function persistPublishedDesign(){
   try{
     if(!window.localStorage)return;
-    var str=JSON.stringify({design:liveDesign,style:{timerStyle:state.timerStyle,timeoutMode:state.timeoutMode,buttonStyle:state.buttonStyle,buttonScale:state.buttonScale,trueColor:state.trueColor,falseColor:state.falseColor,trueLabel:state.trueLabel,falseLabel:state.falseLabel},ts:Date.now()});
+    var str=JSON.stringify({design:liveDesign,screenTs:designScreenTs,style:{timerStyle:state.timerStyle,timeoutMode:state.timeoutMode,buttonStyle:state.buttonStyle,buttonScale:state.buttonScale,trueColor:state.trueColor,falseColor:state.falseColor,trueLabel:state.trueLabel,falseLabel:state.falseLabel},ts:Date.now()});
     if(str===lastDesignStoreStr)return;
     lastDesignStoreStr=str;
     localStorage.setItem(DESIGN_STORE_KEY,str);
@@ -1585,26 +1676,43 @@ function persistPublishedDesign(){
 }
 function restorePublishedDesign(){
   try{
-    if(!window.localStorage)return false;
-    var raw=localStorage.getItem(DESIGN_STORE_KEY); if(!raw)return false;
+    if(!window.localStorage){diag.restore="storage unavailable in this browser";diagNote();return false;}
+    var keyUsed=DESIGN_STORE_KEY, raw=localStorage.getItem(DESIGN_STORE_KEY);
+    if(!raw){raw=localStorage.getItem(DESIGN_STORE_KEY_OLD);keyUsed=DESIGN_STORE_KEY_OLD;}
+    if(!raw){diag.restore="nothing stored yet — screens show the factory design until the first Go Live";diagNote();return false;}
     lastDesignStoreStr=raw;
-    var saved=JSON.parse(raw); if(!saved||!saved.design||!saved.design.host||!saved.design.player1||!saved.design.player2)return false;
+    var saved=JSON.parse(raw); if(!saved||!saved.design||!saved.design.host||!saved.design.player1||!saved.design.player2){diag.restore="stored design was unreadable — ignored";diagNote();return false;}
     liveDesign=clone(saved.design); design=clone(saved.design); ensureDesign();
+    if(saved.screenTs){["host","player1","player2"].forEach(function(k){if(typeof saved.screenTs[k]==="number")designScreenTs[k]=saved.screenTs[k];});}
+    else if(saved.ts){designScreenTs={host:saved.ts,player1:saved.ts,player2:saved.ts};}
     if(saved.style){["timerStyle","timeoutMode","buttonStyle","buttonScale","trueColor","falseColor","trueLabel","falseLabel"].forEach(function(k){if(saved.style[k]!==undefined)state[k]=saved.style[k];});}
     designPublished=true; hasRemoteDesign=true;
+    diag.restore="YES — read from storage ("+keyUsed+") · saved "+diagTime(saved.ts||Date.now())+" · Host: "+designFingerprint("host");
+    diagNote();
     return true;
-  }catch(e){return false;}
+  }catch(e){diag.restore="ERROR reading storage: "+(e&&e.message?e.message:e);diagNote();return false;}
 }
-function publishDesignLive(what){
+function publishDesignLive(what,screenKey){
   designPublished=true;
+  var now=Date.now();
+  if(screenKey){designScreenTs[screenKey]=now;}
+  else{designScreenTs={host:now,player1:now,player2:now};}
   persistPublishedDesign(); /* survives an Admin reload — see store note above */
   broadcastState(); /* immediate — not just queued — when this tab hosts the room */
   queueBroadcast();
-  if(designChannel){try{designChannel.postMessage({type:"design",design:clone(liveDesign)});}catch(e){}}
+  if(designChannel){
+    /* Single-screen publish sends ONLY that screen — the other screens'
+       designs are not in the message at all, so nothing can overwrite them. */
+    var screens=screenKey?{}:clone(liveDesign);
+    if(screenKey)screens[screenKey]=clone(liveDesign[screenKey]);
+    try{designChannel.postMessage({type:"design",screens:screens,screenTs:clone(designScreenTs)});}catch(e){}
+  }
+  diag.publish=what+" · "+diagTime(now)+(screenKey?(" · only the "+screenKey+" screen was sent"):" · all screens sent");
+  diagNote();
   markSaved(what);
 }
-$("saveAllBtn").addEventListener("click",function(){ensureDesign();liveDesign=clone(design);render();renderDesigner();publishDesignLive("all screens & settings");});
-$("saveScreenBtn").addEventListener("click",function(){ensureDesign();liveDesign[designTab]=clone(design[designTab]);render();renderDesigner();publishDesignLive(designTabLabel()+" only");});
+$("saveAllBtn").addEventListener("click",function(){ensureDesign();liveDesign=clone(design);render();renderDesigner();publishDesignLive("all screens & settings",null);});
+$("saveScreenBtn").addEventListener("click",function(){ensureDesign();liveDesign[designTab]=clone(design[designTab]);render();renderDesigner();publishDesignLive(designTabLabel()+" only",designTab);});
 
 /* ================= INIT ================= */
 restorePublishedDesign(); /* last Go Live design, restored before first paint so a reload keeps it */
@@ -1625,6 +1733,9 @@ setInterval(function(){
     else if(live.mode==="viewer"&&!lastHostState&&live.joinedAt&&Date.now()-live.joinedAt>15000){var c=live.code;live.joinedAt=Date.now();rejoinViewer(c);}
   }catch(e){}
 },6000);
+/* Diagnostics stay fresh on their own — channel/gate/sync lines re-render
+   every 3s so a live test can watch them change (or catch them stuck). */
+setInterval(function(){try{renderDiag();}catch(e){}},3000);
 /* A freshly opened screen asks any other open tab that has a published design
    (the room host, or a tab where Save was pressed) to send it over. */
 if(designChannel){try{designChannel.postMessage({type:"design-request"});}catch(e){}}
