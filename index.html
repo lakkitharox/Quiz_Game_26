@@ -296,9 +296,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
 .phistory{margin-top:11px;font-size:12.5px;color:var(--muted);line-height:1.6}
 .phistory b{color:var(--text)}
 .phistory div{padding:6px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
-/* --- v17 diagnostics (Host lobby + Admin → Live) --- */
-.diag-box{margin-top:14px;text-align:left;padding:11px 13px;border-radius:12px;background:rgba(0,0,0,.38);border:1px dashed rgba(255,255,255,.35);font-size:12px;line-height:1.65}
-.diag-box b.diag-t{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.85;margin-bottom:3px}
+/* --- diagnostics (Admin → Live) --- */
 .diag-line{display:flex;gap:7px;justify-content:space-between;border-top:1px solid rgba(127,127,127,.25);padding:2.5px 0}
 .diag-line:first-of-type{border-top:0}
 .diag-line span{opacity:.75;flex:none}
@@ -307,11 +305,15 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
 .diag-wrap b.diag-t{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
 .diag-wrap .diag-line{border-top-color:var(--line)}
 .diag-wrap .diag-line span{color:var(--muted)}
-/* Host-lobby diagnostics live at stage level (v18) — a direct child of the
-   stage, never nested inside a design element, so hiding or moving the
-   question element in the designer can never hide the panel with it. */
-.host-diag{position:absolute;left:12px;bottom:12px;z-index:6;width:min(430px,calc(100vw - 24px));max-height:42%;overflow:auto}
-.host-diag .diag-box{margin-top:0}
+/* --- Today's room (one code all day) --- */
+.day-room{border:2px solid var(--amber);background:linear-gradient(135deg,color-mix(in srgb,var(--amber) 13%, var(--card)),var(--card))}
+.day-room .dr-kicker{font-size:11.5px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.day-room .dr-code{font-family:Archivo;font-weight:900;font-size:clamp(38px,7vw,56px);letter-spacing:.05em;line-height:1.05;color:var(--text)}
+.day-room .dr-code b{color:var(--amber)}
+.day-room .dr-meta{font-size:13.5px;color:var(--muted);line-height:1.55;margin-top:4px}
+.day-room .dr-status{font-size:14px;line-height:1.55;margin-top:10px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+.day-room .dr-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.remembered-note{font-size:13.5px;line-height:1.55;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.45);border-radius:12px;padding:11px 13px;margin-top:10px;text-align:left}
 </style>
 </head>
 <body>
@@ -342,8 +344,9 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <input id="joinName2" placeholder="Your name" maxlength="18" autocomplete="off">
       <button class="btn primary" onclick="playerJoinFrom('join2')">Join Game →</button>
       <div class="statusline" id="joinStatus2"></div>
+      <div class="remembered-note" id="joinRememberedNote" hidden></div>
     </div>
-    <p class="hint">No room yet? Admin must tap “Create Live Room” in the Admin panel first.</p>
+    <p class="hint">You only enter the code <b>once per day</b> — this device remembers today's code until midnight, so later rounds need no code at all. No room yet? Admin must tap “Create Today's Room” in the Admin panel first.</p>
   </div>
   <div id="livePlayerNote" hidden><p class="hint" style="padding-top:22px">✅ You're in — your controller is on your <b>Player screen</b>. Keep this device on that screen during the game.</p></div>
 </section>
@@ -354,6 +357,18 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
   <div class="intro">
     <h1>Admin — design every screen, run the quiz</h1>
     <p>You have full control here: start, end, restart and reset the game, design every screen with logos and text, then use <b style="color:var(--text)">Go Live at the bottom</b> to publish. The Host screen itself has no tabs or buttons — it is a clean full-screen display only.</p>
+  </div>
+  <!-- TODAY'S ROOM — one code for the full day, Admin only (never on the Host TV screen) -->
+  <div class="panel day-room" id="adminRoomPanel">
+    <div class="dr-kicker">🔑 Today's room — one code, all day</div>
+    <div class="dr-code" id="adminRoomCodeBig">QUIZ-<b>····</b></div>
+    <div class="dr-meta" id="adminRoomMeta">One room for the full day — a new code starts tomorrow.</div>
+    <div class="dr-status" id="adminRoomStatus">Loading today's room…</div>
+    <p style="font-size:13.5px;line-height:1.6;color:var(--muted);margin:12px 0 0">Give this code to both players <b style="color:var(--text)">once in the morning</b>. Each iPad remembers it for the rest of the day — refreshes, new rounds and reopening the room all use this same code, so nobody has to type it again today. It is shown <b style="color:var(--text)">only here in Admin</b>, never on the Host TV screen. <b style="color:var(--text)">Names work the opposite way — per session:</b> between groups, tap <b style="color:var(--text)">New Session</b> in Game Control and each iPad shows its name bar again, so every session's players enter their own names; names never carry over.</p>
+    <div class="dr-actions">
+      <button class="btn primary" id="adminRoomCreateBtn" onclick="hostCreateRoom()">● Create Today's Room</button>
+      <button class="btn" id="adminRoomCopyBtn" onclick="copyTodaysCode()">Copy today's code</button>
+    </div>
   </div>
   <div class="admin-shell">
     <nav class="admin-menu" id="adminMenu" aria-label="Admin sections">
@@ -473,7 +488,9 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>🎮 Game control — full authority</h3>
         <p>Only Admin controls the game. The Host screen shows no buttons at all. <b style="color:var(--text)" id="phaseLabel">Phase: Lobby</b></p>
+        <p style="margin-top:-6px">Between groups, tap <b style="color:var(--text)">New Session</b>: scores and names clear and the <b style="color:var(--text)">name bar shows again on both iPads</b>, so the next players type their own names — names never carry over between sessions. The iPads stay in today's room, so the code is never asked again.</p>
         <div class="control-grid">
+          <button class="btn dark" id="ctlNewSession">✦ New Session — New Players</button>
           <button class="btn primary" id="ctlStart">▶ Start Game</button>
           <button class="btn restart" id="ctlRestart">↻ Restart Game</button>
           <button class="btn" id="ctlPause">⏸ Pause Timer</button>
@@ -485,7 +502,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <div class="stack">
           <button class="btn" id="ctlReveal">Reveal Answer Now</button>
           <button class="btn" id="ctlNext">Next Question →</button>
-          <button class="btn" onclick="hostCreateRoom()">● Create Live Room for iPads</button>
+          <button class="btn" onclick="hostCreateRoom()">● Create Today's Room for iPads</button>
           <button class="btn" id="restoreBtn">Restore the 40-statement bank</button>
         </div>
       </div>
@@ -541,7 +558,9 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <p>These are the only links — one clean address per screen. Give each player their own: Player 1's iPad opens <b style="color:var(--text)">/Player1</b> only, Player 2's opens <b style="color:var(--text)">/Player2</b> only. Each link opens that screen directly, on its own. Connection status for both players is in the Live monitor above.</p>
         <div id="linkList"></div>
         <div class="divider"></div>
-        <h3 style="font-size:15px">Live room</h3>
+        <h3 style="font-size:15px">Live room — today's code</h3>
+        <div class="codebig" id="adminLiveRoomCode" style="font-size:34px;margin:4px 0 6px">QUIZ-····</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.55;margin:0 0 8px">This is the one code for the full day (same as the Today's Room card at the top of Admin). Players enter it once — their iPads remember it until midnight.</p>
         <p id="adminLiveInfo" style="margin-bottom:10px">No live room — one-screen demo mode.</p>
         <div class="stack"><button class="btn" onclick="switchView('host')">Go to Host / Live Room →</button></div>
       </div>
@@ -551,10 +570,10 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>About this app</h3>
         <p><b style="color:var(--text)">Myth or Fact Quiz Game</b> — a two-player quiz for one big screen and two iPads. The bank holds 40 statements; each round picks 10 at random. The statement and a quick countdown show on the TV screen and on both player tabs; each player taps <b style="color:var(--text)">MYTH</b> or <b style="color:var(--text)">FACT</b> before the countdown ends. A correct answer is worth 10 points — but if both players are correct, only the fastest tap scores and the other gets 0. A wrong answer, or waiting for the countdown to end, scores 0. The correct answer is revealed on the TV screen when the countdown ends or as soon as both players have answered, scores update live on the TV, and after 10 statements the final totals decide the winner.</p>
-        <p><b style="color:var(--text)">How a live game runs:</b> in <b style="color:var(--text)">Live</b>, press “Create Live Room for iPads”, then give the players the room code (it only ever appears here in Admin). Players open their Player link, enter the code and their name, and their taps count live on the Host screen. Start, reveal, end and reset are all controlled from Live. The <b style="color:var(--text)">Live monitor</b> at the top of Live shows each player's screen link, Connected / Disconnected status, score, correct count, streak, current answer, answer time, recent answers, plus the current question and the timer.</p>
+        <p><b style="color:var(--text)">How a live game runs:</b> in <b style="color:var(--text)">Live</b>, press “Create Today's Room for iPads”, then give the players today's room code — it is shown at the top of Admin and only ever appears in Admin. There is <b style="color:var(--text)">one code for the full day</b>: players open their Player link and enter it once, and their iPad remembers it until midnight, so reopening the room or starting new rounds never asks for it again. <b style="color:var(--text)">Names are per session</b> (activation model): at the start of every session the name bar shows again on each iPad — players enter or change their names fresh, and Admin's <b style="color:var(--text)">New Session</b> button clears the previous session's names and scores so nothing carries over. Their taps count live on the Host screen. Start, reveal, end and reset are all controlled from Live. The <b style="color:var(--text)">Live monitor</b> at the top of Live shows each player's screen link, Connected / Disconnected status, score, correct count, streak, current answer, answer time, recent answers, plus the current question and the timer.</p>
         <p><b style="color:var(--text)">Designing:</b> in <b style="color:var(--text)">Screens</b> you edit a draft of each screen — the canvas previews every change as you make it, but the Host and Player screens keep showing the last published design until you tap <b style="color:var(--text)">Go Live at the bottom of Admin</b>. Go Live means one thing only: it publishes the design live to all screens at once — no file, no download — and saves it in this browser, so it is still here after you reload Admin. Screens on other devices receive it through the live room.</p>
         <p><b style="color:var(--text)">Screens:</b> Host (main address) · Player 1 (/Player1) · Player 2 (/Player2) · Admin (/Admin). No accounts or installs — everything runs in the browser.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v20</b> · 26 Nov 2026 — the game is now <b style="color:var(--text)">Myth or Fact</b>: 40-statement bank, 10 picked at random per round, MYTH / FACT buttons, 10 points per correct answer with fastest-correct-only scoring, the statement and countdown on the TV and both tabs, and the answer revealed on TV at countdown end or when both players have answered. Earlier fixes kept: the player join forms now keep whatever is being typed (and the focused field) across screen re-renders, so a Player 1 iPad can always enter its room code and name; a standalone Host screen gets extra ways into the game — the open room's code is remembered in this browser for Host tabs opened alongside Admin, a stored code that turns out to be stale drops back to room discovery on its own, a stalled viewer connection is rebuilt from a completely clean slate, and a Host tab retries joining when it becomes visible. The published-design store, per-screen publishing and slot pinning are unchanged from v18. Read this tag back to confirm you are on the new build; if it says anything else, you are looking at an older one.</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v21</b> · 26 Nov 2026 — NEW: one room code per day (date-derived, stored for the day, shown in a Today's Room card at the top of Admin and in Live → screen links; the Host reuses it for every room it opens that day, and each player iPad remembers the code it joined with until midnight — code entered once per day, never per round) and per-session names (the name bar returns at the start of every session: joined iPads get an editable name bar in the lobby that updates the host live, Admin's New Session and Reset to Lobby clear names back to Player 1 / Player 2 and bump the session so typed names never carry over; names are never stored with the day's code). Previously v20: the game is now <b style="color:var(--text)">Myth or Fact</b>: 40-statement bank, 10 picked at random per round, MYTH / FACT buttons, 10 points per correct answer with fastest-correct-only scoring, the statement and countdown on the TV and both tabs, and the answer revealed on TV at countdown end or when both players have answered. Earlier fixes kept: the player join forms now keep whatever is being typed (and the focused field) across screen re-renders, so a Player 1 iPad can always enter its room code and name; a standalone Host screen gets extra ways into the game — the open room's code is remembered in this browser for Host tabs opened alongside Admin, a stored code that turns out to be stale drops back to room discovery on its own, a stalled viewer connection is rebuilt from a completely clean slate, and a Host tab retries joining when it becomes visible. The published-design store, per-screen publishing and slot pinning are unchanged from v18. Read this tag back to confirm you are on the new build; if it says anything else, you are looking at an older one.</p>
       </div>
       </div>
     </div>
@@ -674,7 +693,7 @@ var state={
   phase:"lobby", idx:0, answers:[null,null], lastGain:[0,0],
   answerTimes:[null,null], answerSeq:[null,null], seqCounter:0, questionStartedAt:0, answerLog:[],
   timerDur:10, timeLeft:10, points:10, orderMode:"random", roundSize:10, newAnswer:true,
-  timerStyle:"ring", timeoutMode:"reveal", paused:false,
+  timerStyle:"ring", timeoutMode:"reveal", paused:false, sessionId:0,
   buttonStyle:"classic", buttonScale:100, trueColor:"#22C55E", falseColor:"#EF4444", trueLabel:"FACT", falseLabel:"MYTH"
 };
 function elapsedNow(){ if(state.questionStartedAt) return Math.max(0,(Date.now()-state.questionStartedAt)/1000); if(state.timerDur>0) return Math.max(0,state.timerDur-state.timeLeft); return 0; }
@@ -707,7 +726,7 @@ function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeSt
 function designFingerprint(k){var d=liveDesign[k];if(!d)return k+": —";var bg=d.bgMode==="image"?"image":d.bgMode==="color"?("solid "+(d.bgColor||"")):("grad "+(d.bg1||"")+" → "+(d.bg2||""));return bg+(d.headline?(" · headline “"+d.headline+"”"):" · no headline");}
 function diagLines(admin){
   var L=[];
-  L.push(["Build","v20"]);
+  L.push(["Build","v21"]);
   L.push(["Live library (Supabase)",diag.supa]);
   L.push(["This screen's role",live.mode==="host"?"Host (room owner)":live.mode==="player"?("Player "+(live.mySlot!==null?live.mySlot+1:"?")):live.mode==="viewer"?"Host display (viewer)":"Offline / demo"]);
   L.push(["Room channel",diag.channel]);
@@ -726,10 +745,9 @@ function diagLines(admin){
   return L;
 }
 function diagHTML(admin){
-  return '<b class="diag-t">🔎 Diagnostics — Build v20</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
+  return '<b class="diag-t">🔎 Diagnostics — Build v21</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
 }
 function renderDiag(){
-  var hd=$("hostDiagBody"); if(hd)hd.innerHTML=diagHTML(false);
   var ad=$("adminDiag"); if(ad)ad.innerHTML=diagHTML(true);
 }
 function diagNote(){renderDiag();}
@@ -741,11 +759,114 @@ function normalizeCode(s){return String(s||"").toUpperCase().replace(/[^A-Z0-9]/
 var earlyRoomCode=null;
 try{var _q0=new URLSearchParams(location.search);var _r0=_q0.get("room")||_q0.get("code");if(_r0){var _n0=normalizeCode(_r0);if(_n0.length>=3)earlyRoomCode=_n0;}}catch(e){}
 function genCode(){return String(Math.floor(1000+Math.random()*9000))}
+/* ================= ONE ROOM FOR THE FULL DAY (v21) =================
+   One room code per calendar day. The Host reuses the same code for every
+   room it opens that day — closing and reopening the room, refreshing
+   Admin, or starting a new round never changes it; a new code starts at
+   midnight. The code is derived from the date (so it is the same even if
+   this browser's storage was cleared) and also stored for the day.
+   Players enter the code ONCE: a successful join is remembered on that
+   iPad for the rest of the day (code + name + slot), and the player
+   screen rejoins with it automatically — no re-typing until tomorrow. */
+var DAILY_ROOM_KEY="tfq-daily-room-v21";
+var PLAYER_DAY_KEY="tfq-player-day-v21";
+function todayKey(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function todayLabel(){try{return new Date().toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",year:"numeric"});}catch(e){return todayKey();}}
+function dailyCodeForDate(ds){var h=2166136261,s="MYTHFACT-"+ds;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return String(1000+(Math.abs(h)%9000));}
+function getDailyRoom(){
+  var tk=todayKey();
+  try{
+    if(window.localStorage){
+      var raw=localStorage.getItem(DAILY_ROOM_KEY);
+      if(raw){var saved=JSON.parse(raw);if(saved&&saved.date===tk&&normalizeCode(saved.code).length>=3)return{date:tk,code:normalizeCode(saved.code)};}
+    }
+  }catch(e){}
+  var rec={date:tk,code:dailyCodeForDate(tk)};
+  try{if(window.localStorage)localStorage.setItem(DAILY_ROOM_KEY,JSON.stringify(rec));}catch(e){}
+  return rec;
+}
+function getDailyRoomCode(){return getDailyRoom().code;}
+function getPlayerDaySession(){
+  /* Only the CODE (and which player slot) is remembered for the day.
+     Names are deliberately NOT stored here: this is an activation, so
+     every new session has new guests — the name bar comes back at the
+     start of every session and each pair of players enters fresh names. */
+  try{
+    if(!window.localStorage)return null;
+    var raw=localStorage.getItem(PLAYER_DAY_KEY); if(!raw)return null;
+    var s=JSON.parse(raw);
+    if(!s||!s.code)return null;
+    if(s.date!==todayKey()){try{localStorage.removeItem(PLAYER_DAY_KEY);}catch(e){}return null;}
+    s.code=normalizeCode(s.code); if(s.code.length<3)return null;
+    if(s.slot!==0&&s.slot!==1)s.slot=null;
+    return s;
+  }catch(e){return null;}
+}
+function savePlayerDaySession(code,slot){
+  try{
+    if(!window.localStorage)return;
+    var prev=getPlayerDaySession()||{};
+    var rec={date:todayKey(),code:normalizeCode(code),slot:(slot===0||slot===1)?slot:(prev.slot===0||prev.slot===1?prev.slot:null),savedAt:Date.now()};
+    if(rec.code.length<3)return;
+    localStorage.setItem(PLAYER_DAY_KEY,JSON.stringify(rec));
+  }catch(e){}
+}
+function clearPlayerDaySession(){try{if(window.localStorage)localStorage.removeItem(PLAYER_DAY_KEY);}catch(e){}joinDraft={"c0":"","n0":"","c1":"","n1":""};}
+function forgetTodaysRoom(){
+  clearPlayerDaySession();
+  if(live.mode==="player")disconnectLive(true);
+  toast("Today's remembered code cleared — enter a code to join again");
+  render(); updateLiveUI();
+}
+function copyTodaysCode(){
+  var code="QUIZ-"+getDailyRoomCode();
+  function done(){toast("Copied today's room code: "+code);}
+  function fallback(){try{var ta=document.createElement("textarea");ta.value=code;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);done();}catch(e){toast("Today's code is "+code);}}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(code).then(done).catch(fallback);}else fallback();
+}
+function renderAdminRoomPanel(){
+  var big=$("adminRoomCodeBig"); if(!big)return;
+  var daily=getDailyRoom(), code=daily.code;
+  big.innerHTML="QUIZ-<b>"+esc(code)+"</b>";
+  var meta=$("adminRoomMeta"); if(meta)meta.textContent=todayLabel()+" · One room for the full day · This code works until midnight tonight — a new code starts tomorrow.";
+  var st=$("adminRoomStatus");
+  if(st){
+    if(live.mode==="host"&&live.code===code)st.innerHTML=(live.connected?"<b style='color:#16A34A'>● Live now</b>":"<b>Connecting…</b>")+" · "+countJoined()+" of 2 players joined. Every round today uses this same room — players who entered the code once today are already in, no new code needed.";
+    else if(live.mode==="host")st.innerHTML="<b>Live in room QUIZ-"+esc(live.code||"")+"</b> — that room was opened before today's code took over. Close it and tap Create Today's Room to move everyone onto today's code QUIZ-"+esc(code)+".";
+    else if(live.mode==="viewer"||live.mode==="player")st.innerHTML="This tab is following / playing in a live room. Today's code stays <b>QUIZ-"+esc(code)+"</b> — reopening the room from Admin today reuses it.";
+    else st.innerHTML="Not live yet — tap <b>Create Today's Room</b> below. The code stays <b>QUIZ-"+esc(code)+"</b> for every game today, even if you close and reopen the room.";
+  }
+  var cb=$("adminRoomCreateBtn"); if(cb){cb.textContent=(live.mode==="host"&&live.code===code)?("● Room Live — QUIZ-"+code):"● Create Today's Room";cb.disabled=(live.mode==="host"&&live.code===code);}
+  var lc=$("adminLiveRoomCode"); if(lc)lc.textContent="QUIZ-"+code;
+  var note=$("joinRememberedNote");
+  if(note){
+    var sess=getPlayerDaySession();
+    if(sess){note.hidden=false;note.innerHTML="✓ <b>Code remembered for today:</b> this device already joined today with code <b>QUIZ-"+esc(sess.code)+"</b>"+(sess.slot===0||sess.slot===1?(" as <b>Player "+(sess.slot+1)+"</b>"):"")+". The code above is filled in for you — just enter <b>your name for this session</b> (names are fresh every session) and tap Join. <button class='btn small' style='margin-top:8px' onclick='forgetTodaysRoom()'>Forget today's code</button>";}
+    else note.hidden=true;
+  }
+}
+var playerSessionPrepped=false;
+function prepareRememberedPlayer(){
+  /* New session on a player iPad: today's CODE is prefilled from the
+     day memory — the NAME field is always left blank, because names are
+     entered fresh at the start of every session (activation model). */
+  if(playerSessionPrepped)return;
+  if(currentView!=="p1"&&currentView!=="p2"&&currentView!=="join")return;
+  var sess=getPlayerDaySession(); if(!sess)return;
+  playerSessionPrepped=true;
+  var viewSlot=currentView==="p1"?0:currentView==="p2"?1:null;
+  var slot=(viewSlot!==null?viewSlot:sess.slot);
+  if($("joinCode2")&&!$("joinCode2").value)$("joinCode2").value=sess.code;
+  if(slot===0||slot===1){
+    if(!joinDraft["c"+slot])joinDraft["c"+slot]=sess.code;
+    joinDraft["n"+slot]=""; /* name always fresh — never carried into a new session */
+  }
+}
 function channelName(code){return "quiz-room-"+code}
 function broadcastState(){
   if(live.mode!=="host"||!live.channel||!live.connected) return;
   var q=getQ();
-  var payload={phase:state.phase,idx:state.idx,total:getTotal(),
+  var payload={phase:state.phase,idx:state.idx,total:getTotal(),sessionId:state.sessionId,
     questionText:(state.phase==="playing"||state.phase==="reveal")&&q?q.text:null,
     correctAnswer:(state.phase==="reveal"||state.phase==="finished")&&q?q.answer:null,
     players:state.players.map(function(p){return{name:p.name,score:p.score,correct:p.correct,streak:p.streak}}),
@@ -764,11 +885,12 @@ function hostCreateRoom(){
   var s=getSupa();
   if(!s){toast("Live unavailable in this browser — demo mode still works");return;}
   if(live.mode!=="offline"){toast("Already in a live room");return;}
-  live.code=genCode(); live.mode="host"; live.connected=false; live.occupied=[null,null]; live.lastSeen=[0,0]; live.stale=[false,false];
+  live.code=getDailyRoomCode(); live.mode="host"; live.connected=false; live.occupied=[null,null]; live.lastSeen=[0,0]; live.stale=[false,false]; /* v21: today's code — the same room all day, reopening never changes it */
   try{if(window.localStorage)localStorage.setItem(OPEN_ROOM_KEY,live.code);}catch(e){} /* v19: same-browser Host tabs can find this room even if an announce is missed */
   var ch=s.channel(channelName(live.code),{config:{broadcast:{self:false}}}); live.channel=ch;
   ch.on("broadcast",{event:"join"},function(m){handleHostJoin(m.payload||{})});
   ch.on("broadcast",{event:"answer"},function(m){handleHostAnswer(m.payload||{})});
+  ch.on("broadcast",{event:"name-update"},function(m){var pl=m.payload||{};var sl=+pl.slot;if(sl!==0&&sl!==1)return;if(live.occupied[sl]!==pl.clientId)return;var nm=String(pl.name||"").trim().slice(0,18);if(!nm)return;state.players[sl].name=nm;render();queueBroadcast();toast(nm+" is Player "+(sl+1)+" for this session");}); /* v21: per-session name change from an iPad already in the room — no code needed again */
   ch.on("broadcast",{event:"ping"},function(m){var pl=m.payload||{};var sl=live.occupied.indexOf(pl.clientId);if(sl!==-1){live.lastSeen[sl]=Date.now();if(live.stale[sl]){live.stale[sl]=false;render();}}});
   ch.on("broadcast",{event:"request-sync"},function(){queueBroadcast()});
   ch.on("broadcast",{event:"viewer-hello"},function(){queueBroadcast()}); /* a display screen announcing itself gets the full state at once */
@@ -782,7 +904,7 @@ function hostCreateRoom(){
   },3000);
   ch.subscribe(function(status){
     diag.channel="room channel (as host): "+status+" · "+diagTime(Date.now()); diagNote();
-    if(status==="SUBSCRIBED"){live.connected=true;queueBroadcast();toast("Live room "+live.code+" is open — players can join!");}
+    if(status==="SUBSCRIBED"){live.connected=true;queueBroadcast();toast("Today's room QUIZ-"+live.code+" is open — this one code works all day!");}
     else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){live.connected=false;toast("Live connection problem — demo mode still works");}
     updateLiveUI(); render();
   });
@@ -908,10 +1030,11 @@ function playerJoinFrom(prefix){
   if(live.mode==="player"&&live.code===code){switchView(live.mySlot===1?"p2":"p1");return;}
   if(live.mode!=="offline") disconnectLive(true);
   live.mode="player"; live.code=code; live.myName=name.slice(0,18); live.connected=false; live.assigned=false; live.mySlot=null; live.wantSlot=pendingWantSlot; pendingWantSlot=null; lastHostState=null; liveMyAnswer=null; liveMyIdx=-1;
+  savePlayerDaySession(code,live.wantSlot); /* v21: remember the CODE (and slot) for the whole day — the name is per-session and is never stored */
   var ch=freshRoomChannel(s,code); live.channel=ch;
   ch.on("broadcast",{event:"state"},onStateBroadcast);
   ch.on("broadcast",{event:"tick"},function(m){var pl=m.payload||{};state.timeLeft=pl.timeLeft;state.timerDur=pl.timerDur;render();});
-  ch.on("broadcast",{event:"joined"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;live.mySlot=+pl.slot;live.assigned=true;if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}setStatus("");updateLiveUI();toast("You're in as Player "+(live.mySlot+1)+" 🎉");switchView(live.mySlot===1?"p2":"p1");try{live.channel.send({type:"broadcast",event:"request-sync",payload:{clientId:live.clientId}});}catch(e){}
+  ch.on("broadcast",{event:"joined"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;live.mySlot=+pl.slot;live.assigned=true;savePlayerDaySession(live.code,live.mySlot);if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}setStatus("");updateLiveUI();toast("You're in as Player "+(live.mySlot+1)+" 🎉");switchView(live.mySlot===1?"p2":"p1");try{live.channel.send({type:"broadcast",event:"request-sync",payload:{clientId:live.clientId}});}catch(e){}
     if(live.pingTimer)clearInterval(live.pingTimer);
     var sendPing=function(){try{if(live.channel)live.channel.send({type:"broadcast",event:"ping",payload:{clientId:live.clientId,slot:live.mySlot}});}catch(e){}};
     sendPing(); live.pingTimer=setInterval(sendPing,4000);
@@ -1049,8 +1172,10 @@ function maybeHostViewer(){
     else {diag.gate="PASS (no code in link) — discovery started, listening for Admin's room announcement · "+diagTime(Date.now());diagNote();startHostDiscovery();}
   }catch(e){diag.gate="ERROR — "+(e&&e.message?e.message:e)+" · "+diagTime(Date.now());diagNote();}
 }
+var sessionNameDraft=[null,null]; /* per-session name being typed on a player iPad — kept across stage re-renders, wiped when a new session starts */
 function applyRemoteState(pl){
   lastHostState=pl;
+  if(typeof pl.sessionId==="number"&&pl.sessionId!==state.sessionId){state.sessionId=pl.sessionId;sessionNameDraft=[null,null];joinDraft.n0="";joinDraft.n1=""; /* v21: a new session started — old names (and half-typed ones) never carry over */}
   if(live.viewerFallbackTimer){clearTimeout(live.viewerFallbackTimer);live.viewerFallbackTimer=null;} /* v19: state arrived — the join is proven, no stale-code fallback needed */
   diag.syncCount++; diag.sync="state · phase “"+(pl.phase||"?")+"” · Q "+((pl.idx!==undefined?pl.idx+1:"?"))+" / "+(pl.total||"?")+" · scores "+(pl.players?pl.players.map(function(p){return p.score;}).join("–"):"?")+" · "+diagTime(Date.now()); diagNote();
   if(live.syncTimer){clearInterval(live.syncTimer);live.syncTimer=null;}
@@ -1142,7 +1267,8 @@ function updateLiveUI(){
   dot.className="conn-dot "+(live.connected?"on":(live.mode!=="offline"?"wait":""));
   $("roomCodeDisplay").textContent=live.code?("QUIZ-"+live.code):"—";
   $("connStatus").textContent=isHost?(live.connected?"Live host · "+countJoined()+" joined":"Connecting…"):isPlayer?(live.assigned?("Live · Player "+(live.mySlot+1)):(live.connected?"Joining…":"Connecting…")):live.mode==="viewer"?(live.connected?"Live · following the game":"Connecting to the game…"):"Demo mode";
-  var ali=$("adminLiveInfo"); if(ali)ali.textContent=isHost?("Live room QUIZ-"+live.code+" is open · "+countJoined()+" of 2 players joined. Saved designs and Admin changes broadcast to the screens. The Host link below carries the room, so the main screen follows the game on its own — the code itself only ever shows here in Admin."):isPlayer?("This device joined room QUIZ-"+live.code+" as a player. Admin lives on the host screen."):live.mode==="viewer"?("This screen is following the live game as a display. Run the game from Admin."):"No live room — you're in one-screen demo mode. Use Create Live Room in the Game Control panel to connect iPads.";
+  var ali=$("adminLiveInfo"); if(ali)ali.textContent=isHost?("Live room QUIZ-"+live.code+" is open · "+countJoined()+" of 2 players joined. This is today's one code — it stays the same all day. Saved designs and Admin changes broadcast to the screens. The Host link below carries the room, so the main screen follows the game on its own — the code itself only ever shows here in Admin."):isPlayer?("This device joined room QUIZ-"+live.code+" as a player. Admin lives on the host screen."):live.mode==="viewer"?("This screen is following the live game as a display. Run the game from Admin."):"No live room — you're in one-screen demo mode. Use Create Today's Room at the top of Admin (or in Game Control) to connect iPads.";
+  renderAdminRoomPanel();
   renderDiag();
 }
 
@@ -1207,12 +1333,6 @@ function hostStageHTML(){
   }
   h+='<div class="stage-el" style="'+elStyle(d.els.question)+'"><div style="transform:scale('+(d.els.question.s/100)+')">'+centre+'</div></div>';
   h+=scoreTile(0,d.els.score1)+scoreTile(1,d.els.score2);
-  /* v18: the diagnostics panel is a direct child of the stage — in v17 it
-     was nested inside the question element's lobby panel, so it vanished
-     with that element and the Host's join/channel state could not be read
-     from the Host screen at all. It now renders on the lobby at stage level,
-     independent of every designer element's position and visibility. */
-  if(state.phase==="lobby")h+='<div class="host-diag"><div class="diag-box" id="hostDiagBody">'+diagHTML(false)+'</div></div>';
   /* No tabs, no buttons on the Host screen — Admin controls the game. */
   return h;
 }
@@ -1228,6 +1348,17 @@ function playerJoinAs(i){
   playerJoinFrom("join2");
 }
 function goFullscreen(id){var el=$(id);if(!el)return;try{if(document.fullscreenElement)document.exitFullscreen();else if(el.requestFullscreen)el.requestFullscreen();}catch(e){}}
+function playerUpdateName(i){
+  /* Per-session name entry from an iPad that is already in today's room:
+     sends the new name to the host, which updates the scoreboards. The
+     room code is not involved — it stays remembered for the whole day. */
+  var inp=$("pNameEdit"+i), v=inp?inp.value.trim():"";
+  if(!v){toast("Type the player's name for this session first");if(inp)inp.focus();return;}
+  v=v.slice(0,18); sessionNameDraft[i]=null;
+  state.players[i].name=v;
+  if(live.mode==="player"&&live.mySlot===i&&live.channel){try{live.channel.send({type:"broadcast",event:"name-update",payload:{clientId:live.clientId,slot:i,name:v}});}catch(e){}}
+  render(); toast("Name set for this session: "+v);
+}
 
 /* ================= PLAYER STAGES ================= */
 function playerStageHTML(i){
@@ -1246,7 +1377,23 @@ function playerStageHTML(i){
   } else if(state.phase==="lobby"){
     var joinBit="";
     if(live.mode==="offline"){
-      joinBit='<div class="join-mini" style="text-align:left"><input id="pJoinCode'+i+'" placeholder="ROOM CODE" maxlength="10" autocapitalize="characters" autocomplete="off" value="'+esc(joinDraft["c"+i]||"")+'"><input id="pJoinName'+i+'" placeholder="Your name" maxlength="18" autocomplete="off" value="'+esc(joinDraft["n"+i]||"")+'"><button class="btn primary" onclick="playerJoinAs('+i+')">Join →</button></div><div style="font-size:13px;opacity:.85;margin-top:8px">Joining a live room? Enter the code from Admin — or just play on this device in demo mode.</div>';
+      var rem=getPlayerDaySession();
+      var codeVal=joinDraft["c"+i]||(rem?rem.code:"");
+      joinBit='<div class="join-mini" style="text-align:left"><input id="pJoinCode'+i+'" placeholder="ROOM CODE" maxlength="10" autocapitalize="characters" autocomplete="off" value="'+esc(codeVal)+'"><input id="pJoinName'+i+'" placeholder="Your name — this session" maxlength="18" autocomplete="off" value="'+esc(joinDraft["n"+i]||"")+'"><button class="btn primary" onclick="playerJoinAs('+i+')">Join →</button></div>'
+        +'<div style="font-size:13px;opacity:.9;margin-top:8px;text-align:left">'+(rem?("✓ <b>Today's code is remembered</b> on this iPad (QUIZ-"+esc(rem.code)+") — it's filled in for you, all day. Only your <b>name is asked every session</b>, so each new player types their own."):"Joining a live room? Enter today's code from Admin — this iPad then remembers it for the whole day. Your name is asked fresh every session.")+'</div>'
+        +(rem?'<div style="margin-top:8px;text-align:left"><button class="btn small" onclick="forgetTodaysRoom()">Forget today\'s code</button></div>':"");
+    } else if(isLiveMine){
+      /* v21 — the name bar comes back at the start of EVERY session, even
+         though this iPad is already in today's room: new guests type their
+         name (or the same player changes theirs) and tap Set name — the
+         host updates instantly, no room code is ever asked again today.
+         After Admin starts a New Session the host name resets to
+         “Player N”, so this field shows blank again on its own. */
+      var isDefaultName=(p.name==="Player "+(i+1));
+      var nameVal=sessionNameDraft[i]!==null?sessionNameDraft[i]:(isDefaultName?"":p.name);
+      joinBit='<div style="margin-top:12px;text-align:left"><div style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.85;margin-bottom:6px">✎ Name for this session</div>'
+        +'<div class="join-mini"><input id="pNameEdit'+i+'" placeholder="Type the player\'s name" maxlength="18" autocomplete="off" value="'+esc(nameVal)+'"><button class="btn primary" onclick="playerUpdateName('+i+')">Set name ✓</button></div>'
+        +'<div style="font-size:13px;opacity:.9;margin-top:8px">'+(isDefaultName?"<b>New session — enter this player's name.</b> Names never carry over from the last session.":"Name is set — you can change it here before the game starts.")+' No room code needed — this iPad stays in today\'s room all day.</div></div>';
     } else if(live.mode==="host"){
       joinBit='<div style="font-size:13.5px;opacity:.85;margin-top:8px">This device is the host — players join from their own iPads with the room code.</div>';
     }
@@ -1293,6 +1440,7 @@ function snapshotJoinInputs(){
     var c=$("pJoinCode"+i), n=$("pJoinName"+i);
     if(c)joinDraft["c"+i]=c.value;
     if(n)joinDraft["n"+i]=n.value;
+    var ne=$("pNameEdit"+i); if(ne)sessionNameDraft[i]=ne.value; /* per-session name bar survives re-renders while typing */
   }
 }
 function render(){
@@ -1311,7 +1459,7 @@ function render(){
      re-render can never eat a half-typed room code again. */
   snapshotJoinInputs();
   var focusId=null, focusPos=null, ae=document.activeElement;
-  if(ae&&ae.id&&/^(pJoinCode|pJoinName)[01]$/.test(ae.id)){focusId=ae.id;try{focusPos=ae.selectionStart;}catch(e){}}
+  if(ae&&ae.id&&/^(pJoinCode|pJoinName|pNameEdit)[01]$/.test(ae.id)){focusId=ae.id;try{focusPos=ae.selectionStart;}catch(e){}}
   var hs=$("hostStage"); hs.innerHTML=hostStageHTML(); applyAccent(hs,liveDesign.host); hs.style.zoom=((liveDesign.host.globalScale||100)/100);
   var s1=$("p1Stage"); s1.innerHTML=playerStageHTML(0); applyAccent(s1,liveDesign.player1); s1.style.zoom=((liveDesign.player1.globalScale||100)/100);
   var s2=$("p2Stage"); s2.innerHTML=playerStageHTML(1); applyAccent(s2,liveDesign.player2); s2.style.zoom=((liveDesign.player2.globalScale||100)/100);
@@ -1342,6 +1490,7 @@ function startGame(){
   /* v20 game rule: each round is ROUND_SIZE statements picked at random from the whole bank. */
   state.active=shuffle(clone(state.questions)).slice(0,Math.min(state.roundSize||10,state.questions.length));
   state.players.forEach(function(p){p.score=0;p.streak=0;p.correct=0});
+  state.sessionId++; /* a new game = a new session (names were entered fresh in the lobby for it) */
   state.idx=0;state.answers=[null,null];state.answerTimes=[null,null];state.answerSeq=[null,null];state.seqCounter=0;state.answerLog=[];state.lastGain=[0,0];state.phase="playing";state.timeLeft=state.timerDur;state.paused=false;state.questionStartedAt=Date.now();
   render(); startTimer();
   toast("Game started — "+state.active.length+" statements picked at random 🔀 Statement 1 is live!");
@@ -1391,7 +1540,18 @@ function finishGame(){if(live.mode==="player")return;state.phase="finished";stop
 function endGame(){if(live.mode==="player"){toast("Only Admin / host can end the game");return;}stopTimer();state.paused=false;state.phase="finished";render();toast("Game ended by Admin — winner is on the Host screen 🏆");}
 function restartGame(){if(live.mode==="player"){toast("Only Admin / host can restart");return;}state.paused=false;startGame();toast("Game restarted by Admin ↻");}
 function togglePause(){if(live.mode==="player")return;if(state.phase!=="playing"){toast("Pause only works while a question is live");return;}state.paused=!state.paused;render();toast(state.paused?"⏸ Timer paused by Admin":"▶ Timer resumed");}
-function resetGame(){if(live.mode==="player")return;stopTimer();state.phase="lobby";state.idx=0;state.answers=[null,null];state.answerTimes=[null,null];state.lastGain=[0,0];state.timeLeft=state.timerDur;render();toast("Back to lobby — scores kept. Start Game resets scores.");}
+function resetGame(){if(live.mode==="player")return;stopTimer();state.sessionId++;state.players[0].name="Player 1";state.players[1].name="Player 2";state.phase="lobby";state.idx=0;state.answers=[null,null];state.answerTimes=[null,null];state.lastGain=[0,0];state.timeLeft=state.timerDur;render();toast("Back to lobby for a new session — names cleared, so the name bar is showing on both iPads again. Scores kept; Start Game resets scores.");}
+function newSession(){
+  /* Activation flow: between groups of guests, Admin taps New Session.
+     Scores, answers and NAMES all clear and every iPad shows its name bar
+     again for the next players — but the iPads stay in today's room, so
+     nobody ever re-enters the room code during the day. */
+  if(live.mode==="player"){toast("Only Admin / host can start a new session");return;}
+  stopTimer(); state.paused=false; state.sessionId++;
+  state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];
+  state.answers=[null,null]; state.answerTimes=[null,null]; state.answerSeq=[null,null]; state.lastGain=[0,0]; state.answerLog=[]; state.active=[]; state.phase="lobby"; state.idx=0; state.timeLeft=state.timerDur;
+  render(); toast("New session — names & scores cleared, name bars are showing on both iPads for the next players. Room code unchanged: QUIZ-"+(live.code||getDailyRoomCode()));
+}
 function resetPlayer(i){
   var kicked=live.mode==="host"?live.occupied[i]:null;
   if(live.mode==="host"){live.occupied[i]=null;live.lastSeen[i]=0;live.stale[i]=false;if(kicked&&live.channel){try{live.channel.send({type:"broadcast",event:"kicked",payload:{clientId:kicked}});}catch(e){}}state.players[i].name="Player "+(i+1);}
@@ -1710,6 +1870,8 @@ function switchView(v){
   window.scrollTo({top:0});
   if(v==="admin"){renderAdmin();renderDesigner();}
   render();
+  prepareRememberedPlayer(); /* player screens: today's code prefilled, name left fresh for this session */
+  renderAdminRoomPanel();
 }
 function routeFromURL(){
   /* Working routes — the clean paths only: / = Host, /Player1, /Player2,
@@ -1797,13 +1959,14 @@ $("newFalse").addEventListener("click",function(){state.newAnswer=false;$("newFa
 $("addQBtn").addEventListener("click",function(){var v=$("newQ").value.trim();if(!v){toast("Type a statement first");return;}state.questions.push({text:v,answer:state.newAnswer});$("newQ").value="";render();toast("Statement added — "+state.questions.length+" in the bank");});
 
 /* ================= V5 WIRING: control, timer/button options, branding, save ================= */
+$("ctlNewSession").addEventListener("click",function(){newSession();});
 $("ctlStart").addEventListener("click",function(){startGame();toast("Game started — watch the Host screen ▶");});
 $("ctlRestart").addEventListener("click",function(){restartGame();});
 $("ctlEnd").addEventListener("click",function(){endGame();});
 $("ctlPause").addEventListener("click",function(){togglePause();});
 $("ctlReveal").addEventListener("click",function(){if(state.phase==="playing")revealAnswer();else toast("Reveal works while a question is live");});
 $("ctlNext").addEventListener("click",function(){if(state.phase==="reveal"){if(state.idx<getTotal()-1)nextQuestion();else finishGame();}else if(state.phase==="finished"){toast("Game finished — Start or Restart to play again");}else toast("Next works after Reveal");});
-$("ctlHardReset").addEventListener("click",function(){stopTimer();state.paused=false;state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];state.answers=[null,null];state.answerTimes=[null,null];state.answerLog=[];state.active=[];state.phase="lobby";state.idx=0;render();toast("Everything reset — scores, players and game back to lobby");});
+$("ctlHardReset").addEventListener("click",function(){stopTimer();state.paused=false;state.sessionId++;state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];state.answers=[null,null];state.answerTimes=[null,null];state.answerLog=[];state.active=[];state.phase="lobby";state.idx=0;render();toast("Everything reset — scores, players and game back to lobby");});
 document.querySelectorAll("#timerStyleSeg button").forEach(function(b){b.addEventListener("click",function(){state.timerStyle=b.getAttribute("data-tstyle");render();renderDesigner();toast("Timer style: "+b.textContent.trim()+" — preview is on the designer canvas");});});
 document.querySelectorAll("#timeoutSeg button").forEach(function(b){b.addEventListener("click",function(){state.timeoutMode=b.getAttribute("data-timeout");render();toast(state.timeoutMode==="reveal"?"Time-up will auto-reveal the answer":"Time-up will wait for Admin to reveal");});});
 document.querySelectorAll("#btnStyleSeg button").forEach(function(b){b.addEventListener("click",function(){state.buttonStyle=b.getAttribute("data-bstyle");render();renderDesigner();toast("Button style: "+b.textContent.trim()+" — preview is on the designer canvas (Player tabs)");});});
@@ -2010,7 +2173,7 @@ document.addEventListener("visibilitychange",function(){
 });
 /* Diagnostics stay fresh on their own — channel/gate/sync lines re-render
    every 3s so a live test can watch them change (or catch them stuck). */
-setInterval(function(){try{renderDiag();}catch(e){}},3000);
+setInterval(function(){try{renderDiag();renderAdminRoomPanel();}catch(e){}},3000); /* the room panel re-renders too, so at midnight it rolls over to the new day's code on its own */
 /* A freshly opened screen asks any other open tab that has a published design
    (the room host, or a tab where Save was pressed) to send it over. */
 if(designChannel){try{designChannel.postMessage({type:"design-request"});}catch(e){}}
