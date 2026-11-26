@@ -485,6 +485,21 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       </div>
       </div>
       <div class="admin-sec" data-sec="live" hidden>
+      <!-- ROOM CODE — first thing in Live, so the code is never hunted for -->
+      <div class="panel day-room" id="liveRoomPanel">
+        <div class="dr-kicker">🔑 Room code — connect to the room here</div>
+        <div class="dr-code" id="liveRoomCodeBig">QUIZ-<b>····</b></div>
+        <div class="dr-meta" id="liveRoomMeta">Today's code — one code for the full day, works until midnight tonight.</div>
+        <div class="dr-status" id="liveRoomStatusLine">Loading today's room…</div>
+        <div class="dr-actions">
+          <button class="btn primary" id="liveRoomCreateBtn" onclick="hostCreateRoom()">● Create Today's Room</button>
+          <button class="btn" onclick="copyTodaysCode()">Copy code</button>
+        </div>
+        <p style="font-size:13.5px;line-height:1.6;color:var(--muted);margin:14px 0 4px">Or skip typing altogether — open a screen from here and the code travels with the link, already filled in:</p>
+        <div id="liveRoomLinks"></div>
+      </div>
+      </div>
+      <div class="admin-sec" data-sec="live" hidden>
       <!-- LIVE MONITOR — connections, player info, timer, question -->
       <div class="panel">
         <h3>● Live monitor</h3>
@@ -570,7 +585,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <div class="divider"></div>
         <h3 style="font-size:15px">Live room — today's code</h3>
         <div class="codebig" id="adminLiveRoomCode" style="font-size:34px;margin:4px 0 6px">QUIZ-····</div>
-        <p style="font-size:13px;color:var(--muted);line-height:1.55;margin:0 0 8px">This is the one code for the full day (same as the Today's Room card at the top of Admin). Players enter it once — their iPads remember it until midnight.</p>
+        <p style="font-size:13px;color:var(--muted);line-height:1.55;margin:0 0 8px">This is the one code for the full day — the same code as the big card at the very top of Live and the Today's Room card at the top of Admin. Players enter it once — their iPads remember it until midnight.</p>
         <p id="adminLiveInfo" style="margin-bottom:10px">No live room — one-screen demo mode.</p>
         <div class="stack"><button class="btn" onclick="switchView('host')">Go to Host / Live Room →</button></div>
       </div>
@@ -580,7 +595,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>About this app</h3>
         <p><b style="color:var(--text)">Myth or Fact Quiz Game</b> — a two-player quiz for one big screen and two iPads. The bank holds 40 statements; each round picks 10 at random. The statement and a quick countdown show on the TV screen and on both player tabs; each player taps <b style="color:var(--text)">MYTH</b> or <b style="color:var(--text)">FACT</b> before the countdown ends. A correct answer is worth 10 points — but if both players are correct, only the fastest tap scores and the other gets 0. A wrong answer, or waiting for the countdown to end, scores 0. The correct answer is revealed on the TV screen when the countdown ends or as soon as both players have answered, scores update live on the TV, and after 10 statements the final totals decide the winner.</p>
-        <p><b style="color:var(--text)">How a live game runs:</b> in <b style="color:var(--text)">Live</b>, press “Create Today's Room for iPads”, then give the players today's room code — it is shown at the top of Admin and only ever appears in Admin. There is <b style="color:var(--text)">one code for the full day</b>: players open their Player link and enter it once, and their iPad remembers it until midnight, so reopening the room or starting new rounds never asks for it again. <b style="color:var(--text)">Names are per session</b> (activation model): at the start of every session the name bar shows again on each iPad — players enter or change their names fresh, and Admin's <b style="color:var(--text)">New Session</b> button clears the previous session's names and scores so nothing carries over. Their taps count live on the Host screen. Start, reveal, end and reset are all controlled from Live. The <b style="color:var(--text)">Live monitor</b> at the top of Live shows each player's screen link, Connected / Disconnected status, score, correct count, streak, current answer, answer time, recent answers, plus the current question and the timer.</p>
+        <p><b style="color:var(--text)">How a live game runs:</b> in <b style="color:var(--text)">Live</b>, press “Create Today's Room for iPads”, then give the players today's room code — it is shown at the top of Admin and only ever appears in Admin. There is <b style="color:var(--text)">one code for the full day</b>: players open their Player link and enter it once, and their iPad remembers it until midnight, so reopening the room or starting new rounds never asks for it again. <b style="color:var(--text)">Names are per session</b> (activation model): at the start of every session the name bar shows again on each iPad — players enter or change their names fresh, and Admin's <b style="color:var(--text)">New Session</b> button clears the previous session's names and scores so nothing carries over. Their taps count live on the Host screen. Start, reveal, end and reset are all controlled from Live. The <b style="color:var(--text)">room code</b> sits in its own big card at the very top of <b style="color:var(--text)">Live</b>, with one-tap Host / Player 1 / Player 2 links that carry the code so those screens connect without typing it. The <b style="color:var(--text)">Live monitor</b> just below it shows each player's screen link, Connected / Disconnected status, score, correct count, streak, current answer, answer time, recent answers, plus the current question and the timer.</p>
         <p><b style="color:var(--text)">Designing:</b> in <b style="color:var(--text)">Screens</b> you edit a draft of each screen — the canvas previews every change as you make it, but the Host and Player screens keep showing the last published design until you tap <b style="color:var(--text)">Go Live at the bottom of Admin</b>. Go Live means one thing only: it publishes the design live to all screens at once — no file, no download — and saves it in this browser, so it is still here after you reload Admin. Screens on other devices receive it through the live room.</p>
         <p><b style="color:var(--text)">Screens:</b> Host (main address) · Player 1 (/Player1) · Player 2 (/Player2) · Admin (/Admin). No accounts or installs — everything runs in the browser.</p>
         <p style="margin-bottom:0"><b style="color:var(--text)">Build v22</b> · 26 Nov 2026 — JOIN FORM FIXED PROPERLY: the room-code / name form and the per-session name bar no longer sit inside the game stage, which the app rebuilds on every update — those rebuilds were destroying the boxes mid-tap (typing produced nothing) and wiping pasted text a second later, on both player screens. The form is now a fixed bar at the bottom of each player screen that rebuilds never touch, every keystroke is saved as it is typed, and a player link carrying the room code (…?room=…) now fills the code in on that player's own screen too. Previously v21: one room code per day (date-derived, stored for the day, shown in a Today's Room card at the top of Admin and in Live → screen links; the Host reuses it for every room it opens that day, and each player iPad remembers the code it joined with until midnight — code entered once per day, never per round) and per-session names (the name bar returns at the start of every session: joined iPads get an editable name bar in the lobby that updates the host live, Admin's New Session and Reset to Lobby clear names back to Player 1 / Player 2 and bump the session so typed names never carry over; names are never stored with the day's code). Earlier v20: the game is <b style="color:var(--text)">Myth or Fact</b>: 40-statement bank, 10 picked at random per round, MYTH / FACT buttons, 10 points per correct answer with fastest-correct-only scoring, the statement and countdown on the TV and both tabs, and the answer revealed on TV at countdown end or when both players have answered. A standalone Host screen gets extra ways into the game — the open room's code is remembered in this browser for Host tabs opened alongside Admin, a stored code that turns out to be stale drops back to room discovery on its own, a stalled viewer connection is rebuilt from a completely clean slate, and a Host tab retries joining when it becomes visible. The published-design store, per-screen publishing and slot pinning are unchanged from v18. Read this tag back to confirm you are on the new build; if it says anything else, you are looking at an older one.</p>
@@ -848,6 +863,29 @@ function renderAdminRoomPanel(){
   }
   var cb=$("adminRoomCreateBtn"); if(cb){cb.textContent=(live.mode==="host"&&live.code===code)?("● Room Live — QUIZ-"+code):"● Create Today's Room";cb.disabled=(live.mode==="host"&&live.code===code);}
   var lc=$("adminLiveRoomCode"); if(lc)lc.textContent="QUIZ-"+code;
+  /* Live section's own room card — same code, first thing seen in Live */
+  var lbig=$("liveRoomCodeBig"); if(lbig)lbig.innerHTML="QUIZ-<b>"+esc(code)+"</b>";
+  var lmeta=$("liveRoomMeta"); if(lmeta)lmeta.textContent=todayLabel()+" · One code for the full day — works until midnight tonight, then a new code starts.";
+  var lst=$("liveRoomStatusLine");
+  if(lst){
+    if(live.mode==="host"&&live.code===code)lst.innerHTML=(live.connected?"<b style='color:#16A34A'>● Room is live</b>":"<b>Connecting…</b>")+" · "+countJoined()+" of 2 players joined. Give the players this code once — or open their screen from the links below and it is filled in for them.";
+    else if(live.mode==="host")lst.innerHTML="<b>Live in room QUIZ-"+esc(live.code||"")+"</b> — opened before today's code took over. Close it and tap Create Today's Room to move everyone onto <b>QUIZ-"+esc(code)+"</b>.";
+    else if(live.mode==="viewer"||live.mode==="player")lst.innerHTML="This tab is following / playing in a live room. Today's code is <b>QUIZ-"+esc(code)+"</b> — reopening the room from Admin today reuses it.";
+    else lst.innerHTML="Not live yet — tap <b>Create Today's Room</b>, then give the players this code, or open their screens from the links below.";
+  }
+  var lcb=$("liveRoomCreateBtn"); if(lcb){lcb.textContent=(live.mode==="host"&&live.code===code)?("● Room Live — QUIZ-"+code):"● Create Today's Room";lcb.disabled=(live.mode==="host"&&live.code===code);}
+  var ll=$("liveRoomLinks");
+  if(ll){
+    var base="https://quizgame26.vercel.app";
+    var litems=[
+      ["🖥 Host — main screen",base+"/?screen=host&room="+code],
+      ["Player 1 — code filled in",base+"/Player1?room="+code],
+      ["Player 2 — code filled in",base+"/Player2?room="+code]
+    ];
+    ll.innerHTML=litems.map(function(it){
+      return '<div class="linkrow"><div><b style="font-size:14px">'+it[0]+'</b><br><code>'+esc(it[1])+'</code></div><span style="display:flex;gap:6px;flex-wrap:wrap"><a class="btn small" href="'+esc(it[1])+'" target="_blank" rel="noopener">Open ↗</a></span></div>';
+    }).join("");
+  }
   var note=$("joinRememberedNote");
   if(note){
     var sess=getPlayerDaySession();
