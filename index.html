@@ -314,6 +314,16 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
 .day-room .dr-status{font-size:14px;line-height:1.55;margin-top:10px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
 .day-room .dr-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .remembered-note{font-size:13.5px;line-height:1.55;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.45);border-radius:12px;padding:11px 13px;margin-top:10px;text-align:left}
+/* --- v22: player join dock — a FIXED form that lives OUTSIDE the stage ---
+   The stage markup is rebuilt wholesale on every state/design/timer render,
+   which kept destroying the join inputs mid-tap (v19–v21). The dock is a
+   sibling of the stage, is only rebuilt when its mode changes, and captures
+   every keystroke live — so no re-render can ever eat a typed room code. */
+.join-dock{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;z-index:45;width:min(680px,94vw);max-height:64dvh;overflow-y:auto;padding:18px;border-radius:20px;background:rgba(9,11,17,.92);border:1px solid rgba(255,255,255,.32);backdrop-filter:blur(12px);color:#fff;box-shadow:0 18px 50px rgba(0,0,0,.5);text-align:left}
+.join-dock h3{font-size:17px;font-weight:900;margin-bottom:3px}
+.join-dock .jd-sub{font-size:13px;opacity:.88;line-height:1.5}
+.join-dock .jd-label{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;opacity:.85;margin-bottom:6px}
+.join-dock .jd-note{font-size:13px;opacity:.92;line-height:1.55;margin-top:9px}
 </style>
 </head>
 <body>
@@ -329,8 +339,8 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
 </section>
 
 <!-- ================= PLAYER 1 / 2 — full screen ================= -->
-<section id="view-p1" hidden><div class="stage" id="p1Stage"></div></section>
-<section id="view-p2" hidden><div class="stage" id="p2Stage"></div></section>
+<section id="view-p1" hidden><div class="stage" id="p1Stage"></div><div class="join-dock" id="p1Dock" hidden></div></section>
+<section id="view-p2" hidden><div class="stage" id="p2Stage"></div><div class="join-dock" id="p2Dock" hidden></div></section>
 
 <!-- ================= IPAD JOIN (live) ================= -->
 <section id="view-join" hidden>
@@ -573,7 +583,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <p><b style="color:var(--text)">How a live game runs:</b> in <b style="color:var(--text)">Live</b>, press “Create Today's Room for iPads”, then give the players today's room code — it is shown at the top of Admin and only ever appears in Admin. There is <b style="color:var(--text)">one code for the full day</b>: players open their Player link and enter it once, and their iPad remembers it until midnight, so reopening the room or starting new rounds never asks for it again. <b style="color:var(--text)">Names are per session</b> (activation model): at the start of every session the name bar shows again on each iPad — players enter or change their names fresh, and Admin's <b style="color:var(--text)">New Session</b> button clears the previous session's names and scores so nothing carries over. Their taps count live on the Host screen. Start, reveal, end and reset are all controlled from Live. The <b style="color:var(--text)">Live monitor</b> at the top of Live shows each player's screen link, Connected / Disconnected status, score, correct count, streak, current answer, answer time, recent answers, plus the current question and the timer.</p>
         <p><b style="color:var(--text)">Designing:</b> in <b style="color:var(--text)">Screens</b> you edit a draft of each screen — the canvas previews every change as you make it, but the Host and Player screens keep showing the last published design until you tap <b style="color:var(--text)">Go Live at the bottom of Admin</b>. Go Live means one thing only: it publishes the design live to all screens at once — no file, no download — and saves it in this browser, so it is still here after you reload Admin. Screens on other devices receive it through the live room.</p>
         <p><b style="color:var(--text)">Screens:</b> Host (main address) · Player 1 (/Player1) · Player 2 (/Player2) · Admin (/Admin). No accounts or installs — everything runs in the browser.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v21</b> · 26 Nov 2026 — NEW: one room code per day (date-derived, stored for the day, shown in a Today's Room card at the top of Admin and in Live → screen links; the Host reuses it for every room it opens that day, and each player iPad remembers the code it joined with until midnight — code entered once per day, never per round) and per-session names (the name bar returns at the start of every session: joined iPads get an editable name bar in the lobby that updates the host live, Admin's New Session and Reset to Lobby clear names back to Player 1 / Player 2 and bump the session so typed names never carry over; names are never stored with the day's code). Previously v20: the game is now <b style="color:var(--text)">Myth or Fact</b>: 40-statement bank, 10 picked at random per round, MYTH / FACT buttons, 10 points per correct answer with fastest-correct-only scoring, the statement and countdown on the TV and both tabs, and the answer revealed on TV at countdown end or when both players have answered. Earlier fixes kept: the player join forms now keep whatever is being typed (and the focused field) across screen re-renders, so a Player 1 iPad can always enter its room code and name; a standalone Host screen gets extra ways into the game — the open room's code is remembered in this browser for Host tabs opened alongside Admin, a stored code that turns out to be stale drops back to room discovery on its own, a stalled viewer connection is rebuilt from a completely clean slate, and a Host tab retries joining when it becomes visible. The published-design store, per-screen publishing and slot pinning are unchanged from v18. Read this tag back to confirm you are on the new build; if it says anything else, you are looking at an older one.</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v22</b> · 26 Nov 2026 — JOIN FORM FIXED PROPERLY: the room-code / name form and the per-session name bar no longer sit inside the game stage, which the app rebuilds on every update — those rebuilds were destroying the boxes mid-tap (typing produced nothing) and wiping pasted text a second later, on both player screens. The form is now a fixed bar at the bottom of each player screen that rebuilds never touch, every keystroke is saved as it is typed, and a player link carrying the room code (…?room=…) now fills the code in on that player's own screen too. Previously v21: one room code per day (date-derived, stored for the day, shown in a Today's Room card at the top of Admin and in Live → screen links; the Host reuses it for every room it opens that day, and each player iPad remembers the code it joined with until midnight — code entered once per day, never per round) and per-session names (the name bar returns at the start of every session: joined iPads get an editable name bar in the lobby that updates the host live, Admin's New Session and Reset to Lobby clear names back to Player 1 / Player 2 and bump the session so typed names never carry over; names are never stored with the day's code). Earlier v20: the game is <b style="color:var(--text)">Myth or Fact</b>: 40-statement bank, 10 picked at random per round, MYTH / FACT buttons, 10 points per correct answer with fastest-correct-only scoring, the statement and countdown on the TV and both tabs, and the answer revealed on TV at countdown end or when both players have answered. A standalone Host screen gets extra ways into the game — the open room's code is remembered in this browser for Host tabs opened alongside Admin, a stored code that turns out to be stale drops back to room discovery on its own, a stalled viewer connection is rebuilt from a completely clean slate, and a Host tab retries joining when it becomes visible. The published-design store, per-screen publishing and slot pinning are unchanged from v18. Read this tag back to confirm you are on the new build; if it says anything else, you are looking at an older one.</p>
       </div>
       </div>
     </div>
@@ -726,7 +736,7 @@ function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeSt
 function designFingerprint(k){var d=liveDesign[k];if(!d)return k+": —";var bg=d.bgMode==="image"?"image":d.bgMode==="color"?("solid "+(d.bgColor||"")):("grad "+(d.bg1||"")+" → "+(d.bg2||""));return bg+(d.headline?(" · headline “"+d.headline+"”"):" · no headline");}
 function diagLines(admin){
   var L=[];
-  L.push(["Build","v21"]);
+  L.push(["Build","v22"]);
   L.push(["Live library (Supabase)",diag.supa]);
   L.push(["This screen's role",live.mode==="host"?"Host (room owner)":live.mode==="player"?("Player "+(live.mySlot!==null?live.mySlot+1:"?")):live.mode==="viewer"?"Host display (viewer)":"Offline / demo"]);
   L.push(["Room channel",diag.channel]);
@@ -745,7 +755,7 @@ function diagLines(admin){
   return L;
 }
 function diagHTML(admin){
-  return '<b class="diag-t">🔎 Diagnostics — Build v21</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
+  return '<b class="diag-t">🔎 Diagnostics — Build v22</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
 }
 function renderDiag(){
   var ad=$("adminDiag"); if(ad)ad.innerHTML=diagHTML(true);
@@ -852,13 +862,19 @@ function prepareRememberedPlayer(){
      entered fresh at the start of every session (activation model). */
   if(playerSessionPrepped)return;
   if(currentView!=="p1"&&currentView!=="p2"&&currentView!=="join")return;
-  var sess=getPlayerDaySession(); if(!sess)return;
+  var sess=getPlayerDaySession();
+  /* v22: a code carried in this screen's own link (?room=) also prefills the
+     player join form — v21 only ever offered it to the Host viewer and the
+     hidden /join form, so a /Player1?room=… link left the code box empty. */
+  var linkCode=earlyRoomCode||null;
+  if(!sess&&!linkCode)return;
   playerSessionPrepped=true;
   var viewSlot=currentView==="p1"?0:currentView==="p2"?1:null;
-  var slot=(viewSlot!==null?viewSlot:sess.slot);
-  if($("joinCode2")&&!$("joinCode2").value)$("joinCode2").value=sess.code;
+  var slot=(viewSlot!==null?viewSlot:(sess? sess.slot:null));
+  var code=(sess&&sess.code)||linkCode;
+  if(code&&$("joinCode2")&&!$("joinCode2").value)$("joinCode2").value=code;
   if(slot===0||slot===1){
-    if(!joinDraft["c"+slot])joinDraft["c"+slot]=sess.code;
+    if(code&&!joinDraft["c"+slot])joinDraft["c"+slot]=code;
     joinDraft["n"+slot]=""; /* name always fresh — never carried into a new session */
   }
 }
@@ -1269,6 +1285,7 @@ function updateLiveUI(){
   $("connStatus").textContent=isHost?(live.connected?"Live host · "+countJoined()+" joined":"Connecting…"):isPlayer?(live.assigned?("Live · Player "+(live.mySlot+1)):(live.connected?"Joining…":"Connecting…")):live.mode==="viewer"?(live.connected?"Live · following the game":"Connecting to the game…"):"Demo mode";
   var ali=$("adminLiveInfo"); if(ali)ali.textContent=isHost?("Live room QUIZ-"+live.code+" is open · "+countJoined()+" of 2 players joined. This is today's one code — it stays the same all day. Saved designs and Admin changes broadcast to the screens. The Host link below carries the room, so the main screen follows the game on its own — the code itself only ever shows here in Admin."):isPlayer?("This device joined room QUIZ-"+live.code+" as a player. Admin lives on the host screen."):live.mode==="viewer"?("This screen is following the live game as a display. Run the game from Admin."):"No live room — you're in one-screen demo mode. Use Create Today's Room at the top of Admin (or in Game Control) to connect iPads.";
   renderAdminRoomPanel();
+  renderJoinDocks();
   renderDiag();
 }
 
@@ -1360,6 +1377,71 @@ function playerUpdateName(i){
   render(); toast("Name set for this session: "+v);
 }
 
+/* ================= PLAYER JOIN DOCK (v22) =================
+   The join form and the per-session name bar live HERE — in fixed dock
+   elements that are siblings of the stage, NOT inside the stage markup.
+   render() rebuilds the stages wholesale on every state/design/timer
+   update, and in v19–v21 those rebuilds destroyed the join inputs while
+   they were being tapped and typed in: taps landed on nodes that were
+   swapped out mid-gesture (typing produced nothing) and any rebuild path
+   that didn't snapshot first (the per-second timer tick writes stage
+   innerHTML directly) reverted the field to the last snapshot — pasted
+   text vanished a second or two after pasting. The dock is rebuilt ONLY
+   when its mode signature changes (join vs name-bar vs hidden, remembered
+   code, session), and every keystroke is written straight into
+   joinDraft / sessionNameDraft by an input listener, so there is no
+   snapshot timing to get wrong: the node the user is typing in is never
+   replaced, and its text is already saved before any render can run. */
+function dockMode(i){
+  if(state.phase!=="lobby")return "hidden";
+  if(live.mode==="offline")return "join";
+  if(live.mode==="player"&&live.mySlot===i)return "name";
+  return "hidden";
+}
+var dockSig=["",""];
+function renderJoinDocks(){
+  for(var i=0;i<2;i++){
+    (function(i){
+      var dock=$("p"+(i+1)+"Dock"); if(!dock)return;
+      var mode=dockMode(i);
+      var rem=mode==="join"?getPlayerDaySession():null;
+      var isDefaultName=(state.players[i].name==="Player "+(i+1));
+      var sig=mode+"|"+(rem?rem.code:"")+"|"+(isDefaultName?"d":"n")+"|"+state.players[i].name+"|"+state.sessionId;
+      if(sig===dockSig[i]&&dock.hidden===(mode==="hidden"))return; /* unchanged — leave the live inputs exactly as they are */
+      dockSig[i]=sig;
+      if(mode==="hidden"){dock.hidden=true;dock.innerHTML="";return;}
+      dock.hidden=false;
+      if(mode==="join"){
+        /* Prefill order: what this player already typed, today's remembered
+           code, then a code carried in this screen's own link (?room=) —
+           v21 never offered the link's code to this form at all. */
+        var codeVal=joinDraft["c"+i]||(rem?rem.code:"")||earlyRoomCode||"";
+        dock.innerHTML='<h3>Join today\'s game — Player '+(i+1)+'</h3>'
+          +'<div class="jd-sub">Enter today\'s room code from Admin and your name for this session.</div>'
+          +'<div class="join-mini" style="text-align:left"><input id="pJoinCode'+i+'" placeholder="ROOM CODE" maxlength="10" autocapitalize="characters" autocomplete="off" value="'+esc(codeVal)+'"><input id="pJoinName'+i+'" placeholder="Your name — this session" maxlength="18" autocomplete="off" value="'+esc(joinDraft["n"+i]||"")+'"><button class="btn primary" onclick="playerJoinAs('+i+')">Join →</button></div>'
+          +'<div class="jd-note">'+(rem?("✓ <b>Today's code is remembered</b> on this iPad (QUIZ-"+esc(rem.code)+") — it's filled in for you, all day. Only your <b>name is asked every session</b>, so each new player types their own."):"This iPad remembers today's code after you join, so it's only typed once per day. Your name is asked fresh every session.")+'</div>'
+          +(rem?'<div style="margin-top:8px"><button class="btn small" onclick="forgetTodaysRoom()">Forget today\'s code</button></div>':"");
+      } else {
+        /* The name bar comes back at the start of EVERY session, even though
+           this iPad is already in today's room (v21 rule, kept): new guests
+           type their name and tap Set name — the host updates instantly, no
+           room code is ever asked again today. After Admin starts a New
+           Session the host name resets to “Player N”, so this field shows
+           blank again on its own. */
+        var nameVal=sessionNameDraft[i]!==null?sessionNameDraft[i]:(isDefaultName?"":state.players[i].name);
+        dock.innerHTML='<div class="jd-label">✎ Name for this session — Player '+(i+1)+'</div>'
+          +'<div class="join-mini"><input id="pNameEdit'+i+'" placeholder="Type the player\'s name" maxlength="18" autocomplete="off" value="'+esc(nameVal)+'"><button class="btn primary" onclick="playerUpdateName('+i+')">Set name ✓</button></div>'
+          +'<div class="jd-note">'+(isDefaultName?"<b>New session — enter this player's name.</b> Names never carry over from the last session.":"Name is set — you can change it here before the game starts.")+' No room code needed — this iPad stays in today\'s room all day.</div>';
+      }
+      /* Live draft capture: every keystroke is saved the moment it happens,
+         not whenever the next render happens to snapshot the fields. */
+      var c=$("pJoinCode"+i); if(c)c.addEventListener("input",function(){joinDraft["c"+i]=c.value;});
+      var n=$("pJoinName"+i); if(n)n.addEventListener("input",function(){joinDraft["n"+i]=n.value;});
+      var ne=$("pNameEdit"+i); if(ne)ne.addEventListener("input",function(){sessionNameDraft[i]=ne.value;});
+    })(i);
+  }
+}
+
 /* ================= PLAYER STAGES ================= */
 function playerStageHTML(i){
   ensureDesign();
@@ -1375,25 +1457,17 @@ function playerStageHTML(i){
   if(isLiveOther){
     body='<div class="p-wait">This device is playing as <b>Player '+(live.mySlot+1)+'</b>.<br>Your controller is on your own Player '+(live.mySlot+1)+' screen — this screen belongs to the other player.</div>';
   } else if(state.phase==="lobby"){
+    /* v22 — the join form and the per-session name bar NO LONGER live in
+       this stage markup: the stage is rebuilt on every render, and those
+       rebuilds kept destroying the inputs mid-tap (the v19–v21 bug). They
+       now live in the fixed join dock (#p1Dock / #p2Dock), a sibling of the
+       stage that renders never touch — see renderJoinDocks(). This panel
+       only points at it. */
     var joinBit="";
     if(live.mode==="offline"){
-      var rem=getPlayerDaySession();
-      var codeVal=joinDraft["c"+i]||(rem?rem.code:"");
-      joinBit='<div class="join-mini" style="text-align:left"><input id="pJoinCode'+i+'" placeholder="ROOM CODE" maxlength="10" autocapitalize="characters" autocomplete="off" value="'+esc(codeVal)+'"><input id="pJoinName'+i+'" placeholder="Your name — this session" maxlength="18" autocomplete="off" value="'+esc(joinDraft["n"+i]||"")+'"><button class="btn primary" onclick="playerJoinAs('+i+')">Join →</button></div>'
-        +'<div style="font-size:13px;opacity:.9;margin-top:8px;text-align:left">'+(rem?("✓ <b>Today's code is remembered</b> on this iPad (QUIZ-"+esc(rem.code)+") — it's filled in for you, all day. Only your <b>name is asked every session</b>, so each new player types their own."):"Joining a live room? Enter today's code from Admin — this iPad then remembers it for the whole day. Your name is asked fresh every session.")+'</div>'
-        +(rem?'<div style="margin-top:8px;text-align:left"><button class="btn small" onclick="forgetTodaysRoom()">Forget today\'s code</button></div>':"");
+      joinBit='<div style="font-size:13.5px;opacity:.92;margin-top:8px">Joining today\'s game? Use the <b>join form at the bottom of this screen</b> — today\'s code from Admin plus your name for this session. This iPad then remembers the code for the whole day; your name is asked fresh every session.</div>';
     } else if(isLiveMine){
-      /* v21 — the name bar comes back at the start of EVERY session, even
-         though this iPad is already in today's room: new guests type their
-         name (or the same player changes theirs) and tap Set name — the
-         host updates instantly, no room code is ever asked again today.
-         After Admin starts a New Session the host name resets to
-         “Player N”, so this field shows blank again on its own. */
-      var isDefaultName=(p.name==="Player "+(i+1));
-      var nameVal=sessionNameDraft[i]!==null?sessionNameDraft[i]:(isDefaultName?"":p.name);
-      joinBit='<div style="margin-top:12px;text-align:left"><div style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.85;margin-bottom:6px">✎ Name for this session</div>'
-        +'<div class="join-mini"><input id="pNameEdit'+i+'" placeholder="Type the player\'s name" maxlength="18" autocomplete="off" value="'+esc(nameVal)+'"><button class="btn primary" onclick="playerUpdateName('+i+')">Set name ✓</button></div>'
-        +'<div style="font-size:13px;opacity:.9;margin-top:8px">'+(isDefaultName?"<b>New session — enter this player's name.</b> Names never carry over from the last session.":"Name is set — you can change it here before the game starts.")+' No room code needed — this iPad stays in today\'s room all day.</div></div>';
+      joinBit='<div style="font-size:13.5px;opacity:.92;margin-top:8px">Set your name for this session in the <b>form at the bottom of this screen</b> — no room code needed, this iPad stays in today\'s room all day.</div>';
     } else if(live.mode==="host"){
       joinBit='<div style="font-size:13.5px;opacity:.85;margin-top:8px">This device is the host — players join from their own iPads with the room code.</div>';
     }
@@ -1426,7 +1500,7 @@ function playerStageHTML(i){
       else if(myAnswer===q.answer){status="✓ Correct — but "+esc(other.name)+" tapped first, so 0 points this time. It was a "+(q.answer?"FACT":"MYTH")+".";sCls="good";}
       else{status="Not this time — it was a "+(q.answer?"FACT":"MYTH")+". 0 points.";sCls="bad";}
     }
-    else if(state.phase==="lobby"){status="Waiting for the host to start…";}
+    else if(state.phase==="lobby"){status=dockMode(i)==="hidden"?"Waiting for the host to start…":"";} /* v22: while the join dock is up it carries the waiting message — no pill behind it */
     else if(state.phase==="finished"){status="Game over — check the Host screen for the winner 🏆";}
   }
   if(status)h+='<div class="stage-el" style="'+elStyle(d.els.status)+'"><div class="p-status '+sCls+'" style="transform:scale('+(d.els.status.s/100)+')">'+esc(status)+'</div></div>';
@@ -1445,18 +1519,12 @@ function snapshotJoinInputs(){
 }
 function render(){
   ensureDesign();
-  /* v19 — the Player 1 join failure: the join form lives inside the stage
-     markup this function rebuilds wholesale, so ANY re-render that landed
-     while the tester was tapping/typing on Player 1's form (Admin in
-     another tab of the same browser publishing a design, a storage
-     refresh, a sync render) destroyed the input nodes mid-gesture: the
-     click hit whatever node replaced the field (“covered / target
-     blocked”), focus never landed, and a pasted value vanished when the
-     node was swapped out. Player 2's identical form simply wasn't being
-     re-rendered at the moments it was used. Fix: snapshot the form's
-     values and the focused field BEFORE the rebuild (the rebuilt form is
-     prefilled from joinDraft) and restore focus + caret after it, so a
-     re-render can never eat a half-typed room code again. */
+  /* v22 — the join form no longer lives in the stage markup this function
+     rebuilds (see the join dock above): v19's snapshot-and-refocus fix
+     still lost keystrokes whenever a rebuild path that doesn't snapshot
+     (the timer tick) landed between renders, and the node swaps kept
+     eating taps in the live test. The snapshot below is now only a
+     backstop for the dock's own live draft capture. */
   snapshotJoinInputs();
   var focusId=null, focusPos=null, ae=document.activeElement;
   if(ae&&ae.id&&/^(pJoinCode|pJoinName|pNameEdit)[01]$/.test(ae.id)){focusId=ae.id;try{focusPos=ae.selectionStart;}catch(e){}}
@@ -1464,6 +1532,7 @@ function render(){
   var s1=$("p1Stage"); s1.innerHTML=playerStageHTML(0); applyAccent(s1,liveDesign.player1); s1.style.zoom=((liveDesign.player1.globalScale||100)/100);
   var s2=$("p2Stage"); s2.innerHTML=playerStageHTML(1); applyAccent(s2,liveDesign.player2); s2.style.zoom=((liveDesign.player2.globalScale||100)/100);
   if(focusId){var nf=$(focusId);if(nf){nf.focus();try{if(focusPos!==null&&focusPos!==undefined)nf.setSelectionRange(focusPos,focusPos);}catch(e){}}}
+  renderJoinDocks(); /* rebuilds a dock only when its mode changed — typing is never disturbed */
   renderAdmin();
   if(live.mode==="host")queueBroadcast();
 }
@@ -1896,7 +1965,7 @@ function routeFromURL(){
       else if(c==="host"||c==="stage"||c==="main")v="host";
     }
     var r=q.get("room")||q.get("code");
-    if(r){var nc=normalizeCode(r);if($("joinCode2"))$("joinCode2").value=nc;if(!v)v="join";}
+    if(r){var nc=normalizeCode(r);var jc=$("joinCode2");if(jc&&!jc.value)jc.value=nc;if(!v)v="join";} /* v22: never overwrite a code the user has already typed on a hashchange */
   }catch(e){}
   return v;
 }
