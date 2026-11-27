@@ -79,6 +79,12 @@ a{color:inherit}
 .codebig{font-family:Archivo;font-weight:900;font-size:44px;letter-spacing:.06em;color:var(--amber);line-height:1.1}
 .slot-chip{display:inline-flex;padding:7px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.3);font-size:12.5px;font-weight:700;margin:6px 6px 0 0;background:rgba(255,255,255,.08)}
 .slot-chip.filled{border-color:var(--green);background:rgba(34,197,94,.25)}
+.slot-chip.ready{border-color:var(--green);background:rgba(34,197,94,.5);color:#fff}
+.jd-ready-btn{width:100%;margin-top:12px;font-size:17px;padding:14px}
+.jd-ready-done{margin-top:12px;font-weight:800;color:#4ADE80;font-size:15.5px;line-height:1.45}
+.ready-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid var(--line)}
+.ready-pill.on{color:#16A34A;border-color:#16A34A;background:rgba(34,197,94,.12)}
+.ready-pill.off{color:var(--amber);border-color:var(--amber);background:rgba(245,158,11,.1)}
 .join-mini{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:12px}
 @media(max-width:560px){.join-mini{grid-template-columns:1fr}}
 .join-mini input{padding:12px 13px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.4);color:#fff;font-weight:700;width:100%}
@@ -605,8 +611,8 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>Players — names, scores &amp; resets</h3>
         <p>Rename players, adjust scores, or reset a player. Live connection, answers and answer times are in the Live monitor above. Resetting a live player also frees their iPad slot so they can rejoin.</p>
-        <div class="field"><label>Player 1 name</label><input id="name1" maxlength="18"></div>
-        <div class="field"><label>Player 2 name</label><input id="name2" maxlength="18"></div>
+        <div class="field"><label id="nameLabel1">Player 1 name</label><input id="name1" maxlength="18"></div>
+        <div class="field"><label id="nameLabel2">Player 2 name</label><input id="name2" maxlength="18"></div>
         <div class="kv"><span id="scoreLabel1">Player 1 score</span><span class="scoreadj"><button data-adj="0,-10" aria-label="Player 1 minus points per answer">−</button><b id="scoreVal1">0</b><button data-adj="0,10" aria-label="Player 1 plus points per answer">+</button></span></div>
         <div class="kv"><span id="scoreLabel2">Player 2 score</span><span class="scoreadj"><button data-adj="1,-10" aria-label="Player 2 minus points per answer">−</button><b id="scoreVal2">0</b><button data-adj="1,10" aria-label="Player 2 plus points per answer">+</button></span></div>
         <p style="font-size:12.5px;color:var(--muted);margin:8px 0 0" id="scoreStepHint">− / + step: 10 points (matches “Points per correct answer” above — change that value and this step changes too).</p>
@@ -649,13 +655,13 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>About this app</h3>
         <p><b style="color:var(--text)">Myth or Fact Quiz Game</b> — a two-player quiz for one big screen and two iPads. The bank holds 40 statements; each round picks 10 at random. The statement and a quick countdown show on the TV screen and on both player tabs; each player taps <b style="color:var(--text)">MYTH</b> or <b style="color:var(--text)">FACT</b> before the countdown ends. A correct answer is worth 10 points — but if both players are correct, only the fastest tap scores and the other gets 0. A wrong answer, or waiting for the countdown to end, scores 0. The correct answer is revealed on the TV screen when the countdown ends or as soon as both players have answered, scores update live on the TV, and after 10 statements the final totals decide the winner.</p>
-        <p><b style="color:var(--text)">How a live game runs:</b> in <b style="color:var(--text)">Live</b>, press “Create Today's Room for iPads”, then give the players today's room code — it is shown at the top of Admin and only ever appears in Admin. There is <b style="color:var(--text)">one code for the full day</b>: players open this same link, tap their Player screen and enter the code once, and their iPad remembers it until midnight, so reopening the room or starting new rounds never asks for it again. <b style="color:var(--text)">Names are per session</b> (activation model): at the start of every session the name bar shows again on each iPad — players enter or change their names fresh, and Admin's <b style="color:var(--text)">New Session</b> button clears the previous session's names and scores so nothing carries over. Their taps count live on the Host screen. Start, reveal, end and reset are all controlled from Live. The <b style="color:var(--text)">room code</b> sits in its own big card at the very top of <b style="color:var(--text)">Live</b>, with one-tap buttons that open the Host / Player 1 / Player 2 screens on this same link, code already filled in. The <b style="color:var(--text)">Live monitor</b> just below it shows each player's Connected / Disconnected status, score, correct count, streak, current answer, answer time, recent answers, plus the current question and the timer.</p>
+        <p><b style="color:var(--text)">How a live game runs:</b> in <b style="color:var(--text)">Live</b>, press “Create Today's Room for iPads”, then give the players today's room code — it is shown at the top of Admin and only ever appears in Admin. There is <b style="color:var(--text)">one code for the full day</b>: players open this same link, tap their Player screen and enter the code once, and their iPad remembers it until midnight, so reopening the room or starting new rounds never asks for it again. <b style="color:var(--text)">Names are per session</b> (activation model): at the start of every session the name bar shows again on each iPad — players enter or change their names fresh, and Admin's <b style="color:var(--text)">New Session</b> button clears the previous session's names and scores so nothing carries over. The flow on each iPad is simple: <b style="color:var(--text)">first time only</b> they enter the room code and join; after that the code is never asked again — they just set their name and tap the big <b style="color:var(--text)">I'm Ready</b> button that appears under the name bar. The Host screen and the Live monitor then show each player <b style="color:var(--text)">by their name</b> with <b style="color:var(--text)">✅ Ready</b> or <b style="color:var(--text)">⏳ Not ready</b> — once a name is set, screens show the name, not “Player 1 / Player 2”. Their taps count live on the Host screen. <b style="color:var(--text)">Start Game</b> now makes sure today's room is live first: if the room isn't created or is still connecting, Start creates/connects it and the game begins the moment the room is live, so it always reaches the Host screen and both iPads — it never starts on the Admin tab alone. Start, reveal, end and reset are all controlled from Live. The <b style="color:var(--text)">room code</b> sits in its own big card at the very top of <b style="color:var(--text)">Live</b>, with one-tap buttons that open the Host / Player 1 / Player 2 screens on this same link, code already filled in. The <b style="color:var(--text)">Live monitor</b> just below it shows each player's Connected / Disconnected status, score, correct count, streak, current answer, answer time, recent answers, plus the current question and the timer.</p>
         <p><b style="color:var(--text)">Designing:</b> in <b style="color:var(--text)">Screens</b> you edit a draft of each screen — the canvas previews every change as you make it, but the Host and Player screens keep showing the last published design until you tap <b style="color:var(--text)">Go Live at the bottom of Admin</b>. Go Live means one thing only: it publishes the design live to all screens at once — no file, no download — and saves it in this browser, so it is still here after you reload Admin. Screens on other devices receive it through the live room.</p>
         <p><b style="color:var(--text)">Screens:</b> Host · Player 1 · Player 2 · Join · Admin — all of them are views on this one single link. There are no other addresses: open this link on the TV and on each iPad, then tap the screen that device should show. No accounts or installs — everything runs in the browser.</p>
         <p><b style="color:var(--text)">Question bank &amp; live sync:</b> the whole quiz backend now lives in the new <b style="color:var(--text)">Supabase</b> project (<b style="color:var(--text)">aylhgfftsokskgpgvemn</b>) — both the live game sync (Realtime Broadcast) and the statement bank use it. The bank is stored as a clear table, <b style="color:var(--text)">quiz_questions</b> — <b style="color:var(--text)">one row per question</b>, with columns for the order (<i>sort_order</i>), the question text (<i>statement</i>) and its answer (<i>answer</i>: true = FACT, false = MYTH) — so in the Supabase Table Editor every question and answer is readable on its own row, nothing packed into a single row. Edit and Save Questions on any device and every other device loads the same bank. The table needs a one-time setup: if it isn't in the project yet, Admin → Statements shows the exact SQL to paste into that project's SQL Editor and Run once. Until that is done, the bank falls back to this browser's saved copy.</p>
         <p><b style="color:var(--text)">Game sessions:</b> every game is recorded in Admin → <b style="color:var(--text)">Sessions</b> and stored in the same Supabase project (table <i>quiz_game_sessions</i>) — both players' names, final scores and correct counts, the winner, and every answer to every statement (what each player tapped, right or wrong, their answer time and the points won). The host writes the record as the game runs, so it is complete even if a tab closes mid-game. Sessions can be opened statement-by-statement in Admin, downloaded as CSV, or deleted. Like the bank, the table needs a one-time SQL setup — until it is run, Admin → Sessions shows the exact SQL and sessions record on the host device only.</p>
         <p><b style="color:var(--text)">Strict 2-Player mode (on by default):</b> the game takes exactly two players on the one shared link, with no distractions — a Player 1 screen can only ever join as Player 1 and a Player 2 screen only as Player 2, a third join is refused while both slots are taken, and once an iPad has joined it is locked to its own player screen (it cannot switch to Host, Admin or the other player's screen) until Admin resets its slot. Strict mode can be turned off in Live → Game control.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v29</b> · 27 Nov 2026 — CLEAR QUESTION TABLE: the statement bank now lives in its own clear Supabase table, <i>quiz_questions</i> — one row per question (sort_order, statement, answer) instead of all 40 statements packed into a single JSON row — so in the Supabase Table Editor every question and its answer sits on its own readable row. The table needs the new one-time SQL shown in Admin → Statements; your existing bank is read as before and the first Save Questions writes it into the new table row by row. Game sessions (<i>quiz_game_sessions</i>) and Strict 2-Player mode are unchanged from v28. Everything else is unchanged from v24–v28: the whole backend (live sync + question bank) in the dedicated quiz project <i>aylhgfftsokskgpgvemn</i>, ONE LINK (Host, Player 1, Player 2, Join and Admin are views on this single page), 10 statements at random per round, fastest-correct-only scoring, one room code per day, per-session names, and the fixed player join form that rebuilds never touch. Read this tag back to confirm you are on the new build; if it says anything else, you are looking at an older one.</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v30</b> · 27 Nov 2026 — READY BUTTON + START FIX + NAMES EVERYWHERE. (1) <b style="color:var(--text)">Start fix:</b> pressing Start Game on an Admin tab whose room wasn't live used to start the game on that tab alone — a PLAYING session was recorded and “Game started” toasted, but the Host TV and iPads never got it. Start now creates today's room first (or waits for it to finish connecting) and the game only begins once the room is confirmed live, so it always reaches every screen; if the room can't connect, Start says so instead of pretending. (2) <b style="color:var(--text)">Ready button:</b> after a player sets their name on their iPad, a big <b style="color:var(--text)">I'm Ready</b> button appears under the name bar (with a “Not ready” undo). The simple flow is unchanged otherwise: room code only on the very first join of the day; after that just name + Ready. (3) <b style="color:var(--text)">Ready on the Host screen:</b> the Host lobby and the Admin Live monitor show each player by name with ✅ Ready / ⏳ Not ready, plus a ready count. (4) <b style="color:var(--text)">Names, not “Player 1 / Player 2”:</b> once a player sets a name, the Host screen, both player screens, the Live monitor, the top bar and Admin's player fields all show that name; the slot labels only remain where no name exists yet. Everything else is unchanged from v29: clear <i>quiz_questions</i> table (one row per question), game sessions in <i>quiz_game_sessions</i>, Strict 2-Player mode, the whole backend in the dedicated quiz project <i>aylhgfftsokskgpgvemn</i>, ONE LINK, 10 statements at random per round, fastest-correct-only scoring, one room code per day, per-session names. Read this tag back to confirm you are on the new build; if it says anything else, you are looking at an older one.</p>
       </div>
       </div>
     </div>
@@ -786,7 +792,7 @@ function getQ(){return state.active[state.idx]||state.questions[state.idx]||null
 
 /* ================= LIVE (Supabase Realtime Broadcast) ================= */
 var supa=null;
-var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,lobbyChannel:null,lobbyTimer:null,joinedAt:0,heartbeatTimer:null,viewerFallbackTimer:null,joinedViaStored:false};
+var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],ready:[false,false],startPending:false,joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,lobbyChannel:null,lobbyTimer:null,joinedAt:0,heartbeatTimer:null,viewerFallbackTimer:null,joinedViaStored:false};
 var pendingWantSlot=null; /* set by a /PlayerN screen's own join form so the host pins that exact slot */
 var joinDraft={"c0":"","n0":"","c1":"","n1":""}; /* v19: text typed into a player screen's join form, kept across stage re-renders (see render()) */
 var lastHostState=null, liveMyAnswer=null, liveMyIdx=-1, broadcastQueued=false;
@@ -808,7 +814,7 @@ function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeSt
 function designFingerprint(k){var d=liveDesign[k];if(!d)return k+": —";var bg=d.bgMode==="image"?"image":d.bgMode==="color"?("solid "+(d.bgColor||"")):("grad "+(d.bg1||"")+" → "+(d.bg2||""));return bg+(d.headline?(" · headline “"+d.headline+"”"):" · no headline");}
 function diagLines(admin){
   var L=[];
-  L.push(["Build","v29"]);
+  L.push(["Build","v30"]);
   L.push(["Live library (Supabase)",diag.supa]);
   L.push(["This screen's role",live.mode==="host"?"Host (room owner)":live.mode==="player"?("Player "+(live.mySlot!==null?live.mySlot+1:"?")):live.mode==="viewer"?"Host display (viewer)":"Offline / demo"]);
   L.push(["Room channel",diag.channel]);
@@ -827,7 +833,7 @@ function diagLines(admin){
   return L;
 }
 function diagHTML(admin){
-  return '<b class="diag-t">🔎 Diagnostics — Build v29</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
+  return '<b class="diag-t">🔎 Diagnostics — Build v30</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
 }
 function renderDiag(){
   var ad=$("adminDiag"); if(ad)ad.innerHTML=diagHTML(true);
@@ -983,6 +989,7 @@ function broadcastState(){
     questionText:(state.phase==="playing"||state.phase==="reveal")&&q?q.text:null,
     correctAnswer:(state.phase==="reveal"||state.phase==="finished")&&q?q.answer:null,
     players:state.players.map(function(p){return{name:p.name,score:p.score,correct:p.correct,streak:p.streak}}),
+    ready:live.ready.slice(), /* v30: per-player Ready flags — Host TV, Admin monitor and the other screens all show who is ready */
     answersLocked:[state.answers[0]!==null,state.answers[1]!==null],
     playerAnswers:state.phase==="reveal"?state.answers.slice():[null,null],
     answerTimes:state.answerTimes.slice(), answerSeq:state.answerSeq.slice(), roundSize:state.roundSize,
@@ -998,12 +1005,13 @@ function hostCreateRoom(){
   var s=getSupa();
   if(!s){toast("Live unavailable in this browser — demo mode still works");return;}
   if(live.mode!=="offline"){toast("Already in a live room");return;}
-  live.code=getDailyRoomCode(); live.mode="host"; live.connected=false; live.occupied=[null,null]; live.lastSeen=[0,0]; live.stale=[false,false]; /* v21: today's code — the same room all day, reopening never changes it */
+  live.code=getDailyRoomCode(); live.mode="host"; live.connected=false; live.occupied=[null,null]; live.ready=[false,false]; live.lastSeen=[0,0]; live.stale=[false,false]; /* v21: today's code — the same room all day, reopening never changes it */
   try{if(window.localStorage)localStorage.setItem(OPEN_ROOM_KEY,live.code);}catch(e){} /* v19: same-browser Host tabs can find this room even if an announce is missed */
   var ch=s.channel(channelName(live.code),{config:{broadcast:{self:false}}}); live.channel=ch;
   ch.on("broadcast",{event:"join"},function(m){handleHostJoin(m.payload||{})});
   ch.on("broadcast",{event:"answer"},function(m){handleHostAnswer(m.payload||{})});
-  ch.on("broadcast",{event:"name-update"},function(m){var pl=m.payload||{};var sl=+pl.slot;if(sl!==0&&sl!==1)return;if(live.occupied[sl]!==pl.clientId)return;var nm=String(pl.name||"").trim().slice(0,18);if(!nm)return;state.players[sl].name=nm;render();queueBroadcast();toast(nm+" is Player "+(sl+1)+" for this session");}); /* v21: per-session name change from an iPad already in the room — no code needed again */
+  ch.on("broadcast",{event:"name-update"},function(m){var pl=m.payload||{};var sl=+pl.slot;if(sl!==0&&sl!==1)return;if(live.occupied[sl]!==pl.clientId)return;var nm=String(pl.name||"").trim().slice(0,18);if(!nm)return;state.players[sl].name=nm;live.ready[sl]=false;render();queueBroadcast();toast(nm+" set their name for this session");}); /* v21: per-session name change from an iPad already in the room — no code needed again · v30: a fresh name clears Ready until they tap it again */
+  ch.on("broadcast",{event:"ready"},function(m){var pl=m.payload||{};var sl=+pl.slot;if(sl!==0&&sl!==1)return;if(live.occupied[sl]!==pl.clientId)return;live.ready[sl]=!!pl.ready;render();queueBroadcast();if(pl.ready)toast(state.players[sl].name+" is ready ✅");}); /* v30: a player tapped “I'm Ready” on their iPad */
   ch.on("broadcast",{event:"ping"},function(m){var pl=m.payload||{};var sl=live.occupied.indexOf(pl.clientId);if(sl!==-1){live.lastSeen[sl]=Date.now();if(live.stale[sl]){live.stale[sl]=false;render();}}});
   ch.on("broadcast",{event:"request-sync"},function(){queueBroadcast()});
   ch.on("broadcast",{event:"viewer-hello"},function(){queueBroadcast()}); /* a display screen announcing itself gets the full state at once */
@@ -1017,8 +1025,8 @@ function hostCreateRoom(){
   },3000);
   ch.subscribe(function(status){
     diag.channel="room channel (as host): "+status+" · "+diagTime(Date.now()); diagNote();
-    if(status==="SUBSCRIBED"){live.connected=true;queueBroadcast();toast("Today's room QUIZ-"+live.code+" is open — this one code works all day!");}
-    else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){live.connected=false;toast("Live connection problem — demo mode still works");}
+    if(status==="SUBSCRIBED"){live.connected=true;queueBroadcast();toast("Today's room QUIZ-"+live.code+" is open — this one code works all day!");if(live.startPending){live.startPending=false;startGame();} /* v30: Start was pressed before the room connected — start NOW, for real, on every screen */}
+    else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){live.connected=false;if(live.startPending){live.startPending=false;toast("⚠ The room could not connect, so the game was NOT started — check the connection and press Start again");}else toast("Live connection problem — demo mode still works");}
     updateLiveUI(); render();
   });
   updateLiveUI(); render();
@@ -1114,13 +1122,13 @@ function handleHostJoin(p){
       slot=live.occupied[0]===null?0:live.occupied[1]===null?1:-1;
       if(slot===-1){try{live.channel.send({type:"broadcast",event:"join-rejected",payload:{clientId:p.clientId,reason:state.strict2p?"Strict 2-Player mode — both player slots are taken. This game takes exactly 2 players; Admin must reset a player to free a slot.":"Room is full — two players are already in."}});}catch(e){} diag.join=name+" tried to join but both slots are taken — refused (strict 2-player) · "+diagTime(Date.now()); diagNote(); return;}
     }
-    live.occupied[slot]=p.clientId;
+    live.occupied[slot]=p.clientId; live.ready[slot]=false; /* v30: a fresh join is never “ready” until they tap I'm Ready */
   }
   diag.join=name+" joined as Player "+(slot+1)+(p.wantSlot===0||p.wantSlot===1?" (pinned by the Player "+(p.wantSlot+1)+" screen)":" (first free slot)")+" · "+diagTime(Date.now()); diagNote();
   live.lastSeen[slot]=Date.now(); live.stale[slot]=false;
   state.players[slot].name=name;
   try{live.channel.send({type:"broadcast",event:"joined",payload:{clientId:p.clientId,slot:slot,name:name,code:live.code}});}catch(e){}
-  render(); queueBroadcast(); updateLiveUI(); toast(name+" joined as Player "+(slot+1)+" 📱");
+  render(); queueBroadcast(); updateLiveUI(); toast(name+" joined 📱 — waiting for them to tap I'm Ready");
 }
 function handleHostAnswer(p){
   if(live.mode!=="host"||state.phase!=="playing") return;
@@ -1147,7 +1155,7 @@ function playerJoinFrom(prefix){
   var ch=freshRoomChannel(s,code); live.channel=ch;
   ch.on("broadcast",{event:"state"},onStateBroadcast);
   ch.on("broadcast",{event:"tick"},function(m){var pl=m.payload||{};state.timeLeft=pl.timeLeft;state.timerDur=pl.timerDur;render();});
-  ch.on("broadcast",{event:"joined"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;live.mySlot=+pl.slot;live.assigned=true;savePlayerDaySession(live.code,live.mySlot);if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}setStatus("");updateLiveUI();toast("You're in as Player "+(live.mySlot+1)+" 🎉");switchView(live.mySlot===1?"p2":"p1");try{live.channel.send({type:"broadcast",event:"request-sync",payload:{clientId:live.clientId}});}catch(e){}
+  ch.on("broadcast",{event:"joined"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;live.mySlot=+pl.slot;live.assigned=true;savePlayerDaySession(live.code,live.mySlot);if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}setStatus("");updateLiveUI();toast("You're in as "+(pl.name||live.myName)+" 🎉 — now tap I'm Ready on your screen");switchView(live.mySlot===1?"p2":"p1");try{live.channel.send({type:"broadcast",event:"request-sync",payload:{clientId:live.clientId}});}catch(e){}
     if(live.pingTimer)clearInterval(live.pingTimer);
     var sendPing=function(){try{if(live.channel)live.channel.send({type:"broadcast",event:"ping",payload:{clientId:live.clientId,slot:live.mySlot}});}catch(e){}};
     sendPing(); live.pingTimer=setInterval(sendPing,4000);
@@ -1329,6 +1337,7 @@ function applyRemoteState(pl){
   if(pl.roundSize)state.roundSize=pl.roundSize;
   if(pl.phase==="playing"&&pl.idx!==undefined) { /* question start approximated on phase change */ }
   state.players=(pl.players||state.players).map(function(p){return{name:p.name,score:p.score||0,correct:p.correct||0,streak:p.streak||0}});
+  if(pl.ready)live.ready=[!!pl.ready[0],!!pl.ready[1]]; /* v30: Ready flags ride along with every state broadcast */
   var qs=[]; for(var i=0;i<(pl.total||0);i++)qs.push({text:"",answer:false});
   if(pl.questionText!=null&&qs[pl.idx])qs[pl.idx]={text:pl.questionText,answer:pl.correctAnswer===null?false:pl.correctAnswer};
   if(qs.length)state.active=qs;
@@ -1364,7 +1373,7 @@ function disconnectLive(silent){
   live.viewerRetries=0;
   live.lastSeen=[0,0]; live.stale=[false,false];
   if(live.channel){var ch=live.channel;live.channel=null;try{var s=getSupa();if(s)s.removeChannel(ch);}catch(e){}}
-  live.mode="offline";live.code=null;live.connected=false;live.mySlot=null;live.wantSlot=null;live.assigned=false;live.occupied=[null,null];lastHostState=null;liveMyAnswer=null;
+  live.mode="offline";live.code=null;live.connected=false;live.mySlot=null;live.wantSlot=null;live.assigned=false;live.occupied=[null,null];live.ready=[false,false];live.startPending=false;lastHostState=null;liveMyAnswer=null;
   if(wasPlayer){state.questions=clone(DEFAULT_QS);state.active=[];state.phase="lobby";state.idx=0;state.answers=[null,null];state.lastGain=[0,0];state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];}
   updateLiveUI(); render();
   if(!silent)toast("Left the live room — demo mode is on");
@@ -1373,6 +1382,10 @@ function disconnectLive(silent){
   try{if(currentView==="host"&&live.mode==="offline")setTimeout(maybeHostViewer,700);}catch(e){}
 }
 function countJoined(){return live.occupied.filter(function(x){return !!x}).length}
+function countReady(){return live.ready.filter(function(x){return !!x}).length}
+/* v30: once a player has set a name, every screen shows THAT name — the
+   “Player 1 / Player 2” slot labels only appear before a name exists. */
+function dispName(i){var n=state.players[i].name;return n&&n!=="Player "+(i+1)?n:"Player "+(i+1);}
 function updateLiveUI(){
   var isHost=live.mode==="host", isPlayer=live.mode==="player";
   $("joinOfflineBox").hidden=isPlayer;
@@ -1380,7 +1393,7 @@ function updateLiveUI(){
   var dot=$("connDot");
   dot.className="conn-dot "+(live.connected?"on":(live.mode!=="offline"?"wait":""));
   $("roomCodeDisplay").textContent=live.code?("QUIZ-"+live.code):"—";
-  $("connStatus").textContent=isHost?(live.connected?"Live host · "+countJoined()+" joined":"Connecting…"):isPlayer?(live.assigned?("Live · Player "+(live.mySlot+1)):(live.connected?"Joining…":"Connecting…")):live.mode==="viewer"?(live.connected?"Live · following the game":"Connecting to the game…"):"Demo mode";
+  $("connStatus").textContent=isHost?(live.connected?"Live host · "+countJoined()+" joined":"Connecting…"):isPlayer?(live.assigned?("Live · "+dispName(live.mySlot)):(live.connected?"Joining…":"Connecting…")):live.mode==="viewer"?(live.connected?"Live · following the game":"Connecting to the game…"):"Demo mode";
   renderAdminRoomPanel();
   renderJoinDocks();
   renderDiag();
@@ -1425,10 +1438,14 @@ function hostStageHTML(){
   if(state.phase==="lobby"){
     var liveBit="";
     if(live.mode==="host"){
-      var chips=""; for(var i=0;i<2;i++)chips+='<span class="slot-chip '+(live.occupied[i]?"filled":"")+'">'+(live.occupied[i]?("✓ Player "+(i+1)+": "+esc(state.players[i].name)):("○ Player "+(i+1)+" — waiting…"))+'</span>';
-      liveBit='<div style="margin-top:16px"><div>'+chips+'</div><div class="statusline '+(live.connected?"ok":"wait")+'">'+(live.connected?"● Live — players join with the room code shown in Admin":"Connecting to live…")+'</div></div>';
+      /* v30: chips show each player BY NAME with their Ready state —
+         “NAME — ✅ Ready” / “NAME — ⏳ Not ready”. “Player N” only appears
+         for a slot nobody has joined yet. */
+      var chips=""; for(var i=0;i<2;i++)chips+='<span class="slot-chip '+(live.occupied[i]?(live.ready[i]?"ready":"filled"):"")+'">'+(live.occupied[i]?(esc(state.players[i].name)+(live.ready[i]?" — ✅ Ready":" — ⏳ Not ready")):("○ Player "+(i+1)+" — waiting to join…"))+'</span>';
+      liveBit='<div style="margin-top:16px"><div>'+chips+'</div><div class="statusline '+(live.connected?"ok":"wait")+'">'+(live.connected?("● Live — "+countJoined()+" of 2 joined · "+countReady()+" of 2 ready. Admin presses Start when both are ready."):"Connecting to live…")+'</div></div>';
     } else if(live.mode==="viewer"){
-      liveBit='<p style="margin-top:14px">● Live — this screen is following the game run from Admin.<br><span style="font-size:13.5px;opacity:.85">Players join from their iPads with the room code shown in Admin.</span></p>';
+      var vchips=""; for(var i=0;i<2;i++){var named=state.players[i].name!=="Player "+(i+1);vchips+='<span class="slot-chip '+(named?(live.ready[i]?"ready":"filled"):"")+'">'+(named?(esc(state.players[i].name)+(live.ready[i]?" — ✅ Ready":" — ⏳ Not ready")):("○ Player "+(i+1)+" — waiting to join…"))+'</span>';}
+      liveBit='<div style="margin-top:16px"><div>'+vchips+'</div><p style="margin-top:10px">● Live — this screen is following the game run from Admin.<br><span style="font-size:13.5px;opacity:.85">Players join from their iPads with the room code shown in Admin, set their name, then tap I\'m Ready.</span></p></div>';
     } else if(live.mode==="player"){
       liveBit='<p>You joined as a player on this device — the host runs the game from the main screen.</p>';
     } else if(discovery.active){
@@ -1469,9 +1486,17 @@ function playerUpdateName(i){
   var inp=$("pNameEdit"+i), v=inp?inp.value.trim():"";
   if(!v){toast("Type the player's name for this session first");if(inp)inp.focus();return;}
   v=v.slice(0,18); sessionNameDraft[i]=null;
-  state.players[i].name=v;
+  state.players[i].name=v; live.ready[i]=false; /* v30: a (re)set name means not ready yet — the Ready button below is the next tap */
   if(live.mode==="player"&&live.mySlot===i&&live.channel){try{live.channel.send({type:"broadcast",event:"name-update",payload:{clientId:live.clientId,slot:i,name:v}});}catch(e){}}
-  render(); toast("Name set for this session: "+v);
+  render(); toast("Name set: "+v+" — now tap I'm Ready ✓");
+}
+function playerSetReady(i,val){
+  /* v30: the Ready button on a player iPad. It appears once a name is set;
+     tapping it tells the host, and the Host screen + Admin monitor flip
+     that player to “✅ Ready” by name. Tapping “Not ready” undoes it. */
+  live.ready[i]=!!val;
+  if(live.mode==="player"&&live.mySlot===i&&live.channel){try{live.channel.send({type:"broadcast",event:"ready",payload:{clientId:live.clientId,slot:i,ready:!!val}});}catch(e){}}
+  render(); toast(val?("You're ready, "+state.players[i].name+" ✅ — the host can see it"):"Not ready — tap I'm Ready when you are");
 }
 
 /* ================= PLAYER JOIN DOCK (v22) =================
@@ -1503,7 +1528,7 @@ function renderJoinDocks(){
       var mode=dockMode(i);
       var rem=mode==="join"?getPlayerDaySession():null;
       var isDefaultName=(state.players[i].name==="Player "+(i+1));
-      var sig=mode+"|"+(rem?rem.code:"")+"|"+(isDefaultName?"d":"n")+"|"+state.players[i].name+"|"+state.sessionId;
+      var sig=mode+"|"+(rem?rem.code:"")+"|"+(isDefaultName?"d":"n")+"|"+state.players[i].name+"|"+state.sessionId+"|"+(live.ready[i]?"R":"-"); /* v30: Ready state is part of the signature so the dock flips between the Ready button and the “You're ready” state */
       if(sig===dockSig[i]&&dock.hidden===(mode==="hidden"))return; /* unchanged — leave the live inputs exactly as they are */
       dockSig[i]=sig;
       if(mode==="hidden"){dock.hidden=true;dock.innerHTML="";return;}
@@ -1526,9 +1551,16 @@ function renderJoinDocks(){
            Session the host name resets to “Player N”, so this field shows
            blank again on its own. */
         var nameVal=sessionNameDraft[i]!==null?sessionNameDraft[i]:(isDefaultName?"":state.players[i].name);
-        dock.innerHTML='<div class="jd-label">✎ Name for this session — Player '+(i+1)+'</div>'
+        /* v30: once the name is set, the big Ready button appears under the
+           name bar. Tapping it marks this player ready on the Host screen
+           and in Admin — by name, not “Player N”. Ready can be undone. */
+        var readyBit="";
+        if(!isDefaultName&&!live.ready[i])readyBit='<button class="btn primary jd-ready-btn" onclick="playerSetReady('+i+',true)">✓ I\'m Ready</button><div class="jd-note">Tap <b>I\'m Ready</b> — the Host screen shows <b>'+esc(state.players[i].name)+'</b> as ready, and the game starts when the host presses Start.</div>';
+        else if(!isDefaultName&&live.ready[i])readyBit='<div class="jd-ready-done">✅ You\'re ready, '+esc(state.players[i].name)+'!<br><span style="font-weight:600;color:#fff;opacity:.85;font-size:13.5px">Waiting for the host to press Start…</span></div><div style="margin-top:8px"><button class="btn small" onclick="playerSetReady('+i+',false)">Not ready</button></div>';
+        dock.innerHTML='<div class="jd-label">✎ '+(isDefaultName?("Name for this session — Player "+(i+1)):("You are "+esc(state.players[i].name)))+'</div>'
           +'<div class="join-mini"><input id="pNameEdit'+i+'" placeholder="Type the player\'s name" maxlength="18" autocomplete="off" value="'+esc(nameVal)+'"><button class="btn primary" onclick="playerUpdateName('+i+')">Set name ✓</button></div>'
-          +'<div class="jd-note">'+(isDefaultName?"<b>New session — enter this player's name.</b> Names never carry over from the last session.":"Name is set — you can change it here before the game starts.")+' No room code needed — this iPad stays in today\'s room all day.</div>';
+          +'<div class="jd-note">'+(isDefaultName?"<b>New session — enter this player's name, tap Set name, then tap I'm Ready.</b> Names never carry over from the last session.":"Name is set — you can change it here before the game starts (changing it asks you to tap I'm Ready again).")+' No room code needed — this iPad stays in today\'s room all day.</div>'
+          +readyBit;
       }
       /* Live draft capture: every keystroke is saved the moment it happens,
          not whenever the next render happens to snapshot the fields. */
@@ -1549,10 +1581,10 @@ function playerStageHTML(i){
   var q=getQ();
   var h='<div class="stage-bg" style="'+stageBgStyle(d)+'"></div><div class="stage-shade" style="opacity:'+(d.overlay/100)+'"></div>';
   h+=brandingHTML(d);
-  h+='<div class="stage-el" style="'+elStyle(d.els.header)+'"><div class="p-head" style="transform:scale('+(d.els.header.s/100)+')"><b>'+esc(p.name)+'</b><span>Player '+(i+1)+' · vs '+esc(other.name)+' ('+other.score+' pts)</span><div><strong>'+p.score+'</strong> <span>points · '+p.correct+' correct · streak '+p.streak+'</span></div></div></div>';
+  h+='<div class="stage-el" style="'+elStyle(d.els.header)+'"><div class="p-head" style="transform:scale('+(d.els.header.s/100)+')"><b>'+esc(p.name)+'</b><span>vs '+esc(other.name)+' ('+other.score+' pts)</span><div><strong>'+p.score+'</strong> <span>points · '+p.correct+' correct · streak '+p.streak+'</span></div></div></div>';
   var body="";
   if(isLiveOther){
-    body='<div class="p-wait">This device is playing as <b>Player '+(live.mySlot+1)+'</b>.<br>Your controller is on your own Player '+(live.mySlot+1)+' screen — this screen belongs to the other player.</div>';
+    body='<div class="p-wait">This device is playing as <b>'+esc(state.players[live.mySlot].name)+'</b>.<br>Your controller is on your own screen — this screen belongs to '+esc(p.name)+'.</div>';
   } else if(state.phase==="lobby"){
     /* v22 — the join form and the per-session name bar NO LONGER live in
        this stage markup: the stage is rebuilt on every render, and those
@@ -1564,7 +1596,9 @@ function playerStageHTML(i){
     if(live.mode==="offline"){
       joinBit='<div style="font-size:13.5px;opacity:.92;margin-top:8px">Joining today\'s game? Use the <b>join form at the bottom of this screen</b> — today\'s code from Admin plus your name for this session. This iPad then remembers the code for the whole day; your name is asked fresh every session.</div>';
     } else if(isLiveMine){
-      joinBit='<div style="font-size:13.5px;opacity:.92;margin-top:8px">Set your name for this session in the <b>form at the bottom of this screen</b> — no room code needed, this iPad stays in today\'s room all day.</div>';
+      joinBit=live.ready[i]
+        ?'<div style="font-size:13.5px;opacity:.92;margin-top:8px">✅ <b>You\'re ready!</b> The Host screen shows you as ready — the game begins as soon as the host presses Start.</div>'
+        :'<div style="font-size:13.5px;opacity:.92;margin-top:8px">Set your name for this session in the <b>form at the bottom of this screen</b>, then tap <b>I\'m Ready</b> — no room code needed, this iPad stays in today\'s room all day.</div>';
     } else if(live.mode==="host"){
       joinBit='<div style="font-size:13.5px;opacity:.85;margin-top:8px">This device is the host — players join from their own iPads with the room code.</div>';
     }
@@ -1652,6 +1686,18 @@ function startTimer(){
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a}
 function startGame(){
   if(live.mode==="player"){toast("Only the host can start the game");return;}
+  /* v30 START FIX: never start a game that only exists on this tab. The old
+     code started instantly even when this Admin tab had not created today's
+     room (or the channel was still connecting): the game ran locally, a
+     PLAYING session was recorded, “Game started” was toasted — and the Host
+     TV and both iPads never received a thing, because state only broadcasts
+     from a connected host. Now Start first makes sure today's room is live
+     ON THIS TAB and starts the moment the channel confirms (see the
+     startPending handling in hostCreateRoom's subscribe callback). In true
+     demo mode (no Supabase in this browser) it still starts locally. */
+  if(live.mode==="viewer"){toast("This tab is only following the game — press Start on the Admin tab that created the room");return;}
+  if(live.mode==="host"&&!live.connected){live.startPending=true;toast("The room is still connecting — the game starts by itself the moment it's live ⏳");return;}
+  if(live.mode==="offline"&&getSupa()){live.startPending=true;hostCreateRoom();if(live.mode!=="host"){live.startPending=false;return;}toast("Creating today's room first — the game starts as soon as it connects, and reaches the Host screen and both iPads ⏳");return;}
   if(!state.questions.length){toast("Add at least one statement in Admin first");switchView("admin");return;}
   /* v20 game rule: each round is ROUND_SIZE statements picked at random from the whole bank. */
   state.active=shuffle(clone(state.questions)).slice(0,Math.min(state.roundSize||10,state.questions.length));
@@ -1706,9 +1752,9 @@ function revealAnswer(){
 function nextQuestion(){if(live.mode==="player")return;state.idx++;state.answers=[null,null];state.answerTimes=[null,null];state.answerSeq=[null,null];state.lastGain=[0,0];state.phase="playing";state.timeLeft=state.timerDur;state.questionStartedAt=Date.now();render();startTimer();}
 function finishGame(){if(live.mode==="player")return;state.phase="finished";stopTimer();render();saveSessionRecord("finished");}
 function endGame(){if(live.mode==="player"){toast("Only Admin / host can end the game");return;}stopTimer();state.paused=false;state.phase="finished";render();saveSessionRecord("finished");toast("Game ended by Admin — winner is on the Host screen 🏆");}
-function restartGame(){if(live.mode==="player"){toast("Only Admin / host can restart");return;}state.paused=false;startGame();toast("Game restarted by Admin ↻");}
+function restartGame(){if(live.mode==="player"){toast("Only Admin / host can restart");return;}state.paused=false;startGame();} /* v30: startGame reports the outcome — no unconditional “restarted” toast */
 function togglePause(){if(live.mode==="player")return;if(state.phase!=="playing"){toast("Pause only works while a question is live");return;}state.paused=!state.paused;render();toast(state.paused?"⏸ Timer paused by Admin":"▶ Timer resumed");}
-function resetGame(){if(live.mode==="player")return;stopTimer();state.sessionId++;state.players[0].name="Player 1";state.players[1].name="Player 2";state.phase="lobby";state.idx=0;state.answers=[null,null];state.answerTimes=[null,null];state.lastGain=[0,0];state.timeLeft=state.timerDur;render();toast("Back to lobby for a new session — names cleared, so the name bar is showing on both iPads again. Scores kept; Start Game resets scores.");}
+function resetGame(){if(live.mode==="player")return;stopTimer();state.sessionId++;live.ready=[false,false];state.players[0].name="Player 1";state.players[1].name="Player 2";state.phase="lobby";state.idx=0;state.answers=[null,null];state.answerTimes=[null,null];state.lastGain=[0,0];state.timeLeft=state.timerDur;render();toast("Back to lobby for a new session — names cleared, so the name bar is showing on both iPads again. Scores kept; Start Game resets scores.");}
 function newSession(){
   /* Activation flow: between groups of guests, Admin taps New Session.
      Scores, answers and NAMES all clear and every iPad shows its name bar
@@ -1716,7 +1762,7 @@ function newSession(){
      nobody ever re-enters the room code during the day. */
   if(live.mode==="player"){toast("Only Admin / host can start a new session");return;}
   if(curSess&&state.answerLog.length){saveSessionRecord(state.phase==="finished"?"finished":"ended");} curSess=null; /* v28: close out the previous game's record before wiping it */
-  stopTimer(); state.paused=false; state.sessionId++;
+  stopTimer(); state.paused=false; state.sessionId++; live.ready=[false,false]; /* v30: new session — Ready clears with the names */
   state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];
   state.answers=[null,null]; state.answerTimes=[null,null]; state.answerSeq=[null,null]; state.lastGain=[0,0]; state.answerLog=[]; state.active=[]; state.phase="lobby"; state.idx=0; state.timeLeft=state.timerDur;
   render(); toast("New session — names & scores cleared, name bars are showing on both iPads for the next players. Room code unchanged: QUIZ-"+(live.code||getDailyRoomCode()));
@@ -1724,6 +1770,7 @@ function newSession(){
 function resetPlayer(i){
   var kicked=live.mode==="host"?live.occupied[i]:null;
   if(live.mode==="host"){live.occupied[i]=null;live.lastSeen[i]=0;live.stale[i]=false;if(kicked&&live.channel){try{live.channel.send({type:"broadcast",event:"kicked",payload:{clientId:kicked}});}catch(e){}}state.players[i].name="Player "+(i+1);}
+  live.ready[i]=false; /* v30: a reset player is not ready */
   state.answerLog=state.answerLog.filter(function(en){return en.player!==i;}); if(state.answers)state.answerTimes[i]=null;
   state.players[i].score=0;state.players[i].streak=0;state.players[i].correct=0;if(state.answers)state.answers[i]=null;if(state.answerSeq)state.answerSeq[i]=null;
   render(); toast("Player "+(i+1)+" reset to 0 — slot freed");
@@ -1738,7 +1785,7 @@ function connFor(i){
     return{label:"Connected",cls:"on",detail:live.lastSeen[i]?("Last seen "+Math.max(0,Math.round((Date.now()-live.lastSeen[i])/1000))+"s ago"):"Connected via live room"};
   }
   if(live.mode==="player"){
-    if(live.mySlot===i)return{label:live.assigned?"Connected":"Connecting…",cls:live.assigned?"on":"wait",detail:"This device is Player "+(i+1)};
+    if(live.mySlot===i)return{label:live.assigned?"Connected":"Connecting…",cls:live.assigned?"on":"wait",detail:"This device is "+dispName(i)};
     return{label:"—",cls:"demo",detail:"Other player's device"};
   }
   if(live.mode==="viewer")return{label:"Following",cls:"demo",detail:"This screen is following the live game"};
@@ -1751,7 +1798,7 @@ function renderLiveMonitor(){
   var pct=state.timerDur===0?100:Math.max(0,Math.min(100,state.timeLeft/state.timerDur*100));
   var timerTxt=state.timerDur===0?"No timer":(state.timeLeft+"s left");
   var phaseTxt=state.phase.charAt(0).toUpperCase()+state.phase.slice(1)+(state.paused?" · Paused":"");
-  var roomTxt=live.mode==="host"?("Live room QUIZ-"+live.code+" · "+countJoined()+" of 2 joined"):(live.mode==="player"?("Joined as Player "+(live.mySlot+1)):(live.mode==="viewer"?"Following live game":"No live room — demo mode"));
+  var roomTxt=live.mode==="host"?("Live room QUIZ-"+live.code+" · "+countJoined()+" of 2 joined · "+countReady()+" of 2 ready"):(live.mode==="player"?("Joined as "+dispName(live.mySlot)):(live.mode==="viewer"?"Following live game":"No live room — demo mode"));
   var h="";
   h+='<div class="live-top">';
   h+='<div class="live-stat"><small>Timer</small><b id="liveTimerNum">'+timerTxt+'</b><span>'+(state.timerDur===0?"Timer is off":("of "+state.timerDur+"s per question · "+state.timeoutMode))+(state.paused?" · ⏸ Paused by Admin":"")+'</span><div class="live-timerbar"><i style="width:'+pct+'%"></i></div></div>';
@@ -1790,18 +1837,24 @@ function renderLiveMonitor(){
       } else if(state.phase==="finished"){
         ansBox="<b>Finished:</b> "+p.score+" pts · "+p.correct+" correct of "+total+"<br><b>Questions answered (revealed):</b> "+answeredCount; ansCls="";
       } else {
-        ansBox="<b>Answer:</b> — (game not started)<br><b>Screen:</b> Player "+(i+1)+" — open this same link on that player's iPad and tap Player "+(i+1); ansCls="";
+        /* v30 lobby card: name + Ready state, by name once one is set */
+        var named=p.name!=="Player "+(i+1);
+        ansBox=named
+          ?("<b>Name:</b> "+esc(p.name)+"<br><b>Ready:</b> "+(live.ready[i]?"✅ <b>Ready</b> — waiting for Start":"⏳ Not ready — waiting for them to tap <b>I'm Ready</b> on their iPad"))
+          :("<b>Name:</b> not set yet — the player types it on their iPad<br><b>Ready:</b> — (they tap I'm Ready after setting their name)"); ansCls="";
       }
       var hist=state.answerLog.filter(function(en){return en.player===i;}).slice(-3).reverse();
       var histHtml="";
       if(hist.length){
         histHtml='<div class="phistory"><b>Recent answers</b>'+hist.map(function(en){return '<div><span>Q'+en.qNum+': '+(en.answer===null?"No answer":(en.answer?"FACT":"MYTH"))+(en.isCorrect?" ✓":" ✕")+'</span><span>'+fmtSecs(en.time)+(en.gain?" · +"+en.gain:(en.isCorrect?" · slower, +0":""))+'</span></div>';}).join("")+'</div>';
       } else histHtml='<div class="phistory">No revealed answers yet — each answer, its time and points will list here after Reveal.</div>';
-      h+='<div class="pcard"><div class="pcard-head"><div class="pavatar">'+esc(initials(p.name))+'</div><div><b>'+esc(p.name)+'</b><span>Player '+(i+1)+' · '+(i===0?"First iPad slot":"Second iPad slot")+'</span></div><span class="conn-pill '+conn.cls+'"><i></i>'+esc(conn.label)+'</span></div>'
+      var namedCard=p.name!=="Player "+(i+1);
+      var readyPill=(state.phase==="lobby"&&namedCard)?('<span class="ready-pill '+(live.ready[i]?"on":"off")+'">'+(live.ready[i]?"✅ Ready":"⏳ Not ready")+'</span>'):"";
+      h+='<div class="pcard"><div class="pcard-head"><div class="pavatar">'+esc(initials(p.name))+'</div><div><b>'+esc(p.name)+'</b><span>'+(namedCard?((i===0?"First iPad":"Second iPad")):("Player "+(i+1)+" · no name set yet"))+'</span></div><span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><span class="conn-pill '+conn.cls+'"><i></i>'+esc(conn.label)+'</span>'+readyPill+'</span></div>'
         +'<div class="pstats"><div class="pstat"><b>'+p.score+'</b><small>Score</small></div><div class="pstat"><b>'+p.correct+'</b><small>Correct</small></div><div class="pstat"><b>'+p.streak+'</b><small>Streak</small></div><div class="pstat"><b>'+fmtSecs(at)+'</b><small>Answer time</small></div></div>'
         +'<div class="panswer '+ansCls+'">'+ansBox+'<div style="margin-top:6px;color:var(--muted);font-size:12.5px">'+esc(conn.detail)+'</div></div>'
         +histHtml
-        +'<div class="plinkrow"><span style="font-size:12.5px;color:var(--muted)">Player '+(i+1)+' screen — this same link, tap “Player '+(i+1)+'” at the top of the page on that iPad</span><button class="btn small" onclick="openScreen(\'p'+(i+1)+'\')">Open here</button></div>'
+        +'<div class="plinkrow"><span style="font-size:12.5px;color:var(--muted)">'+esc(dispName(i))+' screen — this same link, tap “Player '+(i+1)+'” at the top of the page on that iPad</span><button class="btn small" onclick="openScreen(\'p'+(i+1)+'\')">Open here</button></div>'
         +'</div>';
     })(i);
   }
@@ -1854,6 +1907,11 @@ function renderAdmin(){
     document.querySelectorAll("[data-del]").forEach(function(el){el.addEventListener("click",function(){state.questions.splice(+el.getAttribute("data-del"),1);if(state.idx>=state.questions.length)state.idx=Math.max(0,state.questions.length-1);qDirty=true;render();toast("Statement deleted — tap 💾 Save Questions to keep the change");});});
   }
   $("scoreLabel1").textContent=state.players[0].name+" score"; $("scoreLabel2").textContent=state.players[1].name+" score";
+  /* v30: once a name is set, Admin's player fields and reset buttons use it too */
+  var nl1=$("nameLabel1"); if(nl1)nl1.textContent=dispName(0)+" name";
+  var nl2=$("nameLabel2"); if(nl2)nl2.textContent=dispName(1)+" name";
+  var rp1=$("resetP1Btn"); if(rp1)rp1.textContent="Reset "+dispName(0)+" (score + free slot)";
+  var rp2=$("resetP2Btn"); if(rp2)rp2.textContent="Reset "+dispName(1)+" (score + free slot)";
   $("scoreVal1").textContent=state.players[0].score; $("scoreVal2").textContent=state.players[1].score;
   renderLiveMonitor();
   renderCurrentSession();
@@ -2152,13 +2210,13 @@ if(retryBankBtn)retryBankBtn.addEventListener("click",function(){loadBankFromSup
 
 /* ================= V5 WIRING: control, timer/button options, branding, save ================= */
 $("ctlNewSession").addEventListener("click",function(){newSession();});
-$("ctlStart").addEventListener("click",function(){startGame();toast("Game started — watch the Host screen ▶");});
+$("ctlStart").addEventListener("click",function(){startGame();}); /* v30: no unconditional “Game started” toast here — startGame() itself reports what actually happened (started, connecting, or blocked) */
 $("ctlRestart").addEventListener("click",function(){restartGame();});
 $("ctlEnd").addEventListener("click",function(){endGame();});
 $("ctlPause").addEventListener("click",function(){togglePause();});
 $("ctlReveal").addEventListener("click",function(){if(state.phase==="playing")revealAnswer();else toast("Reveal works while a question is live");});
 $("ctlNext").addEventListener("click",function(){if(state.phase==="reveal"){if(state.idx<getTotal()-1)nextQuestion();else finishGame();}else if(state.phase==="finished"){toast("Game finished — Start or Restart to play again");}else toast("Next works after Reveal");});
-$("ctlHardReset").addEventListener("click",function(){if(curSess&&state.answerLog.length){saveSessionRecord(state.phase==="finished"?"finished":"ended");}curSess=null;stopTimer();state.paused=false;state.sessionId++;state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];state.answers=[null,null];state.answerTimes=[null,null];state.answerLog=[];state.active=[];state.phase="lobby";state.idx=0;render();toast("Everything reset — scores, players and game back to lobby");});
+$("ctlHardReset").addEventListener("click",function(){if(curSess&&state.answerLog.length){saveSessionRecord(state.phase==="finished"?"finished":"ended");}curSess=null;stopTimer();state.paused=false;state.sessionId++;live.ready=[false,false];state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];state.answers=[null,null];state.answerTimes=[null,null];state.answerLog=[];state.active=[];state.phase="lobby";state.idx=0;render();toast("Everything reset — scores, players and game back to lobby");});
 document.querySelectorAll("#timerStyleSeg button").forEach(function(b){b.addEventListener("click",function(){state.timerStyle=b.getAttribute("data-tstyle");render();renderDesigner();toast("Timer style: "+b.textContent.trim()+" — preview is on the designer canvas");});});
 document.querySelectorAll("#timeoutSeg button").forEach(function(b){b.addEventListener("click",function(){state.timeoutMode=b.getAttribute("data-timeout");render();toast(state.timeoutMode==="reveal"?"Time-up will auto-reveal the answer":"Time-up will wait for Admin to reveal");});});
 document.querySelectorAll("#strictSeg button").forEach(function(b){b.addEventListener("click",function(){state.strict2p=b.getAttribute("data-strict")==="on";render();toast(state.strict2p?"🔒 Strict 2-Player ON — exactly 2 players, each iPad locked to its own player screen":"Strict mode OFF — screens can be switched freely on this link");});});
