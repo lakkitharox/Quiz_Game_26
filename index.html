@@ -314,6 +314,25 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
 .day-room .dr-status{font-size:14px;line-height:1.55;margin-top:10px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px 13px}
 .day-room .dr-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .remembered-note{font-size:13.5px;line-height:1.55;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.45);border-radius:12px;padding:11px 13px;margin-top:10px;text-align:left}
+/* --- v28: game sessions (Admin → Sessions) --- */
+.sess-card{border:1px solid var(--line);border-radius:16px;padding:15px;background:var(--card2);margin-bottom:12px}
+.sess-head{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.sess-head b{font-family:Archivo;font-size:15.5px}
+.sess-meta{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:3px}
+.sess-scores{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.sess-score{flex:1 1 150px;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:10px 12px}
+.sess-score small{display:block;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.sess-score b{font-family:Archivo;font-size:21px}
+.sess-badge{font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card)}
+.sess-badge.fin{background:rgba(34,197,94,.16);color:#16A34A;border-color:rgba(34,197,94,.45)}
+.sess-badge.play{background:rgba(255,176,32,.16);color:#B45309;border-color:rgba(255,176,32,.5)}
+.qa-block{border-top:1px solid var(--line);padding:11px 0 3px;margin-top:11px}
+.qa-block .qa-q{font-weight:700;line-height:1.5;font-size:14px}
+.qa-players{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+@media(max-width:560px){.qa-players{grid-template-columns:1fr}}
+.qa-p{border:1px solid var(--line);border-radius:11px;padding:9px 11px;background:var(--card);font-size:13px;line-height:1.55}
+.qa-p.good{border-color:var(--green)} .qa-p.bad{border-color:var(--red)}
+.qa-p b{font-family:Archivo}
 /* --- v22: player join dock — a FIXED form that lives OUTSIDE the stage ---
    The stage markup is rebuilt wholesale on every state/design/timer render,
    which kept destroying the join inputs mid-tap (v19–v21). The dock is a
@@ -361,6 +380,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <input id="joinName2" placeholder="Your name" maxlength="18" autocomplete="off">
       <button class="btn primary" onclick="playerJoinFrom('join2')">Join Game →</button>
       <div class="statusline" id="joinStatus2"></div>
+      <div class="remembered-note" style="background:rgba(255,176,32,.12);border-color:rgba(255,176,32,.45)">🔒 <b>Strict 2-Player game:</b> only two players can be in — Player 1 and Player 2. Once this device joins, it stays locked to its own player screen on this link until Admin resets its slot.</div>
       <div class="remembered-note" id="joinRememberedNote" hidden></div>
     </div>
     <p class="hint">You only enter the code <b>once per day</b> — this device remembers today's code until midnight, so later rounds need no code at all. No room yet? Admin must tap “Create Today's Room” in the Admin panel first.</p>
@@ -393,6 +413,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <button data-sec="admin">⚙ Admin</button>
       <button data-sec="questions">❓ Statements</button>
       <button data-sec="live">● Live</button>
+      <button data-sec="sessions">🗂 Sessions</button>
       <button data-sec="about">ℹ About</button>
     </nav>
     <div class="admin-main">
@@ -481,7 +502,14 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <!-- QUESTIONS -->
       <div class="panel">
         <h3>Statement bank <span id="qCount" style="color:var(--amber)"></span></h3>
-        <p>Tap FACT / MYTH on a statement to set the correct answer — FACT means the statement is true, MYTH means it is false. The bank holds 40 statements; every round picks 10 at random. Edits apply to the next game — finish or reset a running game first — and tap <b style="color:var(--text)">💾 Save Questions</b> below so your bank is kept in this browser and still here after a reload.</p>
+        <p>Tap FACT / MYTH on a statement to set the correct answer — FACT means the statement is true, MYTH means it is false. The bank holds 40 statements; every round picks 10 at random. Edits apply to the next game — finish or reset a running game first — and tap <b style="color:var(--text)">💾 Save Questions</b> below to store the bank in <b style="color:var(--text)">Supabase</b>, so the same bank loads on every device — not just this browser.</p>
+        <div id="qBankStatus" style="font-size:13px;line-height:1.55;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:0 0 14px;background:var(--card2)">☁️ Question bank: checking Supabase…</div>
+        <div id="qBankSetup" hidden style="border:1.5px dashed var(--amber);border-radius:12px;padding:13px 14px;margin:0 0 14px">
+          <b style="font-size:14px">One-time Supabase setup — run this SQL once (new project)</b>
+          <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:6px 0 10px">The bank table doesn't exist in the new Supabase project yet (<b style="color:var(--text)">aylhgfftsokskgpgvemn</b>), and the app's publishable key can't create tables. Open that project → <b style="color:var(--text)">SQL Editor</b> → paste this → <b style="color:var(--text)">Run</b>. After that, Save Questions stores the bank in the new project and every device shares it. Until then, edits are kept in this browser only.</p>
+          <pre id="qBankSql" style="white-space:pre-wrap;word-break:break-word;font-size:11.5px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px;overflow-x:auto;margin:0 0 10px"></pre>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="copyBankSqlBtn" type="button">Copy SQL</button><button class="btn small primary" id="retryBankBtn" type="button">I've run it — check again</button></div>
+        </div>
         <div id="qList"></div>
         <div class="divider"></div>
         <div class="field"><label for="newQ">Add a new statement</label><input id="newQ" placeholder="e.g. The Moon is made of cheese."></div>
@@ -526,6 +554,10 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <h3>🎮 Game control — full authority</h3>
         <p>Only Admin controls the game. The Host screen shows no buttons at all. <b style="color:var(--text)" id="phaseLabel">Phase: Lobby</b></p>
         <p style="margin-top:-6px">Between groups, tap <b style="color:var(--text)">New Session</b>: scores and names clear and the <b style="color:var(--text)">name bar shows again on both iPads</b>, so the next players type their own names — names never carry over between sessions. The iPads stay in today's room, so the code is never asked again.</p>
+        <div class="field"><label>Strict 2-Player mode — <span id="strictStateLabel">ON</span></label>
+          <div class="seg" id="strictSeg"><button data-strict="on">🔒 Strict — exactly 2 players</button><button data-strict="off">Open</button></div>
+          <p style="font-size:12.5px;color:var(--muted);margin:7px 0 0" id="strictHint">Strict is ON: the game takes <b style="color:var(--text)">exactly two players</b>. A Player 1 iPad can only ever be Player 1 and a Player 2 iPad only Player 2 — a player screen can never take the other slot, a third join is refused while both slots are taken, and once an iPad has joined it is <b style="color:var(--text)">locked to its own player screen</b> on this link (it can't wander to Host, Admin or the other player's screen) until Admin resets its slot. That keeps the one shared link free of distractions during a game.</p>
+        </div>
         <div class="control-grid">
           <button class="btn dark" id="ctlNewSession">✦ New Session — New Players</button>
           <button class="btn primary" id="ctlStart">▶ Start Game</button>
@@ -588,6 +620,30 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       </div>
 
       </div>
+      <div class="admin-sec" data-sec="sessions" hidden>
+      <!-- GAME SESSIONS — current game on this device -->
+      <div class="panel">
+        <h3>🗂 Game session — current game</h3>
+        <p>Every game played from this screen is recorded as a session: both players, their final scores, and <b style="color:var(--text)">every answer to every statement</b> — what each player tapped, whether it was right, how long they took and the points they won. The record is written to Supabase as the game runs (on Start, on every Reveal, and at the end), so it is complete even if the tab is closed mid-game.</p>
+        <div id="currentSessionBox"></div>
+      </div>
+      </div>
+      <div class="admin-sec" data-sec="sessions" hidden>
+      <!-- GAME SESSIONS — saved in Supabase -->
+      <div class="panel">
+        <h3>☁️ Saved sessions — Supabase</h3>
+        <p>All recorded sessions stored in the quiz Supabase project (<b style="color:var(--text)">aylhgfftsokskgpgvemn</b>), newest first — visible here on any device. Open a session to see both players' answers statement by statement, or download it as a CSV.</p>
+        <div id="sessStatus" style="font-size:13px;line-height:1.55;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:0 0 14px;background:var(--card2)">☁️ Sessions: checking Supabase…</div>
+        <div id="sessSetup" hidden style="border:1.5px dashed var(--amber);border-radius:12px;padding:13px 14px;margin:0 0 14px">
+          <b style="font-size:14px">One-time Supabase setup — run this SQL once (quiz project)</b>
+          <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:6px 0 10px">The sessions table doesn't exist in the quiz Supabase project yet (<b style="color:var(--text)">aylhgfftsokskgpgvemn</b>), and the app's publishable key can't create tables. Open that project → <b style="color:var(--text)">SQL Editor</b> → paste this → <b style="color:var(--text)">Run</b>. After that, every game session is stored in Supabase and listed here. Until then, sessions are recorded on this device only and shown above.</p>
+          <pre id="sessSql" style="white-space:pre-wrap;word-break:break-word;font-size:11.5px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px;overflow-x:auto;margin:0 0 10px"></pre>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="copySessSqlBtn" type="button">Copy SQL</button><button class="btn small primary" id="retrySessBtn" type="button">I've run it — check again</button></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button class="btn small" id="refreshSessBtn" type="button">↻ Refresh saved sessions</button></div>
+        <div id="sessList"></div>
+      </div>
+      </div>
       <div class="admin-sec" data-sec="about" hidden>
       <!-- ABOUT -->
       <div class="panel">
@@ -596,7 +652,10 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <p><b style="color:var(--text)">How a live game runs:</b> in <b style="color:var(--text)">Live</b>, press “Create Today's Room for iPads”, then give the players today's room code — it is shown at the top of Admin and only ever appears in Admin. There is <b style="color:var(--text)">one code for the full day</b>: players open this same link, tap their Player screen and enter the code once, and their iPad remembers it until midnight, so reopening the room or starting new rounds never asks for it again. <b style="color:var(--text)">Names are per session</b> (activation model): at the start of every session the name bar shows again on each iPad — players enter or change their names fresh, and Admin's <b style="color:var(--text)">New Session</b> button clears the previous session's names and scores so nothing carries over. Their taps count live on the Host screen. Start, reveal, end and reset are all controlled from Live. The <b style="color:var(--text)">room code</b> sits in its own big card at the very top of <b style="color:var(--text)">Live</b>, with one-tap buttons that open the Host / Player 1 / Player 2 screens on this same link, code already filled in. The <b style="color:var(--text)">Live monitor</b> just below it shows each player's Connected / Disconnected status, score, correct count, streak, current answer, answer time, recent answers, plus the current question and the timer.</p>
         <p><b style="color:var(--text)">Designing:</b> in <b style="color:var(--text)">Screens</b> you edit a draft of each screen — the canvas previews every change as you make it, but the Host and Player screens keep showing the last published design until you tap <b style="color:var(--text)">Go Live at the bottom of Admin</b>. Go Live means one thing only: it publishes the design live to all screens at once — no file, no download — and saves it in this browser, so it is still here after you reload Admin. Screens on other devices receive it through the live room.</p>
         <p><b style="color:var(--text)">Screens:</b> Host · Player 1 · Player 2 · Join · Admin — all of them are views on this one single link. There are no other addresses: open this link on the TV and on each iPad, then tap the screen that device should show. No accounts or installs — everything runs in the browser.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v24</b> · 26 Nov 2026 — ONE LINK: the separate /Player1, /Player2 and /Admin addresses are gone. Host, Player 1, Player 2, Join and Admin are all views on this single page, switched from the tabs at the top — the address only changes its #screen ending, never its path, so there is no second file or route that can serve an old version. Everything else is unchanged: 40-statement Myth or Fact bank, 10 at random per round, fastest-correct-only scoring, one room code per day, per-session names, and the fixed player join form that rebuilds never touch. Read this tag back to confirm you are on the new build; if it says anything else, you are looking at an older one.</p>
+        <p><b style="color:var(--text)">Question bank &amp; live sync:</b> the whole quiz backend now lives in the new <b style="color:var(--text)">Supabase</b> project (<b style="color:var(--text)">aylhgfftsokskgpgvemn</b>) — both the live game sync (Realtime Broadcast) and the statement bank use it. Edit and Save Questions on any device and every other device loads the same bank. The bank needs a one-time setup: if the table isn't in the new project yet, Admin → Statements shows the exact SQL to paste into that project's SQL Editor and Run once. Until that is done, the bank falls back to this browser's saved copy.</p>
+        <p><b style="color:var(--text)">Game sessions:</b> every game is recorded in Admin → <b style="color:var(--text)">Sessions</b> and stored in the same Supabase project (table <i>quiz_game_sessions</i>) — both players' names, final scores and correct counts, the winner, and every answer to every statement (what each player tapped, right or wrong, their answer time and the points won). The host writes the record as the game runs, so it is complete even if a tab closes mid-game. Sessions can be opened statement-by-statement in Admin, downloaded as CSV, or deleted. Like the bank, the table needs a one-time SQL setup — until it is run, Admin → Sessions shows the exact SQL and sessions record on the host device only.</p>
+        <p><b style="color:var(--text)">Strict 2-Player mode (on by default):</b> the game takes exactly two players on the one shared link, with no distractions — a Player 1 screen can only ever join as Player 1 and a Player 2 screen only as Player 2, a third join is refused while both slots are taken, and once an iPad has joined it is locked to its own player screen (it cannot switch to Host, Admin or the other player's screen) until Admin resets its slot. Strict mode can be turned off in Live → Game control.</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v28</b> · 27 Nov 2026 — GAME SESSION DATA + STRICT 2-PLAYER MODE: every game is now recorded as a session in the quiz Supabase project (<i>quiz_game_sessions</i>) — players, scores and every answer — and listed in the new Admin → Sessions section with per-statement answer detail and CSV download; the table needs the same kind of one-time SQL setup as the bank, shown in that section until it is run. Strict 2-Player mode is on by default: exactly two players, pinned slots, third joins refused, and a joined iPad locked to its own player screen on the shared link. Everything else is unchanged from v24–v27: the whole backend (live sync + question bank) in the dedicated quiz project <i>aylhgfftsokskgpgvemn</i>, ONE LINK (Host, Player 1, Player 2, Join and Admin are views on this single page), 10 statements at random per round, fastest-correct-only scoring, one room code per day, per-session names, and the fixed player join form that rebuilds never touch. Read this tag back to confirm you are on the new build; if it says anything else, you are looking at an older one.</p>
       </div>
       </div>
     </div>
@@ -615,8 +674,8 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-var SUPABASE_URL="https://loaqegnxedkhwiulpidn.supabase.co";
-var SUPABASE_ANON_KEY="sb_publishable_LhfC1wzgG0AFEWhfNcUMgA_FORMzoRZ";
+var SUPABASE_URL="https://aylhgfftsokskgpgvemn.supabase.co";
+var SUPABASE_ANON_KEY="sb_publishable_HiyUZMv_FNEr-Ux4OGPZRA_8q9PpG8Q";
 /* The Myth or Fact bank — 40 statements (answer:true = FACT, answer:false = MYTH).
    Every round picks ROUND_SIZE (10) of these at random. */
 var DEFAULT_QS=[
@@ -716,7 +775,7 @@ var state={
   phase:"lobby", idx:0, answers:[null,null], lastGain:[0,0],
   answerTimes:[null,null], answerSeq:[null,null], seqCounter:0, questionStartedAt:0, answerLog:[],
   timerDur:10, timeLeft:10, points:10, orderMode:"random", roundSize:10, newAnswer:true,
-  timerStyle:"ring", timeoutMode:"reveal", paused:false, sessionId:0,
+  timerStyle:"ring", timeoutMode:"reveal", paused:false, sessionId:0, strict2p:true,
   buttonStyle:"classic", buttonScale:100, trueColor:"#22C55E", falseColor:"#EF4444", trueLabel:"FACT", falseLabel:"MYTH"
 };
 function elapsedNow(){ if(state.questionStartedAt) return Math.max(0,(Date.now()-state.questionStartedAt)/1000); if(state.timerDur>0) return Math.max(0,state.timerDur-state.timeLeft); return 0; }
@@ -749,7 +808,7 @@ function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeSt
 function designFingerprint(k){var d=liveDesign[k];if(!d)return k+": —";var bg=d.bgMode==="image"?"image":d.bgMode==="color"?("solid "+(d.bgColor||"")):("grad "+(d.bg1||"")+" → "+(d.bg2||""));return bg+(d.headline?(" · headline “"+d.headline+"”"):" · no headline");}
 function diagLines(admin){
   var L=[];
-  L.push(["Build","v23"]);
+  L.push(["Build","v28"]);
   L.push(["Live library (Supabase)",diag.supa]);
   L.push(["This screen's role",live.mode==="host"?"Host (room owner)":live.mode==="player"?("Player "+(live.mySlot!==null?live.mySlot+1:"?")):live.mode==="viewer"?"Host display (viewer)":"Offline / demo"]);
   L.push(["Room channel",diag.channel]);
@@ -768,7 +827,7 @@ function diagLines(admin){
   return L;
 }
 function diagHTML(admin){
-  return '<b class="diag-t">🔎 Diagnostics — Build v24</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
+  return '<b class="diag-t">🔎 Diagnostics — Build v28</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
 }
 function renderDiag(){
   var ad=$("adminDiag"); if(ad)ad.innerHTML=diagHTML(true);
@@ -928,7 +987,7 @@ function broadcastState(){
     playerAnswers:state.phase==="reveal"?state.answers.slice():[null,null],
     answerTimes:state.answerTimes.slice(), answerSeq:state.answerSeq.slice(), roundSize:state.roundSize,
     lastGain:state.lastGain.slice(),timeLeft:state.timeLeft,timerDur:state.timerDur,points:state.points,
-    orderMode:state.orderMode, timerStyle:state.timerStyle, timeoutMode:state.timeoutMode, paused:state.paused,
+    orderMode:state.orderMode, timerStyle:state.timerStyle, timeoutMode:state.timeoutMode, paused:state.paused, strict2p:state.strict2p,
     buttonStyle:state.buttonStyle, buttonScale:state.buttonScale, trueColor:state.trueColor, falseColor:state.falseColor, trueLabel:state.trueLabel, falseLabel:state.falseLabel,
     design:clone(liveDesign), screenTs:clone(designScreenTs), ts:Date.now()};
   try{live.channel.send({type:"broadcast",event:"state",payload:payload});}catch(e){}
@@ -1053,7 +1112,7 @@ function handleHostJoin(p){
       else { try{live.channel.send({type:"broadcast",event:"join-rejected",payload:{clientId:p.clientId,reason:"Player "+(want+1)+" is already taken on this device set — that iPad is already in. Use the other player's screen, or reset Player "+(want+1)+" in Admin."}});}catch(e){} diag.join=name+" asked for Player "+(want+1)+" but that slot is taken — rejected · "+diagTime(Date.now()); diagNote(); return; }
     } else {
       slot=live.occupied[0]===null?0:live.occupied[1]===null?1:-1;
-      if(slot===-1){try{live.channel.send({type:"broadcast",event:"join-rejected",payload:{clientId:p.clientId,reason:"Room is full — two players are already in."}});}catch(e){} return;}
+      if(slot===-1){try{live.channel.send({type:"broadcast",event:"join-rejected",payload:{clientId:p.clientId,reason:state.strict2p?"Strict 2-Player mode — both player slots are taken. This game takes exactly 2 players; Admin must reset a player to free a slot.":"Room is full — two players are already in."}});}catch(e){} diag.join=name+" tried to join but both slots are taken — refused (strict 2-player) · "+diagTime(Date.now()); diagNote(); return;}
     }
     live.occupied[slot]=p.clientId;
   }
@@ -1253,6 +1312,7 @@ function applyRemoteState(pl){
   if(pl.timerStyle)state.timerStyle=pl.timerStyle;
   if(pl.timeoutMode)state.timeoutMode=pl.timeoutMode;
   if(pl.paused!==undefined)state.paused=!!pl.paused;
+  if(pl.strict2p!==undefined)state.strict2p=!!pl.strict2p;
   if(pl.buttonStyle)state.buttonStyle=pl.buttonStyle;
   if(pl.buttonScale)state.buttonScale=pl.buttonScale;
   if(pl.trueColor)state.trueColor=pl.trueColor;
@@ -1598,6 +1658,7 @@ function startGame(){
   state.players.forEach(function(p){p.score=0;p.streak=0;p.correct=0});
   state.sessionId++; /* a new game = a new session (names were entered fresh in the lobby for it) */
   state.idx=0;state.answers=[null,null];state.answerTimes=[null,null];state.answerSeq=[null,null];state.seqCounter=0;state.answerLog=[];state.lastGain=[0,0];state.phase="playing";state.timeLeft=state.timerDur;state.paused=false;state.questionStartedAt=Date.now();
+  beginSessionRecord(); /* v28: open the Supabase session record for this game */
   render(); startTimer();
   toast("Game started — "+state.active.length+" statements picked at random 🔀 Statement 1 is live!");
 }
@@ -1640,10 +1701,11 @@ function revealAnswer(){
   });
   if(state.answerLog.length>40)state.answerLog=state.answerLog.slice(-40);
   state.phase="reveal"; render();
+  queueSaveSession("playing"); /* v28: persist this statement's answers + scores to the session record */
 }
 function nextQuestion(){if(live.mode==="player")return;state.idx++;state.answers=[null,null];state.answerTimes=[null,null];state.answerSeq=[null,null];state.lastGain=[0,0];state.phase="playing";state.timeLeft=state.timerDur;state.questionStartedAt=Date.now();render();startTimer();}
-function finishGame(){if(live.mode==="player")return;state.phase="finished";stopTimer();render();}
-function endGame(){if(live.mode==="player"){toast("Only Admin / host can end the game");return;}stopTimer();state.paused=false;state.phase="finished";render();toast("Game ended by Admin — winner is on the Host screen 🏆");}
+function finishGame(){if(live.mode==="player")return;state.phase="finished";stopTimer();render();saveSessionRecord("finished");}
+function endGame(){if(live.mode==="player"){toast("Only Admin / host can end the game");return;}stopTimer();state.paused=false;state.phase="finished";render();saveSessionRecord("finished");toast("Game ended by Admin — winner is on the Host screen 🏆");}
 function restartGame(){if(live.mode==="player"){toast("Only Admin / host can restart");return;}state.paused=false;startGame();toast("Game restarted by Admin ↻");}
 function togglePause(){if(live.mode==="player")return;if(state.phase!=="playing"){toast("Pause only works while a question is live");return;}state.paused=!state.paused;render();toast(state.paused?"⏸ Timer paused by Admin":"▶ Timer resumed");}
 function resetGame(){if(live.mode==="player")return;stopTimer();state.sessionId++;state.players[0].name="Player 1";state.players[1].name="Player 2";state.phase="lobby";state.idx=0;state.answers=[null,null];state.answerTimes=[null,null];state.lastGain=[0,0];state.timeLeft=state.timerDur;render();toast("Back to lobby for a new session — names cleared, so the name bar is showing on both iPads again. Scores kept; Start Game resets scores.");}
@@ -1653,6 +1715,7 @@ function newSession(){
      again for the next players — but the iPads stay in today's room, so
      nobody ever re-enters the room code during the day. */
   if(live.mode==="player"){toast("Only Admin / host can start a new session");return;}
+  if(curSess&&state.answerLog.length){saveSessionRecord(state.phase==="finished"?"finished":"ended");} curSess=null; /* v28: close out the previous game's record before wiping it */
   stopTimer(); state.paused=false; state.sessionId++;
   state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];
   state.answers=[null,null]; state.answerTimes=[null,null]; state.answerSeq=[null,null]; state.lastGain=[0,0]; state.answerLog=[]; state.active=[]; state.phase="lobby"; state.idx=0; state.timeLeft=state.timerDur;
@@ -1761,6 +1824,8 @@ function renderAdmin(){
   var cpEl=$("ctlPause"); if(cpEl)cpEl.textContent=state.paused?"▶ Resume Timer":"⏸ Pause Timer";
   document.querySelectorAll("#timerStyleSeg button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-tstyle")===state.timerStyle);});
   document.querySelectorAll("#timeoutSeg button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-timeout")===state.timeoutMode);});
+  document.querySelectorAll("#strictSeg button").forEach(function(b){b.classList.toggle("on",(b.getAttribute("data-strict")==="on")===!!state.strict2p);});
+  var stlEl=$("strictStateLabel"); if(stlEl)stlEl.textContent=state.strict2p?"ON":"OFF";
   document.querySelectorAll("#btnStyleSeg button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-bstyle")===state.buttonStyle);});
   var bsEl=$("btnScale"); if(bsEl&&document.activeElement!==bsEl)bsEl.value=String(state.buttonScale);
   var bsvEl=$("btnScaleVal"); if(bsvEl)bsvEl.textContent=state.buttonScale+"%";
@@ -1791,6 +1856,7 @@ function renderAdmin(){
   $("scoreLabel1").textContent=state.players[0].name+" score"; $("scoreLabel2").textContent=state.players[1].name+" score";
   $("scoreVal1").textContent=state.players[0].score; $("scoreVal2").textContent=state.players[1].score;
   renderLiveMonitor();
+  renderCurrentSession();
   document.querySelectorAll("#orderSeg button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-order")===state.orderMode);});
   $("orderHint").textContent="Start Game shuffles the "+state.questions.length+"-statement bank and deals "+(state.roundSize||10)+" at random — a different set every round.";
 }
@@ -1917,6 +1983,7 @@ document.querySelectorAll("#adminMenu button").forEach(function(b){b.addEventLis
   document.querySelectorAll("#adminMenu button").forEach(function(x){x.classList.toggle("on",x===b);});
   document.querySelectorAll(".admin-sec").forEach(function(s){s.hidden=s.getAttribute("data-sec")!==sec;});
   if(sec==="screens")renderDesigner();
+  if(sec==="sessions"){renderCurrentSession();renderSessionsList();loadSessionsFromSupabase();}
   window.scrollTo({top:0});
 });});
 $("bgMode").addEventListener("change",function(e){design[designTab].bgMode=e.target.value;designChanged();});
@@ -1951,6 +2018,20 @@ var VIEWS=["host","p1","p2","join","admin"];
 var HASH_FOR_VIEW={host:"host",p1:"player1",p2:"player2",join:"join",admin:"admin"};
 var currentView="host"; /* the screen actually on display — set by switchView, read by the Host auto-join gate */
 function switchView(v){
+  /* v28 — STRICT 2-PLAYER LOCK: once an iPad has joined a live game in
+     strict mode, this device is locked to its OWN player screen on the
+     shared link. It cannot wander to the Host, Admin or the other player's
+     screen (the “same link distractions” the host asked to remove) until
+     Admin resets its slot or the room closes, which disconnects it and
+     lifts the lock. The Join view stays reachable — it only shows the
+     “you're in” note for a joined player. */
+  if(state.strict2p&&live.mode==="player"&&live.assigned&&(live.mySlot===0||live.mySlot===1)){
+    var myView=live.mySlot===1?"p2":"p1";
+    if(v!==myView&&v!=="join"){
+      toast("🔒 Strict 2-Player — this device is locked to Player "+(live.mySlot+1)+". Admin must reset your slot to release it.");
+      v=myView;
+    }
+  }
   currentView=v;
   /* One screen at a time — Host/Player screens are true full-screen: no top bar, no tabs. */
   VIEWS.forEach(function(k){var el=$("view-"+k);if(el)el.hidden=k!==v;});
@@ -2036,7 +2117,7 @@ $("pointsInput").addEventListener("input",function(e){
 });
 $("pointsInput").addEventListener("change",function(e){setPoints(e.target.value,true);});
 document.querySelectorAll("[data-points-preset]").forEach(function(b){b.addEventListener("click",function(){setPoints(+b.getAttribute("data-points-preset"),true);var inp=$("pointsInput");if(inp)inp.value=String(state.points);});});
-document.querySelectorAll("[data-adj]").forEach(function(b){b.addEventListener("click",function(){var parts=b.getAttribute("data-adj").split(",");var i=+parts[0];state.players[i].score=Math.max(0,state.players[i].score+(+parts[1]));render();toast(state.players[i].name+" score: "+state.players[i].score);});});
+document.querySelectorAll("[data-adj]").forEach(function(b){b.addEventListener("click",function(){var parts=b.getAttribute("data-adj").split(",");var i=+parts[0];state.players[i].score=Math.max(0,state.players[i].score+(+parts[1]));render();if(curSess)queueSaveSession(state.phase==="finished"?"finished":"playing");toast(state.players[i].name+" score: "+state.players[i].score);});});
 $("resetScoresBtn").addEventListener("click",function(){state.players.forEach(function(p){p.score=0;p.correct=0;p.streak=0;});render();toast("Scores reset to 0");});
 $("resetP1Btn").addEventListener("click",function(){resetPlayer(0);});
 $("resetP2Btn").addEventListener("click",function(){resetPlayer(1);});
@@ -2045,11 +2126,29 @@ $("resetPlayersBtn").addEventListener("click",function(){
   state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];state.answers=[null,null];state.answerTimes=[null,null];state.answerLog=[];render();toast("Both players reset — iPad slots freed");
 });
 $("resetGameBtn").addEventListener("click",function(){state.players.forEach(function(p){p.score=0;p.correct=0;p.streak=0;});state.active=[];resetGame();toast("Whole game reset");});
-$("restoreBtn").addEventListener("click",function(){state.questions=clone(DEFAULT_QS);state.idx=0;if(persistQuestionBank()){qDirty=false;qSavedAt=Date.now();}else qDirty=true;render();toast("40-statement Myth or Fact bank restored and saved");});
+$("restoreBtn").addEventListener("click",function(){state.questions=clone(DEFAULT_QS);state.idx=0;qDirty=true;render();saveQuestions();toast("40-statement Myth or Fact bank restored — saving it to Supabase");});
 $("newTrue").addEventListener("click",function(){state.newAnswer=true;$("newTrue").className="on-true";$("newFalse").className="";});
 $("newFalse").addEventListener("click",function(){state.newAnswer=false;$("newFalse").className="on-false";$("newTrue").className="";});
 $("addQBtn").addEventListener("click",function(){var v=$("newQ").value.trim();if(!v){toast("Type a statement first");return;}state.questions.push({text:v,answer:state.newAnswer});$("newQ").value="";qDirty=true;render();toast("Statement added — "+state.questions.length+" in the bank · tap 💾 Save Questions to keep it");});
 $("saveQBtn").addEventListener("click",function(){saveQuestions();});
+var copySqlBtn=$("copyBankSqlBtn");
+if(copySqlBtn)copySqlBtn.addEventListener("click",function(){
+  function done(){toast("SQL copied — paste it into Supabase → SQL Editor and Run");}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(QBANK_SQL).then(done).catch(function(){toast("Copy failed — the SQL is shown in the box above");});}
+  else toast("The SQL is shown in the box above — select and copy it");
+});
+var copySessSqlBtn=$("copySessSqlBtn");
+if(copySessSqlBtn)copySessSqlBtn.addEventListener("click",function(){
+  function done(){toast("SQL copied — paste it into Supabase → SQL Editor and Run");}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(SESS_SQL).then(done).catch(function(){toast("Copy failed — the SQL is shown in the box above");});}
+  else toast("The SQL is shown in the box above — select and copy it");
+});
+var retrySessBtn=$("retrySessBtn");
+if(retrySessBtn)retrySessBtn.addEventListener("click",function(){loadSessionsFromSupabase().then(function(ok){if(ok){toast("☁️ Sessions table found — new games will be stored in Supabase");if(curSess)saveSessionRecord(state.phase==="finished"?"finished":"playing");}else if(sessSource==="setup")toast("Table still not found — check the SQL ran in the quiz project (aylhgfftsokskgpgvemn)");});});
+var refreshSessBtn=$("refreshSessBtn");
+if(refreshSessBtn)refreshSessBtn.addEventListener("click",function(){loadSessionsFromSupabase();});
+var retryBankBtn=$("retryBankBtn");
+if(retryBankBtn)retryBankBtn.addEventListener("click",function(){loadBankFromSupabase().then(function(ok){if(ok&&qBankSource==="supabase"){toast("☁️ Supabase bank table found — tap 💾 Save Questions to push this bank up");saveQuestions();}else if(qBankSource==="setup")toast("Table still not found — check the SQL ran in the same Supabase project");});});
 
 /* ================= V5 WIRING: control, timer/button options, branding, save ================= */
 $("ctlNewSession").addEventListener("click",function(){newSession();});
@@ -2059,9 +2158,10 @@ $("ctlEnd").addEventListener("click",function(){endGame();});
 $("ctlPause").addEventListener("click",function(){togglePause();});
 $("ctlReveal").addEventListener("click",function(){if(state.phase==="playing")revealAnswer();else toast("Reveal works while a question is live");});
 $("ctlNext").addEventListener("click",function(){if(state.phase==="reveal"){if(state.idx<getTotal()-1)nextQuestion();else finishGame();}else if(state.phase==="finished"){toast("Game finished — Start or Restart to play again");}else toast("Next works after Reveal");});
-$("ctlHardReset").addEventListener("click",function(){stopTimer();state.paused=false;state.sessionId++;state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];state.answers=[null,null];state.answerTimes=[null,null];state.answerLog=[];state.active=[];state.phase="lobby";state.idx=0;render();toast("Everything reset — scores, players and game back to lobby");});
+$("ctlHardReset").addEventListener("click",function(){if(curSess&&state.answerLog.length){saveSessionRecord(state.phase==="finished"?"finished":"ended");}curSess=null;stopTimer();state.paused=false;state.sessionId++;state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];state.answers=[null,null];state.answerTimes=[null,null];state.answerLog=[];state.active=[];state.phase="lobby";state.idx=0;render();toast("Everything reset — scores, players and game back to lobby");});
 document.querySelectorAll("#timerStyleSeg button").forEach(function(b){b.addEventListener("click",function(){state.timerStyle=b.getAttribute("data-tstyle");render();renderDesigner();toast("Timer style: "+b.textContent.trim()+" — preview is on the designer canvas");});});
 document.querySelectorAll("#timeoutSeg button").forEach(function(b){b.addEventListener("click",function(){state.timeoutMode=b.getAttribute("data-timeout");render();toast(state.timeoutMode==="reveal"?"Time-up will auto-reveal the answer":"Time-up will wait for Admin to reveal");});});
+document.querySelectorAll("#strictSeg button").forEach(function(b){b.addEventListener("click",function(){state.strict2p=b.getAttribute("data-strict")==="on";render();toast(state.strict2p?"🔒 Strict 2-Player ON — exactly 2 players, each iPad locked to its own player screen":"Strict mode OFF — screens can be switched freely on this link");});});
 document.querySelectorAll("#btnStyleSeg button").forEach(function(b){b.addEventListener("click",function(){state.buttonStyle=b.getAttribute("data-bstyle");render();renderDesigner();toast("Button style: "+b.textContent.trim()+" — preview is on the designer canvas (Player tabs)");});});
 $("btnScale").addEventListener("input",function(e){state.buttonScale=+e.target.value;$("btnScaleVal").textContent=state.buttonScale+"%";document.querySelectorAll("#btnScalePresets [data-bs]").forEach(function(b){b.classList.toggle("on",+b.getAttribute("data-bs")===state.buttonScale);});designChangedSoft();});
 document.querySelectorAll("#btnScalePresets [data-bs]").forEach(function(b){b.addEventListener("click",function(){state.buttonScale=+b.getAttribute("data-bs");var s=$("btnScale");if(s)s.value=state.buttonScale;$("btnScaleVal").textContent=state.buttonScale+"%";document.querySelectorAll("#btnScalePresets [data-bs]").forEach(function(x){x.classList.toggle("on",x===b);});designChangedSoft();render();toast("Button size: "+state.buttonScale+"%");});});
@@ -2115,15 +2215,34 @@ try{
   }
 }catch(e){designChannel=null;}
 function markSaved(what){var el=$("saveStatus");if(el)el.textContent="✓ Live now — "+what+" · "+new Date().toLocaleTimeString();toast("🚀 Live now — "+what+" is showing on the Host & Player screens.");}
-/* ================= QUESTION BANK STORE (browser) =================
-   Statement edits used to live only in page memory — a reload silently
-   threw them away, unlike the design which Go Live stores. The 💾 Save
-   Questions button in Admin → Statements now writes the bank into this
-   browser's storage (same approach as the published-design store), and
-   the bank is restored from it at load, before first paint. */
+/* ================= QUESTION BANK STORE (Supabase) =================
+   v26: the bank now lives in Supabase — one shared bank for every device,
+   replacing the v25 browser-only store. Table: public.quiz_question_bank
+   (single row, id = 'default', questions = the whole bank as JSON).
+   v27: whole quiz backend (this bank + live Realtime Broadcast sync) moved
+   to the dedicated quiz project aylhgfftsokskgpgvemn via the single
+   SUPABASE_URL / SUPABASE_ANON_KEY config above — no other backend refs.
+   This browser's localStorage is kept ONLY as an offline cache / fallback:
+   it paints instantly at load and covers the period before the one-time
+   SQL setup has been run in the new Supabase project. Once the table exists,
+   Save Questions writes to Supabase, every screen loads the bank from
+   Supabase at startup, and a save on one device prompts the others to
+   reload it (broadcast ping + Postgres Changes when enabled). */
 var QBANK_KEY="tfq-question-bank-v1";
+var QBANK_TABLE="quiz_question_bank";
+var QBANK_ROW_ID="default";
+var QBANK_SQL="create table if not exists public.quiz_question_bank (\n  id text primary key,\n  questions jsonb not null default '[]'::jsonb,\n  updated_at timestamptz not null default now()\n);\nalter table public.quiz_question_bank enable row level security;\ndrop policy if exists \"Quiz bank read\" on public.quiz_question_bank;\ndrop policy if exists \"Quiz bank insert\" on public.quiz_question_bank;\ndrop policy if exists \"Quiz bank update\" on public.quiz_question_bank;\ncreate policy \"Quiz bank read\" on public.quiz_question_bank for select using (true);\ncreate policy \"Quiz bank insert\" on public.quiz_question_bank for insert with check (true);\ncreate policy \"Quiz bank update\" on public.quiz_question_bank for update using (true) with check (true);";
 var qDirty=false, qSavedAt=null;
+var qBankSource="checking"; /* checking | supabase | local | defaults | setup */
+var qBankRemoteAt=null, qBankBusy=false, qBankChannel=null;
+function cleanBank(qs){
+  if(!Array.isArray(qs))return null;
+  var out=qs.filter(function(q){return q&&typeof q.text==="string"&&q.text.trim();}).map(function(q){return{text:q.text,answer:!!q.answer};});
+  return out.length?out:null;
+}
 function persistQuestionBank(){
+  /* Local cache write (instant, offline-safe). Returns true on success.
+     The shared store is Supabase — see saveBankToSupabase(). */
   try{
     if(!window.localStorage)return false;
     localStorage.setItem(QBANK_KEY,JSON.stringify({questions:state.questions,ts:Date.now()}));
@@ -2131,25 +2250,276 @@ function persistQuestionBank(){
   }catch(e){return false;}
 }
 function restoreQuestionBank(){
+  /* Instant first paint from this browser's cache; the Supabase load that
+     runs right after (loadBankFromSupabase) overrides it when it arrives. */
   try{
     if(!window.localStorage)return;
     var raw=localStorage.getItem(QBANK_KEY); if(!raw)return;
     var saved=JSON.parse(raw);
-    if(!saved||!Array.isArray(saved.questions))return;
-    var qs=saved.questions.filter(function(q){return q&&typeof q.text==="string"&&q.text.trim();}).map(function(q){return{text:q.text,answer:!!q.answer};});
-    if(qs.length){state.questions=qs;qSavedAt=typeof saved.ts==="number"?saved.ts:null;qDirty=false;}
+    var qs=cleanBank(saved&&saved.questions);
+    if(qs){state.questions=qs;qSavedAt=typeof saved.ts==="number"?saved.ts:null;qDirty=false;if(qBankSource==="checking")qBankSource="local";}
   }catch(e){}
 }
+function isBankTableMissing(err){
+  if(!err)return false;
+  var c=String(err.code||""), m=String(err.message||"");
+  return c==="PGRST205"||c==="42P01"||/could not find the table|does not exist|relation .* does not exist/i.test(m);
+}
+function renderBankStatus(){
+  var box=$("qBankStatus"); if(!box)return;
+  var when=qBankRemoteAt?(" · last saved "+new Date(qBankRemoteAt).toLocaleString()):(qSavedAt?(" · browser copy saved "+new Date(qSavedAt).toLocaleTimeString()):"");
+  if(qBankBusy)box.innerHTML="☁️ Question bank: <b>talking to Supabase…</b>";
+  else if(qBankSource==="supabase")box.innerHTML="☁️ Question bank: <b style='color:#16A34A'>stored in Supabase</b> — shared by every device"+esc(when)+".";
+  else if(qBankSource==="setup")box.innerHTML="⚠️ Question bank: <b>Supabase table not set up yet</b> — edits are only in this browser for now. Run the one-time SQL below to switch the bank to Supabase.";
+  else if(qBankSource==="local")box.innerHTML="☁️ Question bank: showing this browser's saved copy — checking Supabase…";
+  else box.innerHTML="☁️ Question bank: using the built-in 40 statements — checking Supabase…";
+  var setup=$("qBankSetup"); if(setup)setup.hidden=qBankSource!=="setup";
+  var pre=$("qBankSql"); if(pre&&!pre.textContent)pre.textContent=QBANK_SQL;
+}
+function applyRemoteBank(qs,remoteAt){
+  var clean=cleanBank(qs); if(!clean)return false;
+  if(qDirty)return false; /* never clobber edits the Admin hasn't saved yet */
+  state.questions=clean;
+  if(state.idx>=state.questions.length)state.idx=Math.max(0,state.questions.length-1);
+  qBankSource="supabase"; qBankRemoteAt=remoteAt||Date.now(); qSavedAt=qBankRemoteAt; qDirty=false;
+  persistQuestionBank(); /* refresh the local cache from the shared bank */
+  return true;
+}
+function loadBankFromSupabase(){
+  var s=getSupa();
+  if(!s){qBankSource="local";renderBankStatus();updateQSaveUI();return Promise.resolve(false);}
+  qBankBusy=true; renderBankStatus();
+  return s.from(QBANK_TABLE).select("questions,updated_at").eq("id",QBANK_ROW_ID).maybeSingle().then(function(res){
+    qBankBusy=false;
+    if(res.error){
+      if(isBankTableMissing(res.error))qBankSource="setup";
+      renderBankStatus(); updateQSaveUI();
+      return false;
+    }
+    if(res.data&&res.data.questions){
+      var at=res.data.updated_at?Date.parse(res.data.updated_at):null;
+      if(applyRemoteBank(res.data.questions,isNaN(at)?null:at)){render();toast("☁️ Question bank loaded from Supabase — "+state.questions.length+" statements, shared on every device");}
+      else {qBankSource="supabase";qBankRemoteAt=isNaN(at)?null:at;}
+    } else {
+      /* Table exists but holds no bank yet — the defaults showing are the
+         bank until the first Save pushes them up. */
+      qBankSource="supabase";
+    }
+    renderBankStatus(); updateQSaveUI();
+    return true;
+  }).catch(function(){qBankBusy=false;renderBankStatus();updateQSaveUI();return false;});
+}
+function saveBankToSupabase(){
+  var s=getSupa();
+  if(!s)return Promise.resolve(false);
+  qBankBusy=true; renderBankStatus();
+  var row={id:QBANK_ROW_ID,questions:state.questions,updated_at:new Date().toISOString()};
+  return s.from(QBANK_TABLE).upsert(row,{onConflict:"id"}).then(function(res){
+    qBankBusy=false;
+    if(res.error){
+      if(isBankTableMissing(res.error)){qBankSource="setup";renderBankStatus();}
+      return false;
+    }
+    qBankSource="supabase"; qBankRemoteAt=Date.parse(row.updated_at);
+    pingBankChanged();
+    return true;
+  }).catch(function(){qBankBusy=false;return false;});
+}
+function pingBankChanged(){
+  /* Tell every other open device to reload the bank from Supabase now —
+     works even when Postgres Changes replication is not enabled. */
+  try{
+    if(qBankChannel){qBankChannel.send({type:"broadcast",event:"bank-changed",payload:{by:live.clientId,ts:Date.now()}});return;}
+  }catch(e){}
+  var s=getSupa(); if(!s)return;
+  try{
+    var ch=s.channel("quiz-bank-sync",{config:{broadcast:{self:false}}});
+    ch.subscribe(function(st){if(st==="SUBSCRIBED"){try{ch.send({type:"broadcast",event:"bank-changed",payload:{by:live.clientId,ts:Date.now()}});}catch(e){} setTimeout(function(){try{s.removeChannel(ch);}catch(e){}},800);}});
+  }catch(e){}
+}
+function subscribeBankChanges(){
+  var s=getSupa(); if(!s||qBankChannel)return;
+  try{
+    var ch=s.channel("quiz-bank-sync",{config:{broadcast:{self:false}}}); qBankChannel=ch;
+    ch.on("broadcast",{event:"bank-changed"},function(m){var pl=(m&&m.payload)||{};if(pl.by===live.clientId)return;loadBankFromSupabase();});
+    try{
+      ch.on("postgres_changes",{event:"*",schema:"public",table:QBANK_TABLE},function(pl){
+        var row=pl&&(pl.new||pl.record); if(row&&row.questions){applyRemoteBank(row.questions,row.updated_at?Date.parse(row.updated_at):null);renderBankStatus();updateQSaveUI();render();}
+      });
+    }catch(e){}
+    ch.subscribe(function(){});
+  }catch(e){qBankChannel=null;}
+}
 function updateQSaveUI(){
+  renderBankStatus();
   var st=$("qSaveStatus"); if(!st)return;
-  if(qDirty)st.textContent="● Unsaved changes — tap 💾 Save Questions to keep them after a reload.";
-  else if(qSavedAt)st.textContent="✓ Saved in this browser · "+new Date(qSavedAt).toLocaleTimeString();
-  else st.textContent="Edits show in the next game right away — tap Save to also keep them after a reload.";
+  if(qDirty)st.textContent="● Unsaved changes — tap 💾 Save Questions to store the bank in Supabase.";
+  else if(qBankSource==="supabase")st.textContent="✓ Saved in Supabase"+(qBankRemoteAt?(" · "+new Date(qBankRemoteAt).toLocaleString()):"")+" — every device loads this bank.";
+  else if(qBankSource==="setup")st.textContent="⚠ Not in Supabase yet — run the one-time SQL above, then tap Save again.";
+  else if(qSavedAt)st.textContent="✓ Saved in this browser · "+new Date(qSavedAt).toLocaleTimeString()+" — Supabase copy not confirmed yet.";
+  else st.textContent="Edits show in the next game right away — tap Save to store the bank in Supabase.";
 }
 function saveQuestions(){
-  if(persistQuestionBank()){qDirty=false;qSavedAt=Date.now();toast("💾 Questions saved — "+state.questions.length+" statements in the bank");}
-  else toast("Couldn't save in this browser — the edits still apply to the next game");
-  updateQSaveUI();
+  persistQuestionBank(); /* cache first, so nothing is lost even offline */
+  saveBankToSupabase().then(function(ok){
+    if(ok){qDirty=false;qSavedAt=Date.now();toast("☁️ Questions saved to Supabase — "+state.questions.length+" statements, shared on every device");}
+    else if(qBankSource==="setup"){toast("Saved in this browser only — run the one-time SQL in the Statements panel to put the bank in Supabase");}
+    else toast("Couldn't reach Supabase — saved in this browser; tap Save again when you're back online");
+    updateQSaveUI();
+  });
+}
+/* ================= GAME SESSION RECORDS (Supabase) =================
+   v28: every game is recorded as a session in the same quiz Supabase
+   project — table public.quiz_game_sessions, one row per game, upserted
+   by the host tab on Start, on every Reveal and at the end of the game,
+   so players, final scores and every answer survive even a mid-game tab
+   close. answers is the game's answerLog as JSON: one entry per player
+   per statement {player, qNum, text, answer, correctAnswer, isCorrect,
+   time, gain}. Player/viewer tabs never write — only the tab running
+   the game does, so a game is never recorded twice. If the table does
+   not exist yet, Admin → Sessions shows the one-time SQL (same pattern
+   as the question bank) and the current game still displays locally. */
+var SESS_TABLE="quiz_game_sessions";
+var SESS_SQL="create table if not exists public.quiz_game_sessions (\n  id text primary key,\n  room_code text,\n  session_date text,\n  started_at timestamptz,\n  finished_at timestamptz,\n  status text not null default 'playing',\n  player1_name text,\n  player2_name text,\n  player1_score integer not null default 0,\n  player2_score integer not null default 0,\n  player1_correct integer not null default 0,\n  player2_correct integer not null default 0,\n  winner text,\n  total_questions integer not null default 0,\n  answers jsonb not null default '[]'::jsonb,\n  questions jsonb not null default '[]'::jsonb,\n  updated_at timestamptz not null default now()\n);\nalter table public.quiz_game_sessions enable row level security;\ndrop policy if exists \"Quiz sessions read\" on public.quiz_game_sessions;\ndrop policy if exists \"Quiz sessions insert\" on public.quiz_game_sessions;\ndrop policy if exists \"Quiz sessions update\" on public.quiz_game_sessions;\ndrop policy if exists \"Quiz sessions delete\" on public.quiz_game_sessions;\ncreate policy \"Quiz sessions read\" on public.quiz_game_sessions for select using (true);\ncreate policy \"Quiz sessions insert\" on public.quiz_game_sessions for insert with check (true);\ncreate policy \"Quiz sessions update\" on public.quiz_game_sessions for update using (true) with check (true);\ncreate policy \"Quiz sessions delete\" on public.quiz_game_sessions for delete using (true);";
+var sessSource="checking"; /* checking | supabase | setup | local | error */
+var sessList=[], sessOpenId=null, sessBusy=false;
+var curSess=null; /* {id, startedAt} — the game running on THIS tab */
+var sessSaveTimer=null;
+function sessWinnerName(){if(state.phase!=="finished")return null;var a=state.players[0],b=state.players[1];return a.score===b.score?"Tie":(a.score>b.score?a.name:b.name);}
+function buildSessionRow(status){
+  if(!curSess)return null;
+  return {id:curSess.id,room_code:live.code||getDailyRoomCode(),session_date:todayKey(),started_at:curSess.startedAt,finished_at:status==="finished"?new Date().toISOString():null,status:status||"playing",
+    player1_name:state.players[0].name,player2_name:state.players[1].name,
+    player1_score:state.players[0].score,player2_score:state.players[1].score,
+    player1_correct:state.players[0].correct,player2_correct:state.players[1].correct,
+    winner:sessWinnerName(),total_questions:state.active.length||0,
+    answers:clone(state.answerLog),questions:state.active.map(function(q){return{text:q.text,answer:q.answer};}),
+    updated_at:new Date().toISOString()};
+}
+function beginSessionRecord(){
+  if(live.mode==="player"||live.mode==="viewer"){curSess=null;return;}
+  curSess={id:"sess-"+todayKey()+"-"+(live.code||getDailyRoomCode())+"-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),startedAt:new Date().toISOString()};
+  saveSessionRecord("playing");
+}
+function saveSessionRecord(status){
+  var row=buildSessionRow(status); if(!row)return;
+  renderCurrentSession();
+  var s=getSupa(); if(!s){sessSource="local";renderSessionsStatus();return;}
+  s.from(SESS_TABLE).upsert(row,{onConflict:"id"}).then(function(res){
+    if(res.error){sessSource=isBankTableMissing(res.error)?"setup":"error";}
+    else{
+      sessSource="supabase";
+      var found=false;
+      for(var i=0;i<sessList.length;i++){if(sessList[i].id===row.id){sessList[i]=row;found=true;break;}}
+      if(!found)sessList.unshift(row);
+    }
+    renderSessionsStatus(); renderSessionsList();
+  }).catch(function(){sessSource="error";renderSessionsStatus();});
+}
+function queueSaveSession(status){if(sessSaveTimer)clearTimeout(sessSaveTimer);sessSaveTimer=setTimeout(function(){saveSessionRecord(status);},500);}
+function fmtDateTime(iso){if(!iso)return "—";try{return new Date(iso).toLocaleString();}catch(e){return String(iso);}}
+function ansLabel(a){return (a===null||a===undefined)?"No answer":(a?"FACT":"MYTH");}
+function sessionAnswersHTML(answers,names){
+  if(!answers||!answers.length)return '<p style="font-size:13px;color:var(--muted);line-height:1.55;margin:10px 0 4px">No answers recorded yet — answers appear here as each statement is revealed.</p>';
+  var byQ={};
+  answers.forEach(function(en){if(!byQ[en.qNum])byQ[en.qNum]=[];byQ[en.qNum].push(en);});
+  var nums=Object.keys(byQ).map(function(k){return +k;}).sort(function(a,b){return a-b;});
+  var h="";
+  nums.forEach(function(qn){
+    var entries=byQ[qn], first=entries[0];
+    h+='<div class="qa-block"><div class="qa-q">Q'+qn+'. '+esc(first.text)+' <span class="sess-badge '+(first.correctAnswer?"fin":"play")+'" style="margin-left:6px">Correct: '+(first.correctAnswer?"✓ FACT":"✕ MYTH")+'</span></div><div class="qa-players">';
+    for(var pi=0;pi<2;pi++){
+      var en=null; for(var j=0;j<entries.length;j++){if(entries[j].player===pi)en=entries[j];}
+      var nm=names&&names[pi]?names[pi]:("Player "+(pi+1));
+      if(!en)h+='<div class="qa-p"><b>'+esc(nm)+'</b> — no record</div>';
+      else h+='<div class="qa-p '+(en.isCorrect?"good":"bad")+'"><b>'+esc(nm)+'</b> — answered <b>'+ansLabel(en.answer)+'</b> · '+(en.isCorrect?"✓ Correct":"✕ Wrong")+'<br>Answered in: '+fmtSecs(en.time)+' · Points: '+(en.gain?("+"+en.gain):(en.isCorrect?"0 (slower — fastest only)":"0"))+'</div>';
+    }
+    h+='</div></div>';
+  });
+  return h;
+}
+function renderCurrentSession(){
+  var box=$("currentSessionBox"); if(!box)return;
+  if(!curSess&&!state.answerLog.length){
+    box.innerHTML='<p style="font-size:13.5px;color:var(--muted);line-height:1.6;margin:0">No game recorded on this device yet. Press <b style="color:var(--text)">Start Game</b> in Live → Game control — the session opens the moment the game starts, and every revealed answer is added to it.</p>';
+    return;
+  }
+  var row=buildSessionRow(state.phase==="finished"?"finished":"playing");
+  var names=[state.players[0].name,state.players[1].name];
+  box.innerHTML='<div class="sess-head"><b>'+esc(names[0])+' vs '+esc(names[1])+'</b><span class="sess-badge '+(state.phase==="finished"?"fin":"play")+'">'+(state.phase==="finished"?"Finished":"● Recording")+'</span></div>'
+    +'<div class="sess-meta">Started '+fmtDateTime(row?row.started_at:null)+' · Room QUIZ-'+esc(row?row.room_code:"")+' · '+(sessSource==="supabase"?"☁️ Saving to Supabase as the game runs":sessSource==="setup"?"⚠️ Sessions table not set up in Supabase yet — recording on this device only (SQL below)":"Recording on this device — Supabase status below")+'</div>'
+    +'<div class="sess-scores"><div class="sess-score"><small>'+esc(names[0])+' — Player 1</small><b>'+state.players[0].score+' pts</b><span style="font-size:12.5px;color:var(--muted)"> · '+state.players[0].correct+' correct</span></div><div class="sess-score"><small>'+esc(names[1])+' — Player 2</small><b>'+state.players[1].score+' pts</b><span style="font-size:12.5px;color:var(--muted)"> · '+state.players[1].correct+' correct</span></div></div>'
+    +(sessWinnerName()?'<p style="font-size:13.5px;margin:10px 0 0">🏆 Winner: <b>'+esc(sessWinnerName())+'</b></p>':"")
+    +sessionAnswersHTML(state.answerLog,names)
+    +(state.answerLog.length?'<div style="margin-top:12px"><button class="btn small" type="button" onclick="downloadSessionCSV(\'current\')">⬇ Download this session (CSV)</button></div>':"");
+}
+function renderSessionsStatus(){
+  var box=$("sessStatus"); if(!box)return;
+  if(sessBusy)box.innerHTML="☁️ Sessions: <b>loading from Supabase…</b>";
+  else if(sessSource==="supabase")box.innerHTML="☁️ Sessions: <b style='color:#16A34A'>stored in Supabase</b> — "+sessList.length+" session"+(sessList.length===1?"":"s")+" found. Every finished game lands here with both players' scores and answers.";
+  else if(sessSource==="setup")box.innerHTML="⚠️ Sessions: <b>Supabase table not set up yet</b> — games are recorded on the host device only for now. Run the one-time SQL below to store sessions in Supabase.";
+  else if(sessSource==="error")box.innerHTML="⚠️ Sessions: couldn't reach the sessions table just now — check the connection and tap Refresh. Games keep recording on the host device meanwhile.";
+  else if(sessSource==="local")box.innerHTML="☁️ Sessions: recording on this device — checking Supabase…";
+  else box.innerHTML="☁️ Sessions: checking Supabase…";
+  var setup=$("sessSetup"); if(setup)setup.hidden=sessSource!=="setup";
+  var pre=$("sessSql"); if(pre&&!pre.textContent)pre.textContent=SESS_SQL;
+}
+function renderSessionsList(){
+  var box=$("sessList"); if(!box)return;
+  renderSessionsStatus();
+  if(sessBusy){box.innerHTML='<p style="font-size:13px;color:var(--muted)">Loading sessions…</p>';return;}
+  if(!sessList.length){box.innerHTML='<p style="font-size:13px;color:var(--muted);line-height:1.55;margin:0">No saved sessions yet — they appear here after the first game is played'+(sessSource==="setup"?" (once the table above is set up)":"")+'.</p>';return;}
+  box.innerHTML=sessList.map(function(r){
+    var names=[r.player1_name||"Player 1",r.player2_name||"Player 2"];
+    var open=sessOpenId===r.id;
+    return '<div class="sess-card"><div class="sess-head"><b>'+esc(names[0])+' vs '+esc(names[1])+'</b><span class="sess-badge '+(r.status==="finished"?"fin":"play")+'">'+esc(r.status||"playing")+'</span></div>'
+      +'<div class="sess-meta">'+fmtDateTime(r.started_at)+' · Room QUIZ-'+esc(r.room_code||"—")+' · '+(r.total_questions||0)+' statements'+(r.winner?' · 🏆 <b style="color:var(--text)">'+esc(r.winner)+'</b>':"")+'</div>'
+      +'<div class="sess-scores"><div class="sess-score"><small>'+esc(names[0])+' — Player 1</small><b>'+(r.player1_score||0)+' pts</b><span style="font-size:12.5px;color:var(--muted)"> · '+(r.player1_correct||0)+' correct</span></div><div class="sess-score"><small>'+esc(names[1])+' — Player 2</small><b>'+(r.player2_score||0)+' pts</b><span style="font-size:12.5px;color:var(--muted)"> · '+(r.player2_correct||0)+' correct</span></div></div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:11px"><button class="btn small" type="button" data-sess-view="'+esc(r.id)+'">'+(open?"Hide answers":"View answers")+'</button><button class="btn small" type="button" data-sess-csv="'+esc(r.id)+'">⬇ CSV</button><button class="btn small danger" type="button" data-sess-del="'+esc(r.id)+'">Delete</button></div>'
+      +(open?sessionAnswersHTML(r.answers,names):"")
+      +'</div>';
+  }).join("");
+  box.querySelectorAll("[data-sess-view]").forEach(function(b){b.addEventListener("click",function(){var id=b.getAttribute("data-sess-view");sessOpenId=sessOpenId===id?null:id;renderSessionsList();});});
+  box.querySelectorAll("[data-sess-csv]").forEach(function(b){b.addEventListener("click",function(){downloadSessionCSV(b.getAttribute("data-sess-csv"));});});
+  box.querySelectorAll("[data-sess-del]").forEach(function(b){b.addEventListener("click",function(){deleteSession(b.getAttribute("data-sess-del"));});});
+}
+function loadSessionsFromSupabase(){
+  var s=getSupa(); if(!s){sessSource="local";renderSessionsList();return Promise.resolve(false);}
+  sessBusy=true; renderSessionsList();
+  return s.from(SESS_TABLE).select("*").order("updated_at",{ascending:false}).limit(30).then(function(res){
+    sessBusy=false;
+    if(res.error){sessSource=isBankTableMissing(res.error)?"setup":"error";renderSessionsList();return false;}
+    sessList=res.data||[]; sessSource="supabase"; renderSessionsList(); return true;
+  }).catch(function(){sessBusy=false;sessSource="error";renderSessionsList();return false;});
+}
+function deleteSession(id){
+  var s=getSupa(); if(!s)return;
+  s.from(SESS_TABLE).delete().eq("id",id).then(function(res){
+    if(res.error){toast("Couldn't delete that session — "+(res.error.message||"error"));return;}
+    sessList=sessList.filter(function(r){return r.id!==id;});
+    if(sessOpenId===id)sessOpenId=null;
+    renderSessionsList(); toast("Session deleted");
+  }).catch(function(){toast("Couldn't delete that session — connection problem");});
+}
+function csvCell(v){return '"'+String(v===null||v===undefined?"":v).replace(/"/g,'""')+'"';}
+function downloadSessionCSV(id){
+  var row=null;
+  if(id==="current")row=buildSessionRow(state.phase==="finished"?"finished":"playing");
+  else{for(var i=0;i<sessList.length;i++){if(sessList[i].id===id)row=sessList[i];}}
+  if(!row){toast("That session isn't available to download");return;}
+  var names=[row.player1_name||"Player 1",row.player2_name||"Player 2"];
+  var lines=[["session_id","started_at","room_code","status","winner","question_number","statement","correct_answer","player","player_answer","result","answer_time_seconds","points_gained","player_final_score"].map(csvCell).join(",")];
+  var finals=[row.player1_score||0,row.player2_score||0];
+  var sorted=(row.answers||[]).slice().sort(function(a,b){return (a.qNum-b.qNum)||(a.player-b.player);});
+  sorted.forEach(function(en){
+    lines.push([row.id,row.started_at||"","QUIZ-"+(row.room_code||""),row.status||"",row.winner||"",en.qNum,en.text,en.correctAnswer?"FACT":"MYTH",names[en.player]||("Player "+(en.player+1)),ansLabel(en.answer),en.isCorrect?"Correct":"Wrong",en.time===null||en.time===undefined?"":en.time,en.gain||0,finals[en.player]].map(csvCell).join(","));
+  });
+  if(!sorted.length)lines.push([row.id,row.started_at||"","QUIZ-"+(row.room_code||""),row.status||"",row.winner||"","","","",names.join(" vs "),"","",  "", "", finals.join(" – ")].map(csvCell).join(","));
+  var blob=new Blob([lines.join("\n")],{type:"text/csv"});
+  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="quiz-session-"+String(row.id).replace(/[^a-z0-9-]/gi,"")+".csv";
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){try{URL.revokeObjectURL(a.href);}catch(e){} if(a.parentNode)a.parentNode.removeChild(a);},400);
+  toast("Session CSV downloaded ⬇");
 }
 /* ================= PUBLISHED-DESIGN STORE (browser) =================
    v3.5/v3.6 kept the published design only in page memory plus two ephemeral
@@ -2174,7 +2544,7 @@ var lastDesignStoreStr="";
 function persistPublishedDesign(){
   try{
     if(!window.localStorage)return;
-    var str=JSON.stringify({design:liveDesign,screenTs:designScreenTs,style:{timerStyle:state.timerStyle,timeoutMode:state.timeoutMode,buttonStyle:state.buttonStyle,buttonScale:state.buttonScale,trueColor:state.trueColor,falseColor:state.falseColor,trueLabel:state.trueLabel,falseLabel:state.falseLabel},ts:Date.now()});
+    var str=JSON.stringify({design:liveDesign,screenTs:designScreenTs,style:{timerStyle:state.timerStyle,timeoutMode:state.timeoutMode,buttonStyle:state.buttonStyle,buttonScale:state.buttonScale,trueColor:state.trueColor,falseColor:state.falseColor,trueLabel:state.trueLabel,falseLabel:state.falseLabel,strict2p:state.strict2p},ts:Date.now()});
     if(str===lastDesignStoreStr)return;
     lastDesignStoreStr=str;
     localStorage.setItem(DESIGN_STORE_KEY,str);
@@ -2184,7 +2554,7 @@ function applyStoredDesign(saved,keyUsed){
   liveDesign=clone(saved.design); design=clone(saved.design); ensureDesign();
   if(saved.screenTs){["host","player1","player2"].forEach(function(k){if(typeof saved.screenTs[k]==="number")designScreenTs[k]=saved.screenTs[k];});}
   else if(saved.ts){designScreenTs={host:saved.ts,player1:saved.ts,player2:saved.ts};}
-  if(saved.style){["timerStyle","timeoutMode","buttonStyle","buttonScale","trueColor","falseColor","trueLabel","falseLabel"].forEach(function(k){if(saved.style[k]!==undefined)state[k]=saved.style[k];});}
+  if(saved.style){["timerStyle","timeoutMode","buttonStyle","buttonScale","trueColor","falseColor","trueLabel","falseLabel","strict2p"].forEach(function(k){if(saved.style[k]!==undefined)state[k]=saved.style[k];});}
   if(state.trueLabel==="TRUE")state.trueLabel="FACT"; if(state.falseLabel==="FALSE")state.falseLabel="MYTH"; /* v20: designs saved by older builds carried TRUE/FALSE labels */
   designPublished=true; hasRemoteDesign=true;
   diag.restore="YES — read from storage ("+keyUsed+") · saved "+diagTime(saved.ts||Date.now())+" · Host: "+designFingerprint("host");
@@ -2230,7 +2600,7 @@ function refreshDesignFromStore(){
     });
     if(changed){
       lastDesignStoreStr=raw;
-      if(saved.style){["timerStyle","timeoutMode","buttonStyle","buttonScale","trueColor","falseColor","trueLabel","falseLabel"].forEach(function(k){if(saved.style[k]!==undefined)state[k]=saved.style[k];});}
+      if(saved.style){["timerStyle","timeoutMode","buttonStyle","buttonScale","trueColor","falseColor","trueLabel","falseLabel","strict2p"].forEach(function(k){if(saved.style[k]!==undefined)state[k]=saved.style[k];});}
       if(state.trueLabel==="TRUE")state.trueLabel="FACT"; if(state.falseLabel==="FALSE")state.falseLabel="MYTH"; /* v20 label migration, as in applyStoredDesign */
       designPublished=true; hasRemoteDesign=true;
       if(!designIsDirty())design=clone(liveDesign);
@@ -2272,8 +2642,11 @@ $("saveScreenBtn").addEventListener("click",function(){ensureDesign();liveDesign
 
 /* ================= INIT ================= */
 restorePublishedDesign(); /* last Go Live design, restored before first paint so a reload keeps it */
-restoreQuestionBank(); /* last 💾 Save Questions bank, restored before first paint so a reload keeps it */
+restoreQuestionBank(); /* instant paint from this browser's cache — Supabase load below overrides it with the shared bank */
 render(); updateLiveUI();
+loadBankFromSupabase(); /* v26: the shared bank lives in Supabase — load it over the cache as soon as it answers */
+subscribeBankChanges(); /* …and follow later saves made on other devices */
+renderCurrentSession(); renderSessionsStatus(); loadSessionsFromSupabase(); /* v28: saved game sessions, loaded from the same Supabase project */
 var initialView=routeFromURL();
 switchView(initialView||"host");
 maybeHostViewer();
