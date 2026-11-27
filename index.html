@@ -362,7 +362,6 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
     <button data-view="join">Join</button>
     <button data-view="admin">⚙ Admin</button>
   </nav>
-  <span style="font-size:12.5px;color:var(--muted);font-weight:600">One link only — every screen is a view on this page. On each device, open this same link and tap its screen above.</span>
 </div></header>
 
 <!-- ================= HOST — full screen ================= -->
@@ -379,35 +378,31 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
   <div id="joinOfflineBox">
     <div class="bigjoin">
       <h2 style="font-size:26px;font-weight:900">Join the game 📱</h2>
-      <p style="color:var(--muted);line-height:1.55;margin:8px 0 10px">Enter the room code from Admin and your name. First to join becomes Player 1, second becomes Player 2 — you'll land on your own full-screen player screen.</p>
+      <p style="color:var(--muted);line-height:1.55;margin:8px 0 10px">Room code + your name.</p>
       <label style="font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Room code</label>
       <input id="joinCode2" placeholder="e.g. 4821" maxlength="10" autocapitalize="characters" autocomplete="off">
       <label style="font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Your name</label>
       <input id="joinName2" placeholder="Your name" maxlength="18" autocomplete="off">
       <button class="btn primary" onclick="playerJoinFrom('join2')">Join Game →</button>
       <div class="statusline" id="joinStatus2"></div>
-      <div class="remembered-note" style="background:rgba(255,176,32,.12);border-color:rgba(255,176,32,.45)">🔒 <b>Strict 2-Player game:</b> only two players can be in — Player 1 and Player 2. Once this device joins, it stays locked to its own player screen on this link until Admin resets its slot.</div>
       <div class="remembered-note" id="joinRememberedNote" hidden></div>
     </div>
-    <p class="hint">You only enter the code <b>once per day</b> — this device remembers today's code until midnight, so later rounds need no code at all. No room yet? Admin must tap “Create Today's Room” in the Admin panel first.</p>
   </div>
-  <div id="livePlayerNote" hidden><p class="hint" style="padding-top:22px">✅ You're in — your controller is on your <b>Player screen</b>. Keep this device on that screen during the game.</p></div>
+  <div id="livePlayerNote" hidden><p class="hint" style="padding-top:22px">✅ You're in — use your <b>Player screen</b>.</p></div>
 </section>
 
 <!-- ================= ADMIN ================= -->
 <section id="view-admin" hidden>
 <div class="wrap">
   <div class="intro">
-    <h1>Admin — design every screen, run the quiz</h1>
-    <p>You have full control here: start, end, restart and reset the game, design every screen with logos and text, then use <b style="color:var(--text)">Go Live at the bottom</b> to publish. The Host screen itself has no tabs or buttons — it is a clean full-screen display only.</p>
+    <h1>Admin</h1>
   </div>
   <!-- TODAY'S ROOM — one code for the full day, Admin only (never on the Host TV screen) -->
   <div class="panel day-room" id="adminRoomPanel">
     <div class="dr-kicker">🔑 Today's room — one code, all day</div>
     <div class="dr-code" id="adminRoomCodeBig">QUIZ-<b>····</b></div>
-    <div class="dr-meta" id="adminRoomMeta">One room for the full day — a new code starts tomorrow.</div>
-    <div class="dr-status" id="adminRoomStatus">Loading today's room…</div>
-    <p style="font-size:13.5px;line-height:1.6;color:var(--muted);margin:12px 0 0">Give this code to both players <b style="color:var(--text)">once in the morning</b>. Each iPad remembers it for the rest of the day — refreshes, new rounds and reopening the room all use this same code, so nobody has to type it again today. It is shown <b style="color:var(--text)">only here in Admin</b>, never on the Host TV screen. <b style="color:var(--text)">Names work the opposite way — per session:</b> between groups, tap <b style="color:var(--text)">New Session</b> in Game Control and each iPad shows its name bar again, so every session's players enter their own names; names never carry over.</p>
+    <div class="dr-meta" id="adminRoomMeta">Today's code — new code tomorrow.</div>
+    <div class="dr-status" id="adminRoomStatus">Loading…</div>
     <div class="dr-actions">
       <button class="btn primary" id="adminRoomCreateBtn" onclick="hostCreateRoom()">● Create Today's Room</button>
       <button class="btn" id="adminRoomCopyBtn" onclick="copyTodaysCode()">Copy today's code</button>
@@ -427,7 +422,6 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <!-- DESIGNER -->
       <div class="panel">
         <h3>🎨 Screen designer</h3>
-        <p>Canvas on the left, Layers &amp; Properties on the right — like Figma / Photoshop. Drag on the canvas, select a layer to edit it, use the eye to hide it. Real screens update only when you tap <b style="color:var(--text)">Go Live at the bottom of Admin</b>.</p>
         <p id="publishStatus" style="font-weight:700;font-size:13px;margin:0 0 10px"></p>
         <div class="design-tabs" id="designTabs">
           <button data-dt="host" class="on">🖥 Host screen</button>
@@ -437,12 +431,10 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <div class="designer-layout">
           <div class="canvas-col">
             <div class="canvas-shell"><div class="canvas" id="designCanvas"></div></div>
-            <p class="canvas-hint">Drag an element to move it. Hidden layers are not drawn here, so the canvas only shows what the audience will see.</p>
           </div>
           <aside class="props-panel" aria-label="Layers and properties">
             <div class="props-sec">
               <h4>Layers</h4>
-              <p>Tap a layer to select it. Tap the eye to show or hide it.</p>
               <div id="elList" class="el-list"></div>
             </div>
             <div class="props-sec">
@@ -476,20 +468,19 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <div class="field"><label>Headline</label><input id="headlineInput" placeholder="e.g. Grand Quiz Night" maxlength="60"></div>
         <div class="field"><label>Sub-text</label><input id="subtextInput" placeholder="e.g. Myth or Fact — fastest finger takes the points!" maxlength="90"></div>
         <div class="row2">
-          <div class="field"><label>Overall screen scale — <span id="globalScaleVal"></span></label><input type="range" id="globalScale" min="25" max="300" step="5"><div class="scale-presets" id="globalScalePresets"><button type="button" data-gs="25">25%</button><button type="button" data-gs="50">50%</button><button type="button" data-gs="75">75%</button><button type="button" data-gs="100">100%</button><button type="button" data-gs="150">150%</button><button type="button" data-gs="200">200%</button><button type="button" data-gs="250">250%</button><button type="button" data-gs="300">300%</button></div><p style="font-size:12.5px;color:var(--muted);margin:7px 0 0">Scales the whole screen — 25% tiny up to 300% huge.</p></div>
+          <div class="field"><label>Overall screen scale — <span id="globalScaleVal"></span></label><input type="range" id="globalScale" min="25" max="300" step="5"><div class="scale-presets" id="globalScalePresets"><button type="button" data-gs="25">25%</button><button type="button" data-gs="50">50%</button><button type="button" data-gs="75">75%</button><button type="button" data-gs="100">100%</button><button type="button" data-gs="150">150%</button><button type="button" data-gs="200">200%</button><button type="button" data-gs="250">250%</button><button type="button" data-gs="300">300%</button></div></div>
           <div class="field"><label>Layout</label><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="resetLayoutBtn">↺ Reset this screen</button><button class="btn small" id="resetAllDesignBtn">Reset all</button></div></div>
         </div>
             </div>
             <div class="props-sec">
               <h4>Timer &amp; button styles</h4>
-              <p>Timer on the Host screen; MYTH / FACT buttons on the player screens. Check the Host tab for the timer, a Player tab for the buttons.</p>
         <div class="field"><label>Timer style (on Host screen)</label>
           <div class="seg" id="timerStyleSeg"><button data-tstyle="ring">◉ Ring</button><button data-tstyle="bar">▬ Bar</button><button data-tstyle="big">Big numbers</button><button data-tstyle="minimal">Minimal pill</button></div>
         </div>
         <div class="field"><label>MYTH / FACT button style</label>
           <div class="seg" id="btnStyleSeg"><button data-bstyle="classic">Classic blocks</button><button data-bstyle="pill">Pill</button><button data-bstyle="soft">Soft 3D</button><button data-bstyle="outline">Outline</button><button data-bstyle="sharp">Sharp</button></div>
         </div>
-        <div class="field"><label>Button size (scale) — <span id="btnScaleVal"></span></label><input type="range" id="btnScale" min="25" max="300" step="5"><div class="scale-presets" id="btnScalePresets"><button type="button" data-bs="25">25%</button><button type="button" data-bs="50">50%</button><button type="button" data-bs="75">75%</button><button type="button" data-bs="100">100%</button><button type="button" data-bs="150">150%</button><button type="button" data-bs="200">200%</button><button type="button" data-bs="250">250%</button><button type="button" data-bs="300">300%</button></div><p style="font-size:12.5px;color:var(--muted);margin:7px 0 0">MYTH / FACT buttons — 25% tiny up to 300% huge. Combines with the buttons element scale on the canvas.</p></div>
+        <div class="field"><label>Button size (scale) — <span id="btnScaleVal"></span></label><input type="range" id="btnScale" min="25" max="300" step="5"><div class="scale-presets" id="btnScalePresets"><button type="button" data-bs="25">25%</button><button type="button" data-bs="50">50%</button><button type="button" data-bs="75">75%</button><button type="button" data-bs="100">100%</button><button type="button" data-bs="150">150%</button><button type="button" data-bs="200">200%</button><button type="button" data-bs="250">250%</button><button type="button" data-bs="300">300%</button></div></div>
         <div class="row2">
           <div class="field"><label>FACT button colour</label><input type="color" id="trueCol"></div>
           <div class="field"><label>MYTH button colour</label><input type="color" id="falseCol"></div>
@@ -508,11 +499,11 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <!-- QUESTIONS -->
       <div class="panel">
         <h3>Statement bank <span id="qCount" style="color:var(--amber)"></span></h3>
-        <p>Tap FACT / MYTH on a statement to set the correct answer — FACT means the statement is true, MYTH means it is false. The bank holds 40 statements; every round picks 10 at random. Edits apply to the next game — finish or reset a running game first — and tap <b style="color:var(--text)">💾 Save Questions</b> below to store the bank in <b style="color:var(--text)">Supabase</b> as a clear table — <b style="color:var(--text)">quiz_questions</b>, <b style="color:var(--text)">one row per statement</b> with its answer — so the same bank loads on every device, and in the Supabase Table Editor you can read every question and its answer at a glance.</p>
-        <div id="qBankStatus" style="font-size:13px;line-height:1.55;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:0 0 14px;background:var(--card2)">☁️ Question bank: checking Supabase…</div>
+        <p>10 picked at random per round. Tap 💾 Save Questions to save.</p>
+        <div id="qBankStatus" style="font-size:13px;line-height:1.55;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:0 0 14px;background:var(--card2)">☁️ Checking…</div>
         <div id="qBankSetup" hidden style="border:1.5px dashed var(--amber);border-radius:12px;padding:13px 14px;margin:0 0 14px">
-          <b style="font-size:14px">One-time Supabase setup — run this SQL once (new project)</b>
-          <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:6px 0 10px">The clear questions table doesn't exist in the Supabase project yet (<b style="color:var(--text)">aylhgfftsokskgpgvemn</b>), and the app's publishable key can't create tables. Open that project → <b style="color:var(--text)">SQL Editor</b> → paste this → <b style="color:var(--text)">Run</b>. It creates <b style="color:var(--text)">quiz_questions</b> — a clear table where <b style="color:var(--text)">each row is one question</b>: <b style="color:var(--text)">sort_order</b> (1, 2, 3…), <b style="color:var(--text)">statement</b> (the question text) and <b style="color:var(--text)">answer</b> (true = FACT, false = MYTH). After that, Save Questions writes one row per statement into it and every device shares it. Your existing questions are kept: the app still reads your previous bank on load, and the first Save copies it into the new table as separate rows. (The old <i>quiz_question_bank</i> table — the one that packed all the questions into a single row — is no longer used; you can delete it in Supabase later if you like.) Until the SQL is run, edits are kept in this browser only.</p>
+          <b style="font-size:14px">One-time setup — run this SQL once</b>
+          <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:6px 0 10px">Supabase project <b style="color:var(--text)">aylhgfftsokskgpgvemn</b> → SQL Editor → paste → Run. Creates the <b style="color:var(--text)">quiz_questions</b> table.</p>
           <pre id="qBankSql" style="white-space:pre-wrap;word-break:break-word;font-size:11.5px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px;overflow-x:auto;margin:0 0 10px"></pre>
           <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="copyBankSqlBtn" type="button">Copy SQL</button><button class="btn small primary" id="retryBankBtn" type="button">I've run it — check again</button></div>
         </div>
@@ -535,13 +526,12 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel day-room" id="liveRoomPanel">
         <div class="dr-kicker">🔑 Room code — connect to the room here</div>
         <div class="dr-code" id="liveRoomCodeBig">QUIZ-<b>····</b></div>
-        <div class="dr-meta" id="liveRoomMeta">Today's code — one code for the full day, works until midnight tonight.</div>
-        <div class="dr-status" id="liveRoomStatusLine">Loading today's room…</div>
+        <div class="dr-meta" id="liveRoomMeta">Today's code — until midnight.</div>
+        <div class="dr-status" id="liveRoomStatusLine">Loading…</div>
         <div class="dr-actions">
           <button class="btn primary" id="liveRoomCreateBtn" onclick="hostCreateRoom()">● Create Today's Room</button>
           <button class="btn" onclick="copyTodaysCode()">Copy code</button>
         </div>
-        <p style="font-size:13.5px;line-height:1.6;color:var(--muted);margin:14px 0 4px">Every screen lives on this one link — no separate addresses. Tap a screen to open it here (today's code is filled in for the players). On another device, open this same link and tap that screen at the top.</p>
         <div id="liveRoomLinks"></div>
       </div>
       </div>
@@ -549,20 +539,17 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <!-- LIVE MONITOR — connections, player info, timer, question -->
       <div class="panel">
         <h3>● Live monitor</h3>
-        <p>Everything happening right now — who is connected, each player's score, answer and answer time, the current question and the timer. Updates live as the game runs.</p>
         <div id="liveMonitor"></div>
-        <div id="adminDiag" class="diag-wrap"></div>
       </div>
       </div>
       <div class="admin-sec" data-sec="live" hidden>
       <!-- GAME CONTROL — admin has full authority -->
       <div class="panel">
         <h3>🎮 Game control — full authority</h3>
-        <p>Only Admin controls the game. The Host screen shows no buttons at all. <b style="color:var(--text)" id="phaseLabel">Phase: Lobby</b></p>
-        <p style="margin-top:-6px">Between groups, tap <b style="color:var(--text)">New Session</b>: scores and names clear and the <b style="color:var(--text)">name bar shows again on both iPads</b>, so the next players type their own names — names never carry over between sessions. The iPads stay in today's room, so the code is never asked again.</p>
+        <p><b style="color:var(--text)" id="phaseLabel">Phase: Lobby</b></p>
         <div class="field"><label>Strict 2-Player mode — <span id="strictStateLabel">ON</span></label>
           <div class="seg" id="strictSeg"><button data-strict="on">🔒 Strict — exactly 2 players</button><button data-strict="off">Open</button></div>
-          <p style="font-size:12.5px;color:var(--muted);margin:7px 0 0" id="strictHint">Strict is ON: the game takes <b style="color:var(--text)">exactly two players</b>. A Player 1 iPad can only ever be Player 1 and a Player 2 iPad only Player 2 — a player screen can never take the other slot, a third join is refused while both slots are taken, and once an iPad has joined it is <b style="color:var(--text)">locked to its own player screen</b> on this link (it can't wander to Host, Admin or the other player's screen) until Admin resets its slot. That keeps the one shared link free of distractions during a game.</p>
+          <p style="font-size:12.5px;color:var(--muted);margin:7px 0 0" id="strictHint">Exactly 2 players. Each iPad stays on its own player screen.</p>
         </div>
         <div class="control-grid">
           <button class="btn dark" id="ctlNewSession">✦ New Session — New Players</button>
@@ -587,9 +574,8 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <!-- GAME SETTINGS -->
       <div class="panel">
         <h3>Game &amp; scoring settings</h3>
-        <p>Question order, timer length, what happens when time runs out, and scoring. All styling — timer style, button style, colours and labels — is done in the <b style="color:var(--text)">Screens</b> designer, while you design the screen.</p>
         <div class="field"><label>Round selection</label>
-          <p style="font-size:13.5px;line-height:1.55;margin:0">🔀 Every round plays <b style="color:var(--text)">10 statements picked at random</b> from the question bank (40 by default). A correct answer scores only for the player who tapped it first — if both are correct, the slower tap gets 0.</p>
+          <p style="font-size:13.5px;line-height:1.55;margin:0">🔀 <b style="color:var(--text)">10 random</b> per round · fastest correct only scores.</p>
           <p style="font-size:12.5px;color:var(--muted);margin:7px 0 0" id="orderHint"></p>
         </div>
         <div class="field"><label>Seconds per question — <span id="timerVal">10s</span></label><input type="range" id="timerRange" min="0" max="90" step="5" value="10"></div>
@@ -601,7 +587,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
           <div class="seg" id="pointsPresets" style="margin-top:8px">
             <button type="button" data-points-preset="10">10</button><button type="button" data-points-preset="25">25</button><button type="button" data-points-preset="50">50</button><button type="button" data-points-preset="100">100</button><button type="button" data-points-preset="200">200</button><button type="button" data-points-preset="500">500</button><button type="button" data-points-preset="1000">1000</button>
           </div>
-          <p style="font-size:12.5px;color:var(--muted);margin:7px 0 0">Points for <b style="color:var(--text)">the fastest correct answer</b> — if both players answer correctly, only the first tap scores; the other gets 0. Type any number or tap a preset. Applies from the next reveal; the − / + score buttons in <b style="color:var(--text)">Live → Players</b> step by the same amount. 0 = no-score round.</p>
+          <p style="font-size:12.5px;color:var(--muted);margin:7px 0 0">Fastest correct only. 0 = no-score round.</p>
         </div>
       </div>
 
@@ -610,12 +596,11 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <!-- PLAYERS -->
       <div class="panel">
         <h3>Players — names, scores &amp; resets</h3>
-        <p>Rename players, adjust scores, or reset a player. Live connection, answers and answer times are in the Live monitor above. Resetting a live player also frees their iPad slot so they can rejoin.</p>
         <div class="field"><label id="nameLabel1">Player 1 name</label><input id="name1" maxlength="18"></div>
         <div class="field"><label id="nameLabel2">Player 2 name</label><input id="name2" maxlength="18"></div>
         <div class="kv"><span id="scoreLabel1">Player 1 score</span><span class="scoreadj"><button data-adj="0,-10" aria-label="Player 1 minus points per answer">−</button><b id="scoreVal1">0</b><button data-adj="0,10" aria-label="Player 1 plus points per answer">+</button></span></div>
         <div class="kv"><span id="scoreLabel2">Player 2 score</span><span class="scoreadj"><button data-adj="1,-10" aria-label="Player 2 minus points per answer">−</button><b id="scoreVal2">0</b><button data-adj="1,10" aria-label="Player 2 plus points per answer">+</button></span></div>
-        <p style="font-size:12.5px;color:var(--muted);margin:8px 0 0" id="scoreStepHint">− / + step: 10 points (matches “Points per correct answer” above — change that value and this step changes too).</p>
+        <p style="font-size:12.5px;color:var(--muted);margin:8px 0 0" id="scoreStepHint">− / + step: 10 pts</p>
         <div class="divider"></div>
         <div class="stack">
           <button class="btn" id="resetScoresBtn">↺ Reset scores only</button>
@@ -630,7 +615,6 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <!-- GAME SESSIONS — current game on this device -->
       <div class="panel">
         <h3>🗂 Game session — current game</h3>
-        <p>Every game played from this screen is recorded as a session: both players, their final scores, and <b style="color:var(--text)">every answer to every statement</b> — what each player tapped, whether it was right, how long they took and the points they won. The record is written to Supabase as the game runs (on Start, on every Reveal, and at the end), so it is complete even if the tab is closed mid-game.</p>
         <div id="currentSessionBox"></div>
       </div>
       </div>
@@ -638,11 +622,10 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <!-- GAME SESSIONS — saved in Supabase -->
       <div class="panel">
         <h3>☁️ Saved sessions — Supabase</h3>
-        <p>All recorded sessions stored in the quiz Supabase project (<b style="color:var(--text)">aylhgfftsokskgpgvemn</b>), newest first — visible here on any device. Open a session to see both players' answers statement by statement, or download it as a CSV.</p>
-        <div id="sessStatus" style="font-size:13px;line-height:1.55;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:0 0 14px;background:var(--card2)">☁️ Sessions: checking Supabase…</div>
+        <div id="sessStatus" style="font-size:13px;line-height:1.55;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:0 0 14px;background:var(--card2)">☁️ Checking…</div>
         <div id="sessSetup" hidden style="border:1.5px dashed var(--amber);border-radius:12px;padding:13px 14px;margin:0 0 14px">
-          <b style="font-size:14px">One-time Supabase setup — run this SQL once (quiz project)</b>
-          <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:6px 0 10px">The sessions table doesn't exist in the quiz Supabase project yet (<b style="color:var(--text)">aylhgfftsokskgpgvemn</b>), and the app's publishable key can't create tables. Open that project → <b style="color:var(--text)">SQL Editor</b> → paste this → <b style="color:var(--text)">Run</b>. After that, every game session is stored in Supabase and listed here. Until then, sessions are recorded on this device only and shown above.</p>
+          <b style="font-size:14px">One-time setup — run this SQL once</b>
+          <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:6px 0 10px">Supabase project <b style="color:var(--text)">aylhgfftsokskgpgvemn</b> → SQL Editor → paste → Run.</p>
           <pre id="sessSql" style="white-space:pre-wrap;word-break:break-word;font-size:11.5px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px;overflow-x:auto;margin:0 0 10px"></pre>
           <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="copySessSqlBtn" type="button">Copy SQL</button><button class="btn small primary" id="retrySessBtn" type="button">I've run it — check again</button></div>
         </div>
@@ -653,15 +636,9 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="admin-sec" data-sec="about" hidden>
       <!-- ABOUT -->
       <div class="panel">
-        <h3>About this app</h3>
-        <p><b style="color:var(--text)">Myth or Fact Quiz Game</b> — a two-player quiz for one big screen and two iPads. The bank holds 40 statements; each round picks 10 at random. The statement and a quick countdown show on the TV screen and on both player tabs; each player taps <b style="color:var(--text)">MYTH</b> or <b style="color:var(--text)">FACT</b> before the countdown ends. A correct answer is worth 10 points — but if both players are correct, only the fastest tap scores and the other gets 0. A wrong answer, or waiting for the countdown to end, scores 0. The correct answer is revealed on the TV screen when the countdown ends or as soon as both players have answered, scores update live on the TV, and after 10 statements the final totals decide the winner.</p>
-        <p><b style="color:var(--text)">How a live game runs:</b> in <b style="color:var(--text)">Live</b>, press “Create Today's Room for iPads”, then give the players today's room code — it is shown at the top of Admin and only ever appears in Admin. There is <b style="color:var(--text)">one code for the full day</b>: players open this same link, tap their Player screen and enter the code once, and their iPad remembers it until midnight, so reopening the room or starting new rounds never asks for it again. <b style="color:var(--text)">Names are per session</b> (activation model): at the start of every session the name bar shows again on each iPad — players enter or change their names fresh, and Admin's <b style="color:var(--text)">New Session</b> button clears the previous session's names and scores so nothing carries over. The flow on each iPad is simple: <b style="color:var(--text)">first time only</b> they enter the room code and join; after that the code is never asked again — they just set their name and tap the big <b style="color:var(--text)">I'm Ready</b> button that appears under the name bar. The Host screen and the Live monitor then show each player <b style="color:var(--text)">by their name</b> with <b style="color:var(--text)">✅ Ready</b> or <b style="color:var(--text)">⏳ Not ready</b> — once a name is set, screens show the name, not “Player 1 / Player 2”. Their taps count live on the Host screen. <b style="color:var(--text)">Start Game</b> now makes sure today's room is live first: if the room isn't created or is still connecting, Start creates/connects it and the game begins the moment the room is live, so it always reaches the Host screen and both iPads — it never starts on the Admin tab alone. Start, reveal, end and reset are all controlled from Live. The <b style="color:var(--text)">room code</b> sits in its own big card at the very top of <b style="color:var(--text)">Live</b>, with one-tap buttons that open the Host / Player 1 / Player 2 screens on this same link, code already filled in. The <b style="color:var(--text)">Live monitor</b> just below it shows each player's Connected / Disconnected status, score, correct count, streak, current answer, answer time, recent answers, plus the current question and the timer.</p>
-        <p><b style="color:var(--text)">Designing:</b> in <b style="color:var(--text)">Screens</b> you edit a draft of each screen — the canvas previews every change as you make it, but the Host and Player screens keep showing the last published design until you tap <b style="color:var(--text)">Go Live at the bottom of Admin</b>. Go Live means one thing only: it publishes the design live to all screens at once — no file, no download — and saves it in this browser, so it is still here after you reload Admin. Screens on other devices receive it through the live room.</p>
-        <p><b style="color:var(--text)">Screens:</b> Host · Player 1 · Player 2 · Join · Admin — all of them are views on this one single link. There are no other addresses: open this link on the TV and on each iPad, then tap the screen that device should show. No accounts or installs — everything runs in the browser.</p>
-        <p><b style="color:var(--text)">Question bank &amp; live sync:</b> the whole quiz backend now lives in the new <b style="color:var(--text)">Supabase</b> project (<b style="color:var(--text)">aylhgfftsokskgpgvemn</b>) — both the live game sync (Realtime Broadcast) and the statement bank use it. The bank is stored as a clear table, <b style="color:var(--text)">quiz_questions</b> — <b style="color:var(--text)">one row per question</b>, with columns for the order (<i>sort_order</i>), the question text (<i>statement</i>) and its answer (<i>answer</i>: true = FACT, false = MYTH) — so in the Supabase Table Editor every question and answer is readable on its own row, nothing packed into a single row. Edit and Save Questions on any device and every other device loads the same bank. The table needs a one-time setup: if it isn't in the project yet, Admin → Statements shows the exact SQL to paste into that project's SQL Editor and Run once. Until that is done, the bank falls back to this browser's saved copy.</p>
-        <p><b style="color:var(--text)">Game sessions:</b> every game is recorded in Admin → <b style="color:var(--text)">Sessions</b> and stored in the same Supabase project (table <i>quiz_game_sessions</i>) — both players' names, final scores and correct counts, the winner, and every answer to every statement (what each player tapped, right or wrong, their answer time and the points won). The host writes the record as the game runs, so it is complete even if a tab closes mid-game. Sessions can be opened statement-by-statement in Admin, downloaded as CSV, or deleted. Like the bank, the table needs a one-time SQL setup — until it is run, Admin → Sessions shows the exact SQL and sessions record on the host device only.</p>
-        <p><b style="color:var(--text)">Strict 2-Player mode (on by default):</b> the game takes exactly two players on the one shared link, with no distractions — a Player 1 screen can only ever join as Player 1 and a Player 2 screen only as Player 2, a third join is refused while both slots are taken, and once an iPad has joined it is locked to its own player screen (it cannot switch to Host, Admin or the other player's screen) until Admin resets its slot. Strict mode can be turned off in Live → Game control.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v30</b> · 27 Nov 2026 — READY BUTTON + START FIX + NAMES EVERYWHERE. (1) <b style="color:var(--text)">Start fix:</b> pressing Start Game on an Admin tab whose room wasn't live used to start the game on that tab alone — a PLAYING session was recorded and “Game started” toasted, but the Host TV and iPads never got it. Start now creates today's room first (or waits for it to finish connecting) and the game only begins once the room is confirmed live, so it always reaches every screen; if the room can't connect, Start says so instead of pretending. (2) <b style="color:var(--text)">Ready button:</b> after a player sets their name on their iPad, a big <b style="color:var(--text)">I'm Ready</b> button appears under the name bar (with a “Not ready” undo). The simple flow is unchanged otherwise: room code only on the very first join of the day; after that just name + Ready. (3) <b style="color:var(--text)">Ready on the Host screen:</b> the Host lobby and the Admin Live monitor show each player by name with ✅ Ready / ⏳ Not ready, plus a ready count. (4) <b style="color:var(--text)">Names, not “Player 1 / Player 2”:</b> once a player sets a name, the Host screen, both player screens, the Live monitor, the top bar and Admin's player fields all show that name; the slot labels only remain where no name exists yet. Everything else is unchanged from v29: clear <i>quiz_questions</i> table (one row per question), game sessions in <i>quiz_game_sessions</i>, Strict 2-Player mode, the whole backend in the dedicated quiz project <i>aylhgfftsokskgpgvemn</i>, ONE LINK, 10 statements at random per round, fastest-correct-only scoring, one room code per day, per-session names. Read this tag back to confirm you are on the new build; if it says anything else, you are looking at an older one.</p>
+        <h3>About</h3>
+        <p><b style="color:var(--text)">Myth or Fact</b> — 2 players · 10 random statements per round · fastest correct tap scores.</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v30</b> · 27 Nov 2026</p>
       </div>
       </div>
     </div>
@@ -670,12 +647,12 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
     <b>🚀 Go Live — publish to screens</b>
     <button class="btn small primary" id="saveAllBtn">Publish All — Go Live</button>
     <button class="btn small" id="saveScreenBtn">Publish This Screen — Go Live</button>
-    <span id="saveStatus" style="font-size:12.5px;font-weight:700;opacity:.9">Edits are drafts until you Go Live. Tapping Go Live sends them straight to the Host &amp; Player screens instantly — no file, no download.</span>
+    <span id="saveStatus" style="font-size:12.5px;font-weight:700;opacity:.9"></span>
   </div>
 </div>
 </section>
 
-<footer>One link for everything — Host, Player 1, Player 2 and Admin are all views on this single page. Open this link on every device and tap the screen it should show. Live play: Admin creates today's room → iPads join with the code → taps count live on the Host screen.</footer>
+
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -916,24 +893,24 @@ function renderAdminRoomPanel(){
   var big=$("adminRoomCodeBig"); if(!big)return;
   var daily=getDailyRoom(), code=daily.code;
   big.innerHTML="QUIZ-<b>"+esc(code)+"</b>";
-  var meta=$("adminRoomMeta"); if(meta)meta.textContent=todayLabel()+" · One room for the full day · This code works until midnight tonight — a new code starts tomorrow.";
+  var meta=$("adminRoomMeta"); if(meta)meta.textContent=todayLabel()+" · until midnight.";
   var st=$("adminRoomStatus");
   if(st){
-    if(live.mode==="host"&&live.code===code)st.innerHTML=(live.connected?"<b style='color:#16A34A'>● Live now</b>":"<b>Connecting…</b>")+" · "+countJoined()+" of 2 players joined. Every round today uses this same room — players who entered the code once today are already in, no new code needed.";
-    else if(live.mode==="host")st.innerHTML="<b>Live in room QUIZ-"+esc(live.code||"")+"</b> — that room was opened before today's code took over. Close it and tap Create Today's Room to move everyone onto today's code QUIZ-"+esc(code)+".";
-    else if(live.mode==="viewer"||live.mode==="player")st.innerHTML="This tab is following / playing in a live room. Today's code stays <b>QUIZ-"+esc(code)+"</b> — reopening the room from Admin today reuses it.";
-    else st.innerHTML="Not live yet — tap <b>Create Today's Room</b> below. The code stays <b>QUIZ-"+esc(code)+"</b> for every game today, even if you close and reopen the room.";
+    if(live.mode==="host"&&live.code===code)st.innerHTML=(live.connected?"<b style='color:#16A34A'>● Live</b>":"<b>Connecting…</b>")+" · "+countJoined()+" of 2 joined";
+    else if(live.mode==="host")st.innerHTML="<b>Live in room QUIZ-"+esc(live.code||"")+"</b> — tap Create Today's Room to switch to <b>QUIZ-"+esc(code)+"</b>.";
+    else if(live.mode==="viewer"||live.mode==="player")st.innerHTML="In a live room · code <b>QUIZ-"+esc(code)+"</b>";
+    else st.innerHTML="Not live — tap <b>Create Today's Room</b>.";
   }
   var cb=$("adminRoomCreateBtn"); if(cb){cb.textContent=(live.mode==="host"&&live.code===code)?("● Room Live — QUIZ-"+code):"● Create Today's Room";cb.disabled=(live.mode==="host"&&live.code===code);}
   /* Live section's own room card — same code, first thing seen in Live */
   var lbig=$("liveRoomCodeBig"); if(lbig)lbig.innerHTML="QUIZ-<b>"+esc(code)+"</b>";
-  var lmeta=$("liveRoomMeta"); if(lmeta)lmeta.textContent=todayLabel()+" · One code for the full day — works until midnight tonight, then a new code starts.";
+  var lmeta=$("liveRoomMeta"); if(lmeta)lmeta.textContent=todayLabel()+" · until midnight.";
   var lst=$("liveRoomStatusLine");
   if(lst){
-    if(live.mode==="host"&&live.code===code)lst.innerHTML=(live.connected?"<b style='color:#16A34A'>● Room is live</b>":"<b>Connecting…</b>")+" · "+countJoined()+" of 2 players joined. Give the players this code once — or open their screen from the buttons below and it is filled in for them.";
-    else if(live.mode==="host")lst.innerHTML="<b>Live in room QUIZ-"+esc(live.code||"")+"</b> — opened before today's code took over. Close it and tap Create Today's Room to move everyone onto <b>QUIZ-"+esc(code)+"</b>.";
-    else if(live.mode==="viewer"||live.mode==="player")lst.innerHTML="This tab is following / playing in a live room. Today's code is <b>QUIZ-"+esc(code)+"</b> — reopening the room from Admin today reuses it.";
-    else lst.innerHTML="Not live yet — tap <b>Create Today's Room</b>, then give the players this code, or open their screens from the buttons below.";
+    if(live.mode==="host"&&live.code===code)lst.innerHTML=(live.connected?"<b style='color:#16A34A'>● Live</b>":"<b>Connecting…</b>")+" · "+countJoined()+" of 2 joined";
+    else if(live.mode==="host")lst.innerHTML="<b>Live in room QUIZ-"+esc(live.code||"")+"</b> — tap Create Today's Room to switch to <b>QUIZ-"+esc(code)+"</b>.";
+    else if(live.mode==="viewer"||live.mode==="player")lst.innerHTML="In a live room · code <b>QUIZ-"+esc(code)+"</b>";
+    else lst.innerHTML="Not live — tap <b>Create Today's Room</b>.";
   }
   var lcb=$("liveRoomCreateBtn"); if(lcb){lcb.textContent=(live.mode==="host"&&live.code===code)?("● Room Live — QUIZ-"+code):"● Create Today's Room";lcb.disabled=(live.mode==="host"&&live.code===code);}
   var ll=$("liveRoomLinks");
@@ -948,13 +925,13 @@ function renderAdminRoomPanel(){
       ["Player 2 — code filled in","p2","Open Player 2 here"]
     ];
     ll.innerHTML=litems.map(function(it){
-      return '<div class="linkrow"><div><b style="font-size:14px">'+it[0]+'</b><br><span style="font-size:12.5px;color:var(--muted)">This same link · #'+({host:"host",p1:"player1",p2:"player2"})[it[1]]+' view</span></div><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="openScreen(\''+it[1]+'\')">'+it[2]+'</button></span></div>';
+      return '<div class="linkrow"><div><b style="font-size:14px">'+it[0]+'</b></div><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="openScreen(\''+it[1]+'\')">'+it[2]+'</button></span></div>';
     }).join("");
   }
   var note=$("joinRememberedNote");
   if(note){
     var sess=getPlayerDaySession();
-    if(sess){note.hidden=false;note.innerHTML="✓ <b>Code remembered for today:</b> this device already joined today with code <b>QUIZ-"+esc(sess.code)+"</b>"+(sess.slot===0||sess.slot===1?(" as <b>Player "+(sess.slot+1)+"</b>"):"")+". The code above is filled in for you — just enter <b>your name for this session</b> (names are fresh every session) and tap Join. <button class='btn small' style='margin-top:8px' onclick='forgetTodaysRoom()'>Forget today's code</button>";}
+    if(sess){note.hidden=false;note.innerHTML="✓ Code <b>QUIZ-"+esc(sess.code)+"</b> remembered"+(sess.slot===0||sess.slot===1?(" · <b>Player "+(sess.slot+1)+"</b>"):"")+" — just enter your name. <button class='btn small' style='margin-top:8px' onclick='forgetTodaysRoom()'>Forget code</button>";}
     else note.hidden=true;
   }
 }
@@ -1442,18 +1419,18 @@ function hostStageHTML(){
          “NAME — ✅ Ready” / “NAME — ⏳ Not ready”. “Player N” only appears
          for a slot nobody has joined yet. */
       var chips=""; for(var i=0;i<2;i++)chips+='<span class="slot-chip '+(live.occupied[i]?(live.ready[i]?"ready":"filled"):"")+'">'+(live.occupied[i]?(esc(state.players[i].name)+(live.ready[i]?" — ✅ Ready":" — ⏳ Not ready")):("○ Player "+(i+1)+" — waiting to join…"))+'</span>';
-      liveBit='<div style="margin-top:16px"><div>'+chips+'</div><div class="statusline '+(live.connected?"ok":"wait")+'">'+(live.connected?("● Live — "+countJoined()+" of 2 joined · "+countReady()+" of 2 ready. Admin presses Start when both are ready."):"Connecting to live…")+'</div></div>';
+      liveBit='<div style="margin-top:16px"><div>'+chips+'</div><div class="statusline '+(live.connected?"ok":"wait")+'">'+(live.connected?("● Live — "+countJoined()+" of 2 joined · "+countReady()+" of 2 ready"):"Connecting…")+'</div></div>';
     } else if(live.mode==="viewer"){
-      var vchips=""; for(var i=0;i<2;i++){var named=state.players[i].name!=="Player "+(i+1);vchips+='<span class="slot-chip '+(named?(live.ready[i]?"ready":"filled"):"")+'">'+(named?(esc(state.players[i].name)+(live.ready[i]?" — ✅ Ready":" — ⏳ Not ready")):("○ Player "+(i+1)+" — waiting to join…"))+'</span>';}
-      liveBit='<div style="margin-top:16px"><div>'+vchips+'</div><p style="margin-top:10px">● Live — this screen is following the game run from Admin.<br><span style="font-size:13.5px;opacity:.85">Players join from their iPads with the room code shown in Admin, set their name, then tap I\'m Ready.</span></p></div>';
+      var vchips=""; for(var i=0;i<2;i++){var named=state.players[i].name!=="Player "+(i+1);vchips+='<span class="slot-chip '+(named?(live.ready[i]?"ready":"filled"):"")+'">'+(named?(esc(state.players[i].name)+(live.ready[i]?" — ✅ Ready":" — ⏳ Not ready")):("○ Player "+(i+1)+" — waiting…"))+'</span>';}
+      liveBit='<div style="margin-top:16px"><div>'+vchips+'</div></div>';
     } else if(live.mode==="player"){
-      liveBit='<p>You joined as a player on this device — the host runs the game from the main screen.</p>';
+      liveBit='';
     } else if(discovery.active){
-      liveBit='<p style="margin-top:14px">● Looking for the live game — this screen joins on its own as soon as Admin creates the room and starts.<br><span style="font-size:13.5px;opacity:.85">No code or buttons needed on this screen.</span></p>';
+      liveBit='<p style="margin-top:14px">● Looking for the game…</p>';
     } else {
-      liveBit='<p style="margin-top:14px">Waiting for Admin to start the game…<br><span style="font-size:13.5px;opacity:.85">Admin: create the live room and press Start Game from the Admin screen.</span></p>';
+      liveBit='<p style="margin-top:14px">Waiting for Start…</p>';
     }
-    centre='<div class="lobby-panel"><h2>'+esc(state.players[0].name)+' vs '+esc(state.players[1].name)+'</h2><p><b>Myth or Fact?</b> '+roundTotal+' statements this round, picked at random from '+state.questions.length+' · '+state.points+' points for the fastest correct tap · '+(state.timerDur===0?"no timer":state.timerDur+"s countdown per statement")+'. If both players are correct, only the first tap scores — wrong or too slow scores 0.</p>'+liveBit+'</div>';
+    centre='<div class="lobby-panel"><h2>'+esc(state.players[0].name)+' vs '+esc(state.players[1].name)+'</h2><p>'+roundTotal+' statements · '+state.points+' pts — fastest correct only</p>'+liveBit+'</div>';
   } else if(state.phase==="finished"){
     var a=state.players[0],b=state.players[1];
     var title=a.score===b.score?"It's a tie!":((a.score>b.score?a.name:b.name)+" wins!");
@@ -1538,10 +1515,8 @@ function renderJoinDocks(){
            code, then a code carried in this screen's own link (?room=) —
            v21 never offered the link's code to this form at all. */
         var codeVal=joinDraft["c"+i]||(rem?rem.code:"")||earlyRoomCode||"";
-        dock.innerHTML='<h3>Join today\'s game — Player '+(i+1)+'</h3>'
-          +'<div class="jd-sub">Enter today\'s room code from Admin and your name for this session.</div>'
-          +'<div class="join-mini" style="text-align:left"><input id="pJoinCode'+i+'" placeholder="ROOM CODE" maxlength="10" autocapitalize="characters" autocomplete="off" value="'+esc(codeVal)+'"><input id="pJoinName'+i+'" placeholder="Your name — this session" maxlength="18" autocomplete="off" value="'+esc(joinDraft["n"+i]||"")+'"><button class="btn primary" onclick="playerJoinAs('+i+')">Join →</button></div>'
-          +'<div class="jd-note">'+(rem?("✓ <b>Today's code is remembered</b> on this iPad (QUIZ-"+esc(rem.code)+") — it's filled in for you, all day. Only your <b>name is asked every session</b>, so each new player types their own."):"This iPad remembers today's code after you join, so it's only typed once per day. Your name is asked fresh every session.")+'</div>'
+        dock.innerHTML='<h3>Join — Player '+(i+1)+'</h3>'
+          +'<div class="join-mini" style="text-align:left"><input id="pJoinCode'+i+'" placeholder="ROOM CODE" maxlength="10" autocapitalize="characters" autocomplete="off" value="'+esc(codeVal)+'"><input id="pJoinName'+i+'" placeholder="Your name" maxlength="18" autocomplete="off" value="'+esc(joinDraft["n"+i]||"")+'"><button class="btn primary" onclick="playerJoinAs('+i+')">Join →</button></div>'
           +(rem?'<div style="margin-top:8px"><button class="btn small" onclick="forgetTodaysRoom()">Forget today\'s code</button></div>':"");
       } else {
         /* The name bar comes back at the start of EVERY session, even though
@@ -1555,11 +1530,10 @@ function renderJoinDocks(){
            name bar. Tapping it marks this player ready on the Host screen
            and in Admin — by name, not “Player N”. Ready can be undone. */
         var readyBit="";
-        if(!isDefaultName&&!live.ready[i])readyBit='<button class="btn primary jd-ready-btn" onclick="playerSetReady('+i+',true)">✓ I\'m Ready</button><div class="jd-note">Tap <b>I\'m Ready</b> — the Host screen shows <b>'+esc(state.players[i].name)+'</b> as ready, and the game starts when the host presses Start.</div>';
-        else if(!isDefaultName&&live.ready[i])readyBit='<div class="jd-ready-done">✅ You\'re ready, '+esc(state.players[i].name)+'!<br><span style="font-weight:600;color:#fff;opacity:.85;font-size:13.5px">Waiting for the host to press Start…</span></div><div style="margin-top:8px"><button class="btn small" onclick="playerSetReady('+i+',false)">Not ready</button></div>';
-        dock.innerHTML='<div class="jd-label">✎ '+(isDefaultName?("Name for this session — Player "+(i+1)):("You are "+esc(state.players[i].name)))+'</div>'
-          +'<div class="join-mini"><input id="pNameEdit'+i+'" placeholder="Type the player\'s name" maxlength="18" autocomplete="off" value="'+esc(nameVal)+'"><button class="btn primary" onclick="playerUpdateName('+i+')">Set name ✓</button></div>'
-          +'<div class="jd-note">'+(isDefaultName?"<b>New session — enter this player's name, tap Set name, then tap I'm Ready.</b> Names never carry over from the last session.":"Name is set — you can change it here before the game starts (changing it asks you to tap I'm Ready again).")+' No room code needed — this iPad stays in today\'s room all day.</div>'
+        if(!isDefaultName&&!live.ready[i])readyBit='<button class="btn primary jd-ready-btn" onclick="playerSetReady('+i+',true)">✓ I\'m Ready</button>';
+        else if(!isDefaultName&&live.ready[i])readyBit='<div class="jd-ready-done">✅ You\'re ready, '+esc(state.players[i].name)+'!</div><div style="margin-top:8px"><button class="btn small" onclick="playerSetReady('+i+',false)">Not ready</button></div>';
+        dock.innerHTML='<div class="jd-label">✎ '+(isDefaultName?("Your name — Player "+(i+1)):("You are "+esc(state.players[i].name)))+'</div>'
+          +'<div class="join-mini"><input id="pNameEdit'+i+'" placeholder="Your name" maxlength="18" autocomplete="off" value="'+esc(nameVal)+'"><button class="btn primary" onclick="playerUpdateName('+i+')">Set name ✓</button></div>'
           +readyBit;
       }
       /* Live draft capture: every keystroke is saved the moment it happens,
@@ -1593,19 +1567,13 @@ function playerStageHTML(i){
        stage that renders never touch — see renderJoinDocks(). This panel
        only points at it. */
     var joinBit="";
-    if(live.mode==="offline"){
-      joinBit='<div style="font-size:13.5px;opacity:.92;margin-top:8px">Joining today\'s game? Use the <b>join form at the bottom of this screen</b> — today\'s code from Admin plus your name for this session. This iPad then remembers the code for the whole day; your name is asked fresh every session.</div>';
-    } else if(isLiveMine){
-      joinBit=live.ready[i]
-        ?'<div style="font-size:13.5px;opacity:.92;margin-top:8px">✅ <b>You\'re ready!</b> The Host screen shows you as ready — the game begins as soon as the host presses Start.</div>'
-        :'<div style="font-size:13.5px;opacity:.92;margin-top:8px">Set your name for this session in the <b>form at the bottom of this screen</b>, then tap <b>I\'m Ready</b> — no room code needed, this iPad stays in today\'s room all day.</div>';
-    } else if(live.mode==="host"){
-      joinBit='<div style="font-size:13.5px;opacity:.85;margin-top:8px">This device is the host — players join from their own iPads with the room code.</div>';
+    if(isLiveMine&&live.ready[i]){
+      joinBit='<div style="font-size:13.5px;opacity:.92;margin-top:8px">✅ <b>You\'re ready!</b></div>';
     }
-    body='<div class="p-wait"><b style="font-size:18px">'+(live.mode==="player"?"You're in, "+esc(p.name)+" 👋":"Player "+(i+1)+" screen")+'</b><br>Waiting for the host to start the game…<br><span style="font-size:13.5px;opacity:.85">Keep this screen open — the statement, countdown and your MYTH / FACT buttons appear with the first statement.</span>'+joinBit+'</div>';
+    body='<div class="p-wait"><b style="font-size:18px">'+(live.mode==="player"?"You're in, "+esc(p.name)+" 👋":"Player "+(i+1))+'</b><br>Waiting for Start…'+joinBit+'</div>';
   } else if(state.phase==="finished"){
     var win=state.players[0].score===state.players[1].score?"It's a tie! 🤝":(p.score>other.score?"🏆 You win!":esc(other.name)+" wins — good game!");
-    body='<div class="p-wait"><b style="font-size:19px">Game over — '+win+'</b><br>You scored <b>'+p.score+' points</b> with '+p.correct+' correct.<br><span style="font-size:13.5px;opacity:.85">Full final scoreboard is on the Host screen.</span></div>';
+    body='<div class="p-wait"><b style="font-size:19px">Game over — '+win+'</b><br>You scored <b>'+p.score+' points</b> · '+p.correct+' correct.</div>';
   } else if(state.phase==="playing"){
     var qh=q&&q.text?'<div style="text-align:center;margin-bottom:12px"><span class="timer-min">⏱ '+(state.timerDur===0?"No countdown":state.timeLeft+"s left")+(state.paused?" · ⏸ Paused":"")+'</span></div><div class="p-q">Statement '+(state.idx+1)+' of '+(state.active.length||state.roundSize||10)+' — Myth or Fact?<br>'+esc(q.text)+'</div>':"";
     var tfCls="tf style-"+state.buttonStyle, tfScale=' style="transform:scale('+(state.buttonScale/100)+')"';
@@ -1623,8 +1591,8 @@ function playerStageHTML(i){
   h+='<div class="stage-el" style="'+elStyle(d.els.buttons)+'"><div style="transform:scale('+(d.els.buttons.s/100)+')">'+body+'</div></div>';
   var status="",sCls="";
   if(!isLiveOther){
-    if(state.phase==="playing"&&myAnswer!==null){status='🔒 Locked in — you picked '+(myAnswer?"FACT":"MYTH")+'. The answer shows when both players are in, or the countdown ends.';}
-    else if(state.phase==="playing"){status='⏱ '+(state.timerDur===0?"Take your time":state.timeLeft+"s left")+' — tap MYTH or FACT, fastest correct tap wins the points';}
+    if(state.phase==="playing"&&myAnswer!==null){status='🔒 Locked in — '+(myAnswer?"FACT":"MYTH");}
+    else if(state.phase==="playing"){status='⏱ '+(state.timerDur===0?"Take your time":state.timeLeft+"s left");}
     else if(state.phase==="reveal"&&q){
       if(myAnswer===null){status="No answer — 0 points. It was a "+(q.answer?"FACT":"MYTH")+".";}
       else if(myAnswer===q.answer&&state.lastGain[i]>0){status="🎉 Correct — and you were fastest! +"+state.lastGain[i]+" points";sCls="good";}
@@ -1779,17 +1747,17 @@ function resetPlayer(i){
 /* ================= LIVE MONITOR ================= */
 function connFor(i){
   if(live.mode==="host"){
-    if(!live.occupied[i])return{label:"Disconnected",cls:"off",detail:"Waiting to join — no iPad in this slot yet"};
-    if(live.stale[i])return{label:"Disconnected",cls:"off",detail:"Was connected — no signal for 14s+ (iPad closed or lost internet)"};
-    if(!live.connected)return{label:"Connecting…",cls:"wait",detail:"Room is connecting"};
-    return{label:"Connected",cls:"on",detail:live.lastSeen[i]?("Last seen "+Math.max(0,Math.round((Date.now()-live.lastSeen[i])/1000))+"s ago"):"Connected via live room"};
+    if(!live.occupied[i])return{label:"Disconnected",cls:"off",detail:""};
+    if(live.stale[i])return{label:"Disconnected",cls:"off",detail:"No signal 14s+"};
+    if(!live.connected)return{label:"Connecting…",cls:"wait",detail:""};
+    return{label:"Connected",cls:"on",detail:live.lastSeen[i]?("Seen "+Math.max(0,Math.round((Date.now()-live.lastSeen[i])/1000))+"s ago"):""};
   }
   if(live.mode==="player"){
-    if(live.mySlot===i)return{label:live.assigned?"Connected":"Connecting…",cls:live.assigned?"on":"wait",detail:"This device is "+dispName(i)};
-    return{label:"—",cls:"demo",detail:"Other player's device"};
+    if(live.mySlot===i)return{label:live.assigned?"Connected":"Connecting…",cls:live.assigned?"on":"wait",detail:""};
+    return{label:"—",cls:"demo",detail:""};
   }
-  if(live.mode==="viewer")return{label:"Following",cls:"demo",detail:"This screen is following the live game"};
-  return{label:"Demo mode",cls:"demo",detail:"No live room — answers happen on this device"};
+  if(live.mode==="viewer")return{label:"Following",cls:"demo",detail:""};
+  return{label:"Demo mode",cls:"demo",detail:""};
 }
 
 function renderLiveMonitor(){
@@ -1801,15 +1769,15 @@ function renderLiveMonitor(){
   var roomTxt=live.mode==="host"?("Live room QUIZ-"+live.code+" · "+countJoined()+" of 2 joined · "+countReady()+" of 2 ready"):(live.mode==="player"?("Joined as "+dispName(live.mySlot)):(live.mode==="viewer"?"Following live game":"No live room — demo mode"));
   var h="";
   h+='<div class="live-top">';
-  h+='<div class="live-stat"><small>Timer</small><b id="liveTimerNum">'+timerTxt+'</b><span>'+(state.timerDur===0?"Timer is off":("of "+state.timerDur+"s per question · "+state.timeoutMode))+(state.paused?" · ⏸ Paused by Admin":"")+'</span><div class="live-timerbar"><i style="width:'+pct+'%"></i></div></div>';
-  h+='<div class="live-stat"><small>Statement</small><b>'+(state.phase==="lobby"?"—":(Math.min(state.idx+1,total)+" / "+total))+'</b><span>'+state.questions.length+' statements in the bank · '+(state.active.length||Math.min(state.roundSize||10,state.questions.length))+' this round, picked at random · '+state.points+' pts for the fastest correct answer only</span></div>';
+  h+='<div class="live-stat"><small>Timer</small><b id="liveTimerNum">'+timerTxt+'</b><span>'+(state.timerDur===0?"Off":(state.timerDur+"s · "+state.timeoutMode))+(state.paused?" · ⏸ Paused":"")+'</span><div class="live-timerbar"><i style="width:'+pct+'%"></i></div></div>';
+  h+='<div class="live-stat"><small>Statement</small><b>'+(state.phase==="lobby"?"—":(Math.min(state.idx+1,total)+" / "+total))+'</b><span>'+state.points+' pts · fastest correct only</span></div>';
   h+='<div class="live-stat"><small>Game &amp; room</small><b style="font-size:17px">'+esc(phaseTxt)+'</b><span>'+esc(roomTxt)+'</span></div>';
   h+='</div>';
   /* current question */
   h+='<div class="live-qbox"><small>'+(state.phase==="lobby"?"Next up":state.phase==="finished"?"Final statement was":"Current statement")+'</small>';
-  if(state.phase==="lobby")h+='<p>Waiting in the lobby. Press <b>Start Game</b> below — 10 statements are picked at random from the bank, and Statement 1 will appear here and on the Host screen.</p>';
+  if(state.phase==="lobby")h+='<p>Lobby — press <b>Start Game</b>.</p>';
   else if(q&&q.text)h+='<p>Q'+(state.idx+1)+'. '+esc(q.text)+'</p>';
-  else if(state.phase==="finished")h+='<p>Game finished — see the final scores on the player cards below and the winner on the Host screen.</p>';
+  else if(state.phase==="finished")h+='<p>Finished.</p>';
   else h+='<p>—</p>';
   if(q&&(state.phase==="playing"||state.phase==="reveal"||state.phase==="finished")){
     h+='<div class="live-qmeta"><span>Correct answer (Admin only)</span><span class="'+(q.answer?"correct-true":"correct-false")+'">'+(q.answer?"✓ FACT":"✕ MYTH")+'</span>';
@@ -1840,21 +1808,21 @@ function renderLiveMonitor(){
         /* v30 lobby card: name + Ready state, by name once one is set */
         var named=p.name!=="Player "+(i+1);
         ansBox=named
-          ?("<b>Name:</b> "+esc(p.name)+"<br><b>Ready:</b> "+(live.ready[i]?"✅ <b>Ready</b> — waiting for Start":"⏳ Not ready — waiting for them to tap <b>I'm Ready</b> on their iPad"))
-          :("<b>Name:</b> not set yet — the player types it on their iPad<br><b>Ready:</b> — (they tap I'm Ready after setting their name)"); ansCls="";
+          ?("<b>"+esc(p.name)+"</b> — "+(live.ready[i]?"✅ Ready":"⏳ Not ready"))
+          :("No name yet"); ansCls="";
       }
       var hist=state.answerLog.filter(function(en){return en.player===i;}).slice(-3).reverse();
       var histHtml="";
       if(hist.length){
         histHtml='<div class="phistory"><b>Recent answers</b>'+hist.map(function(en){return '<div><span>Q'+en.qNum+': '+(en.answer===null?"No answer":(en.answer?"FACT":"MYTH"))+(en.isCorrect?" ✓":" ✕")+'</span><span>'+fmtSecs(en.time)+(en.gain?" · +"+en.gain:(en.isCorrect?" · slower, +0":""))+'</span></div>';}).join("")+'</div>';
-      } else histHtml='<div class="phistory">No revealed answers yet — each answer, its time and points will list here after Reveal.</div>';
+      } else histHtml='';
       var namedCard=p.name!=="Player "+(i+1);
       var readyPill=(state.phase==="lobby"&&namedCard)?('<span class="ready-pill '+(live.ready[i]?"on":"off")+'">'+(live.ready[i]?"✅ Ready":"⏳ Not ready")+'</span>'):"";
       h+='<div class="pcard"><div class="pcard-head"><div class="pavatar">'+esc(initials(p.name))+'</div><div><b>'+esc(p.name)+'</b><span>'+(namedCard?((i===0?"First iPad":"Second iPad")):("Player "+(i+1)+" · no name set yet"))+'</span></div><span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><span class="conn-pill '+conn.cls+'"><i></i>'+esc(conn.label)+'</span>'+readyPill+'</span></div>'
         +'<div class="pstats"><div class="pstat"><b>'+p.score+'</b><small>Score</small></div><div class="pstat"><b>'+p.correct+'</b><small>Correct</small></div><div class="pstat"><b>'+p.streak+'</b><small>Streak</small></div><div class="pstat"><b>'+fmtSecs(at)+'</b><small>Answer time</small></div></div>'
-        +'<div class="panswer '+ansCls+'">'+ansBox+'<div style="margin-top:6px;color:var(--muted);font-size:12.5px">'+esc(conn.detail)+'</div></div>'
+        +'<div class="panswer '+ansCls+'">'+ansBox+(conn.detail?'<div style="margin-top:6px;color:var(--muted);font-size:12.5px">'+esc(conn.detail)+'</div>':"")+'</div>'
         +histHtml
-        +'<div class="plinkrow"><span style="font-size:12.5px;color:var(--muted)">'+esc(dispName(i))+' screen — this same link, tap “Player '+(i+1)+'” at the top of the page on that iPad</span><button class="btn small" onclick="openScreen(\'p'+(i+1)+'\')">Open here</button></div>'
+        +'<div class="plinkrow"><button class="btn small" onclick="openScreen(\'p'+(i+1)+'\')">Open '+esc(dispName(i))+' here</button></div>'
         +'</div>';
     })(i);
   }
@@ -1872,7 +1840,7 @@ function renderAdmin(){
   var pvEl=$("pointsVal"); if(pvEl)pvEl.textContent=state.points+" point"+(state.points===1?"":"s");
   document.querySelectorAll("[data-points-preset]").forEach(function(b){b.classList.toggle("on",+b.getAttribute("data-points-preset")===state.points);});
   document.querySelectorAll("[data-adj]").forEach(function(b){var parts=b.getAttribute("data-adj").split(",");var pi=+parts[0];var dir=(+parts[1])<0?-1:1;var step=state.points===0?10:state.points;b.setAttribute("data-adj",pi+","+(dir*step));b.setAttribute("aria-label","Player "+(pi+1)+(dir<0?" minus ":" plus ")+step+" points");b.title=(dir<0?"−":"+")+step+" points";});
-  var sshEl=$("scoreStepHint"); if(sshEl)sshEl.textContent="− / + step: "+(state.points===0?10:state.points)+" points (matches “Points per correct answer” above — change that value and this step changes too).";
+  var sshEl=$("scoreStepHint"); if(sshEl)sshEl.textContent="− / + step: "+(state.points===0?10:state.points)+" pts";
   var plEl=$("phaseLabel"); if(plEl)plEl.textContent="Phase: "+state.phase.charAt(0).toUpperCase()+state.phase.slice(1)+(state.paused?" · ⏸ Paused":"")+" · Q "+(state.phase==="lobby"?0:Math.min(state.idx+1,getTotal()))+" / "+getTotal();
   var cpEl=$("ctlPause"); if(cpEl)cpEl.textContent=state.paused?"▶ Resume Timer":"⏸ Pause Timer";
   document.querySelectorAll("#timerStyleSeg button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-tstyle")===state.timerStyle);});
@@ -1916,7 +1884,7 @@ function renderAdmin(){
   renderLiveMonitor();
   renderCurrentSession();
   document.querySelectorAll("#orderSeg button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-order")===state.orderMode);});
-  $("orderHint").textContent="Start Game shuffles the "+state.questions.length+"-statement bank and deals "+(state.roundSize||10)+" at random — a different set every round.";
+  $("orderHint").textContent="";
 }
 
 /* ================= DESIGNER ================= */
@@ -1984,7 +1952,7 @@ function renderDesigner(){
   if(document.activeElement!==$("headlineInput"))$("headlineInput").value=d.headline||"";
   if(document.activeElement!==$("subtextInput"))$("subtextInput").value=d.subtext||"";
   $("globalScale").value=d.globalScale||100; $("globalScaleVal").textContent=(d.globalScale||100)+"%"; document.querySelectorAll("#globalScalePresets [data-gs]").forEach(function(b){b.classList.toggle("on",+b.getAttribute("data-gs")===(d.globalScale||100));});
-  var ps=$("publishStatus"); if(ps){var dirty=designIsDirty();ps.textContent=dirty?"● Draft edits — not on the screens yet. Tap Go Live at the bottom of Admin to publish live.":"✓ Live — the screens are showing this design.";ps.style.color=dirty?"var(--amber)":"#4ADE80";}
+  var ps=$("publishStatus"); if(ps){var dirty=designIsDirty();ps.textContent=dirty?"● Draft — tap Go Live to publish":"✓ Live";ps.style.color=dirty?"var(--amber)":"#4ADE80";}
   $("presetRow").innerHTML=PRESETS.map(function(p,i){return '<button class="preset" title="'+p.name+'" data-preset="'+i+'" style="background:linear-gradient(135deg,'+p.bg1+','+p.bg2+')"></button>';}).join("");
   document.querySelectorAll("[data-preset]").forEach(function(b){b.addEventListener("click",function(){var p=PRESETS[+b.getAttribute("data-preset")];var dd=design[designTab];dd.bg1=p.bg1;dd.bg2=p.bg2;dd.bgColor=p.bg1;if(dd.bgMode==="color")dd.bgMode="gradient";designChanged();toast(p.name+" background applied to "+designTabLabel());});});
   renderInspector();
@@ -1992,15 +1960,15 @@ function renderDesigner(){
 function designTabLabel(){return designTab==="host"?"Host screen":designTab==="player1"?"Player 1 screen":"Player 2 screen"}
 function renderInspector(){
   var box=$("elInspector"), d=design[designTab];
-  if(!selectedEl||!d.els[selectedEl]){box.innerHTML='<p class="inspector-empty">No layer selected. Tap a layer above, or tap an element on the canvas — its position, size and visibility appear here.</p>';return;}
+  if(!selectedEl||!d.els[selectedEl]){box.innerHTML='<p class="inspector-empty">No layer selected.</p>';return;}
   var e=d.els[selectedEl];
   box.innerHTML='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><b style="font-family:Archivo;font-size:15px;flex:1;min-width:0">'+esc(e.label)+'</b>'
    +'<button type="button" class="eye-toggle '+(e.show?"":"off")+'" id="elVisToggle" role="switch" aria-checked="'+(e.show?"true":"false")+'" aria-label="Toggle layer visibility" title="'+(e.show?"Hide layer":"Show layer")+'">'+(e.show?EYE_ON:EYE_OFF)+'</button>'
    +'<span style="font-size:12px;font-weight:800;color:var(--muted)">'+(e.show?"Visible":"Hidden")+'</span></div>'
-   +(e.show?"":'<p style="font-size:12.5px;color:var(--muted);line-height:1.5;margin:0 0 10px">This layer is hidden — it is not drawn on the canvas or the real screen. Tap the eye to bring it back.</p>')
+   +(e.show?"":'<p style="font-size:12.5px;color:var(--muted);line-height:1.5;margin:0 0 10px">Hidden layer.</p>')
    +'<div class="field"><label>Position X — <span id="elXVal">'+Math.round(e.x)+'%</span></label><input type="range" id="elX" min="4" max="96" value="'+e.x+'"></div>'
    +'<div class="field"><label>Position Y — <span id="elYVal">'+Math.round(e.y)+'%</span></label><input type="range" id="elY" min="5" max="95" value="'+e.y+'"></div>'
-   +'<div class="field"><label>Size — <span id="elSVal">'+e.s+'%</span></label><input type="range" id="elS" min="10" max="400" step="5" value="'+e.s+'"><div style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="number" id="elSNum" min="10" max="400" step="5" value="'+e.s+'" aria-label="Scale percent" style="width:92px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-weight:700"><span style="font-size:12.5px;color:var(--muted)">% · 10% tiny → 400% huge</span></div><div class="scale-presets" id="elSPresets"><button type="button" data-es="10">10%</button><button type="button" data-es="25">25%</button><button type="button" data-es="50">50%</button><button type="button" data-es="75">75%</button><button type="button" data-es="100">100%</button><button type="button" data-es="150">150%</button><button type="button" data-es="200">200%</button><button type="button" data-es="300">300%</button><button type="button" data-es="400">400%</button></div></div>';
+   +'<div class="field"><label>Size — <span id="elSVal">'+e.s+'%</span></label><input type="range" id="elS" min="10" max="400" step="5" value="'+e.s+'"><div style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="number" id="elSNum" min="10" max="400" step="5" value="'+e.s+'" aria-label="Scale percent" style="width:92px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-weight:700"><span style="font-size:12.5px;color:var(--muted)">%</span></div><div class="scale-presets" id="elSPresets"><button type="button" data-es="10">10%</button><button type="button" data-es="25">25%</button><button type="button" data-es="50">50%</button><button type="button" data-es="75">75%</button><button type="button" data-es="100">100%</button><button type="button" data-es="150">150%</button><button type="button" data-es="200">200%</button><button type="button" data-es="300">300%</button><button type="button" data-es="400">400%</button></div></div>';
   $("elX").addEventListener("input",function(ev){e.x=+ev.target.value;syncCanvasEl();});
   $("elY").addEventListener("input",function(ev){e.y=+ev.target.value;syncCanvasEl();});
   $("elS").addEventListener("input",function(ev){e.s=+ev.target.value;var n=$("elSNum");if(n)n.value=e.s;syncCanvasEl();markElSPresets();});
@@ -2168,7 +2136,7 @@ $("pointsInput").addEventListener("input",function(e){
   state.points=n;
   var pv=$("pointsVal"); if(pv)pv.textContent=n+" point"+(n===1?"":"s");
   document.querySelectorAll("[data-points-preset]").forEach(function(b){b.classList.toggle("on",+b.getAttribute("data-points-preset")===n);});
-  var ssh=$("scoreStepHint"); if(ssh)ssh.textContent="− / + step: "+(n===0?10:n)+" points (matches “Points per correct answer” above — change that value and this step changes too).";
+  var ssh=$("scoreStepHint"); if(ssh)ssh.textContent="− / + step: "+(n===0?10:n)+" pts";
   /* update host lobby text + broadcast without stealing focus from the input */
   var hs=$("hostStage"); if(hs){hs.innerHTML=hostStageHTML();applyAccent(hs,liveDesign.host);}
   queueBroadcast();
@@ -2340,12 +2308,12 @@ function isBankTableMissing(err){
 function renderBankStatus(){
   var box=$("qBankStatus"); if(!box)return;
   var when=qBankRemoteAt?(" · last saved "+new Date(qBankRemoteAt).toLocaleString()):(qSavedAt?(" · browser copy saved "+new Date(qSavedAt).toLocaleTimeString()):"");
-  if(qBankBusy)box.innerHTML="☁️ Question bank: <b>talking to Supabase…</b>";
-  else if(qBankSource==="supabase"&&qBankLegacyPending)box.innerHTML="☁️ Question bank: <b>found your existing bank</b> in the old one-row table — tap <b>💾 Save Questions</b> below to copy it into the new clear table <b>quiz_questions</b>, one row per question.";
-  else if(qBankSource==="supabase")box.innerHTML="☁️ Question bank: <b style='color:#16A34A'>stored in Supabase</b> — clear table <b>quiz_questions</b>, <b>one row per question</b> ("+state.questions.length+" rows: sort_order · statement · answer), shared by every device"+esc(when)+". Open Table Editor → quiz_questions to see every question and its answer.";
-  else if(qBankSource==="setup")box.innerHTML="⚠️ Question bank: <b>the clear questions table (quiz_questions) is not set up yet</b> — edits are only in this browser for now. Run the one-time SQL below to create it.";
-  else if(qBankSource==="local")box.innerHTML="☁️ Question bank: showing this browser's saved copy — checking Supabase…";
-  else box.innerHTML="☁️ Question bank: using the built-in 40 statements — checking Supabase…";
+  if(qBankBusy)box.innerHTML="☁️ <b>Saving…</b>";
+  else if(qBankSource==="supabase"&&qBankLegacyPending)box.innerHTML="☁️ Bank found — tap <b>💾 Save Questions</b> to copy it into <b>quiz_questions</b>.";
+  else if(qBankSource==="supabase")box.innerHTML="☁️ <b style='color:#16A34A'>Saved in Supabase</b> — quiz_questions · "+state.questions.length+" rows"+esc(when);
+  else if(qBankSource==="setup")box.innerHTML="⚠️ Table not set up — run the SQL below.";
+  else if(qBankSource==="local")box.innerHTML="☁️ Browser copy — checking Supabase…";
+  else box.innerHTML="☁️ Checking Supabase…";
   var setup=$("qBankSetup"); if(setup)setup.hidden=qBankSource!=="setup";
   var pre=$("qBankSql"); if(pre)pre.textContent=QBANK_SQL;
 }
@@ -2491,12 +2459,12 @@ function subscribeBankChanges(){
 function updateQSaveUI(){
   renderBankStatus();
   var st=$("qSaveStatus"); if(!st)return;
-  if(qDirty)st.textContent="● Unsaved changes — tap 💾 Save Questions to store the bank in Supabase.";
-  else if(qBankSource==="supabase"&&qBankLegacyPending)st.textContent="☁️ This bank still lives in the old one-row table — tap 💾 Save Questions to copy it into the clear quiz_questions table, one row per question.";
-  else if(qBankSource==="supabase")st.textContent="✓ Saved in Supabase — table quiz_questions, one row per question ("+state.questions.length+" rows)"+(qBankRemoteAt?(" · "+new Date(qBankRemoteAt).toLocaleString()):"")+" — every device loads this bank. See it in Supabase → Table Editor → quiz_questions.";
-  else if(qBankSource==="setup")st.textContent="⚠ Not in Supabase yet — run the one-time SQL above (it creates the clear quiz_questions table), then tap Save again.";
-  else if(qSavedAt)st.textContent="✓ Saved in this browser · "+new Date(qSavedAt).toLocaleTimeString()+" — Supabase copy not confirmed yet.";
-  else st.textContent="Edits show in the next game right away — tap Save to store the bank in Supabase.";
+  if(qDirty)st.textContent="● Unsaved changes";
+  else if(qBankSource==="supabase"&&qBankLegacyPending)st.textContent="☁️ Tap Save to copy into quiz_questions.";
+  else if(qBankSource==="supabase")st.textContent="✓ Saved in Supabase ("+state.questions.length+" rows)"+(qBankRemoteAt?(" · "+new Date(qBankRemoteAt).toLocaleString()):"");
+  else if(qBankSource==="setup")st.textContent="⚠ Run the SQL above, then Save.";
+  else if(qSavedAt)st.textContent="✓ Saved in this browser · "+new Date(qSavedAt).toLocaleTimeString();
+  else st.textContent="";
 }
 function saveQuestions(){
   persistQuestionBank(); /* cache first, so nothing is lost even offline */
@@ -2559,7 +2527,7 @@ function queueSaveSession(status){if(sessSaveTimer)clearTimeout(sessSaveTimer);s
 function fmtDateTime(iso){if(!iso)return "—";try{return new Date(iso).toLocaleString();}catch(e){return String(iso);}}
 function ansLabel(a){return (a===null||a===undefined)?"No answer":(a?"FACT":"MYTH");}
 function sessionAnswersHTML(answers,names){
-  if(!answers||!answers.length)return '<p style="font-size:13px;color:var(--muted);line-height:1.55;margin:10px 0 4px">No answers recorded yet — answers appear here as each statement is revealed.</p>';
+  if(!answers||!answers.length)return '<p style="font-size:13px;color:var(--muted);line-height:1.55;margin:10px 0 4px">No answers yet.</p>';
   var byQ={};
   answers.forEach(function(en){if(!byQ[en.qNum])byQ[en.qNum]=[];byQ[en.qNum].push(en);});
   var nums=Object.keys(byQ).map(function(k){return +k;}).sort(function(a,b){return a-b;});
@@ -2580,13 +2548,13 @@ function sessionAnswersHTML(answers,names){
 function renderCurrentSession(){
   var box=$("currentSessionBox"); if(!box)return;
   if(!curSess&&!state.answerLog.length){
-    box.innerHTML='<p style="font-size:13.5px;color:var(--muted);line-height:1.6;margin:0">No game recorded on this device yet. Press <b style="color:var(--text)">Start Game</b> in Live → Game control — the session opens the moment the game starts, and every revealed answer is added to it.</p>';
+    box.innerHTML='<p style="font-size:13.5px;color:var(--muted);line-height:1.6;margin:0">No game yet.</p>';
     return;
   }
   var row=buildSessionRow(state.phase==="finished"?"finished":"playing");
   var names=[state.players[0].name,state.players[1].name];
   box.innerHTML='<div class="sess-head"><b>'+esc(names[0])+' vs '+esc(names[1])+'</b><span class="sess-badge '+(state.phase==="finished"?"fin":"play")+'">'+(state.phase==="finished"?"Finished":"● Recording")+'</span></div>'
-    +'<div class="sess-meta">Started '+fmtDateTime(row?row.started_at:null)+' · Room QUIZ-'+esc(row?row.room_code:"")+' · '+(sessSource==="supabase"?"☁️ Saving to Supabase as the game runs":sessSource==="setup"?"⚠️ Sessions table not set up in Supabase yet — recording on this device only (SQL below)":"Recording on this device — Supabase status below")+'</div>'
+    +'<div class="sess-meta">Started '+fmtDateTime(row?row.started_at:null)+' · Room QUIZ-'+esc(row?row.room_code:"")+(sessSource==="setup"?" · ⚠️ this device only":"")+'</div>'
     +'<div class="sess-scores"><div class="sess-score"><small>'+esc(names[0])+' — Player 1</small><b>'+state.players[0].score+' pts</b><span style="font-size:12.5px;color:var(--muted)"> · '+state.players[0].correct+' correct</span></div><div class="sess-score"><small>'+esc(names[1])+' — Player 2</small><b>'+state.players[1].score+' pts</b><span style="font-size:12.5px;color:var(--muted)"> · '+state.players[1].correct+' correct</span></div></div>'
     +(sessWinnerName()?'<p style="font-size:13.5px;margin:10px 0 0">🏆 Winner: <b>'+esc(sessWinnerName())+'</b></p>':"")
     +sessionAnswersHTML(state.answerLog,names)
@@ -2594,12 +2562,12 @@ function renderCurrentSession(){
 }
 function renderSessionsStatus(){
   var box=$("sessStatus"); if(!box)return;
-  if(sessBusy)box.innerHTML="☁️ Sessions: <b>loading from Supabase…</b>";
-  else if(sessSource==="supabase")box.innerHTML="☁️ Sessions: <b style='color:#16A34A'>stored in Supabase</b> — "+sessList.length+" session"+(sessList.length===1?"":"s")+" found. Every finished game lands here with both players' scores and answers.";
-  else if(sessSource==="setup")box.innerHTML="⚠️ Sessions: <b>Supabase table not set up yet</b> — games are recorded on the host device only for now. Run the one-time SQL below to store sessions in Supabase.";
-  else if(sessSource==="error")box.innerHTML="⚠️ Sessions: couldn't reach the sessions table just now — check the connection and tap Refresh. Games keep recording on the host device meanwhile.";
-  else if(sessSource==="local")box.innerHTML="☁️ Sessions: recording on this device — checking Supabase…";
-  else box.innerHTML="☁️ Sessions: checking Supabase…";
+  if(sessBusy)box.innerHTML="☁️ <b>Loading…</b>";
+  else if(sessSource==="supabase")box.innerHTML="☁️ <b style='color:#16A34A'>Supabase</b> — "+sessList.length+" session"+(sessList.length===1?"":"s");
+  else if(sessSource==="setup")box.innerHTML="⚠️ Table not set up — run the SQL below.";
+  else if(sessSource==="error")box.innerHTML="⚠️ Couldn't reach Supabase — tap Refresh.";
+  else if(sessSource==="local")box.innerHTML="☁️ This device — checking Supabase…";
+  else box.innerHTML="☁️ Checking…";
   var setup=$("sessSetup"); if(setup)setup.hidden=sessSource!=="setup";
   var pre=$("sessSql"); if(pre&&!pre.textContent)pre.textContent=SESS_SQL;
 }
@@ -2607,7 +2575,7 @@ function renderSessionsList(){
   var box=$("sessList"); if(!box)return;
   renderSessionsStatus();
   if(sessBusy){box.innerHTML='<p style="font-size:13px;color:var(--muted)">Loading sessions…</p>';return;}
-  if(!sessList.length){box.innerHTML='<p style="font-size:13px;color:var(--muted);line-height:1.55;margin:0">No saved sessions yet — they appear here after the first game is played'+(sessSource==="setup"?" (once the table above is set up)":"")+'.</p>';return;}
+  if(!sessList.length){box.innerHTML='<p style="font-size:13px;color:var(--muted);line-height:1.55;margin:0">No saved sessions yet.</p>';return;}
   box.innerHTML=sessList.map(function(r){
     var names=[r.player1_name||"Player 1",r.player2_name||"Player 2"];
     var open=sessOpenId===r.id;
