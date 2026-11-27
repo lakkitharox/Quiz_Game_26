@@ -502,11 +502,11 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <!-- QUESTIONS -->
       <div class="panel">
         <h3>Statement bank <span id="qCount" style="color:var(--amber)"></span></h3>
-        <p>Tap FACT / MYTH on a statement to set the correct answer — FACT means the statement is true, MYTH means it is false. The bank holds 40 statements; every round picks 10 at random. Edits apply to the next game — finish or reset a running game first — and tap <b style="color:var(--text)">💾 Save Questions</b> below to store the bank in <b style="color:var(--text)">Supabase</b>, so the same bank loads on every device — not just this browser.</p>
+        <p>Tap FACT / MYTH on a statement to set the correct answer — FACT means the statement is true, MYTH means it is false. The bank holds 40 statements; every round picks 10 at random. Edits apply to the next game — finish or reset a running game first — and tap <b style="color:var(--text)">💾 Save Questions</b> below to store the bank in <b style="color:var(--text)">Supabase</b> as a clear table — <b style="color:var(--text)">quiz_questions</b>, <b style="color:var(--text)">one row per statement</b> with its answer — so the same bank loads on every device, and in the Supabase Table Editor you can read every question and its answer at a glance.</p>
         <div id="qBankStatus" style="font-size:13px;line-height:1.55;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:0 0 14px;background:var(--card2)">☁️ Question bank: checking Supabase…</div>
         <div id="qBankSetup" hidden style="border:1.5px dashed var(--amber);border-radius:12px;padding:13px 14px;margin:0 0 14px">
           <b style="font-size:14px">One-time Supabase setup — run this SQL once (new project)</b>
-          <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:6px 0 10px">The bank table doesn't exist in the new Supabase project yet (<b style="color:var(--text)">aylhgfftsokskgpgvemn</b>), and the app's publishable key can't create tables. Open that project → <b style="color:var(--text)">SQL Editor</b> → paste this → <b style="color:var(--text)">Run</b>. After that, Save Questions stores the bank in the new project and every device shares it. Until then, edits are kept in this browser only.</p>
+          <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:6px 0 10px">The clear questions table doesn't exist in the Supabase project yet (<b style="color:var(--text)">aylhgfftsokskgpgvemn</b>), and the app's publishable key can't create tables. Open that project → <b style="color:var(--text)">SQL Editor</b> → paste this → <b style="color:var(--text)">Run</b>. It creates <b style="color:var(--text)">quiz_questions</b> — a clear table where <b style="color:var(--text)">each row is one question</b>: <b style="color:var(--text)">sort_order</b> (1, 2, 3…), <b style="color:var(--text)">statement</b> (the question text) and <b style="color:var(--text)">answer</b> (true = FACT, false = MYTH). After that, Save Questions writes one row per statement into it and every device shares it. Your existing questions are kept: the app still reads your previous bank on load, and the first Save copies it into the new table as separate rows. (The old <i>quiz_question_bank</i> table — the one that packed all the questions into a single row — is no longer used; you can delete it in Supabase later if you like.) Until the SQL is run, edits are kept in this browser only.</p>
           <pre id="qBankSql" style="white-space:pre-wrap;word-break:break-word;font-size:11.5px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px;overflow-x:auto;margin:0 0 10px"></pre>
           <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="copyBankSqlBtn" type="button">Copy SQL</button><button class="btn small primary" id="retryBankBtn" type="button">I've run it — check again</button></div>
         </div>
@@ -652,10 +652,10 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <p><b style="color:var(--text)">How a live game runs:</b> in <b style="color:var(--text)">Live</b>, press “Create Today's Room for iPads”, then give the players today's room code — it is shown at the top of Admin and only ever appears in Admin. There is <b style="color:var(--text)">one code for the full day</b>: players open this same link, tap their Player screen and enter the code once, and their iPad remembers it until midnight, so reopening the room or starting new rounds never asks for it again. <b style="color:var(--text)">Names are per session</b> (activation model): at the start of every session the name bar shows again on each iPad — players enter or change their names fresh, and Admin's <b style="color:var(--text)">New Session</b> button clears the previous session's names and scores so nothing carries over. Their taps count live on the Host screen. Start, reveal, end and reset are all controlled from Live. The <b style="color:var(--text)">room code</b> sits in its own big card at the very top of <b style="color:var(--text)">Live</b>, with one-tap buttons that open the Host / Player 1 / Player 2 screens on this same link, code already filled in. The <b style="color:var(--text)">Live monitor</b> just below it shows each player's Connected / Disconnected status, score, correct count, streak, current answer, answer time, recent answers, plus the current question and the timer.</p>
         <p><b style="color:var(--text)">Designing:</b> in <b style="color:var(--text)">Screens</b> you edit a draft of each screen — the canvas previews every change as you make it, but the Host and Player screens keep showing the last published design until you tap <b style="color:var(--text)">Go Live at the bottom of Admin</b>. Go Live means one thing only: it publishes the design live to all screens at once — no file, no download — and saves it in this browser, so it is still here after you reload Admin. Screens on other devices receive it through the live room.</p>
         <p><b style="color:var(--text)">Screens:</b> Host · Player 1 · Player 2 · Join · Admin — all of them are views on this one single link. There are no other addresses: open this link on the TV and on each iPad, then tap the screen that device should show. No accounts or installs — everything runs in the browser.</p>
-        <p><b style="color:var(--text)">Question bank &amp; live sync:</b> the whole quiz backend now lives in the new <b style="color:var(--text)">Supabase</b> project (<b style="color:var(--text)">aylhgfftsokskgpgvemn</b>) — both the live game sync (Realtime Broadcast) and the statement bank use it. Edit and Save Questions on any device and every other device loads the same bank. The bank needs a one-time setup: if the table isn't in the new project yet, Admin → Statements shows the exact SQL to paste into that project's SQL Editor and Run once. Until that is done, the bank falls back to this browser's saved copy.</p>
+        <p><b style="color:var(--text)">Question bank &amp; live sync:</b> the whole quiz backend now lives in the new <b style="color:var(--text)">Supabase</b> project (<b style="color:var(--text)">aylhgfftsokskgpgvemn</b>) — both the live game sync (Realtime Broadcast) and the statement bank use it. The bank is stored as a clear table, <b style="color:var(--text)">quiz_questions</b> — <b style="color:var(--text)">one row per question</b>, with columns for the order (<i>sort_order</i>), the question text (<i>statement</i>) and its answer (<i>answer</i>: true = FACT, false = MYTH) — so in the Supabase Table Editor every question and answer is readable on its own row, nothing packed into a single row. Edit and Save Questions on any device and every other device loads the same bank. The table needs a one-time setup: if it isn't in the project yet, Admin → Statements shows the exact SQL to paste into that project's SQL Editor and Run once. Until that is done, the bank falls back to this browser's saved copy.</p>
         <p><b style="color:var(--text)">Game sessions:</b> every game is recorded in Admin → <b style="color:var(--text)">Sessions</b> and stored in the same Supabase project (table <i>quiz_game_sessions</i>) — both players' names, final scores and correct counts, the winner, and every answer to every statement (what each player tapped, right or wrong, their answer time and the points won). The host writes the record as the game runs, so it is complete even if a tab closes mid-game. Sessions can be opened statement-by-statement in Admin, downloaded as CSV, or deleted. Like the bank, the table needs a one-time SQL setup — until it is run, Admin → Sessions shows the exact SQL and sessions record on the host device only.</p>
         <p><b style="color:var(--text)">Strict 2-Player mode (on by default):</b> the game takes exactly two players on the one shared link, with no distractions — a Player 1 screen can only ever join as Player 1 and a Player 2 screen only as Player 2, a third join is refused while both slots are taken, and once an iPad has joined it is locked to its own player screen (it cannot switch to Host, Admin or the other player's screen) until Admin resets its slot. Strict mode can be turned off in Live → Game control.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v28</b> · 27 Nov 2026 — GAME SESSION DATA + STRICT 2-PLAYER MODE: every game is now recorded as a session in the quiz Supabase project (<i>quiz_game_sessions</i>) — players, scores and every answer — and listed in the new Admin → Sessions section with per-statement answer detail and CSV download; the table needs the same kind of one-time SQL setup as the bank, shown in that section until it is run. Strict 2-Player mode is on by default: exactly two players, pinned slots, third joins refused, and a joined iPad locked to its own player screen on the shared link. Everything else is unchanged from v24–v27: the whole backend (live sync + question bank) in the dedicated quiz project <i>aylhgfftsokskgpgvemn</i>, ONE LINK (Host, Player 1, Player 2, Join and Admin are views on this single page), 10 statements at random per round, fastest-correct-only scoring, one room code per day, per-session names, and the fixed player join form that rebuilds never touch. Read this tag back to confirm you are on the new build; if it says anything else, you are looking at an older one.</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v29</b> · 27 Nov 2026 — CLEAR QUESTION TABLE: the statement bank now lives in its own clear Supabase table, <i>quiz_questions</i> — one row per question (sort_order, statement, answer) instead of all 40 statements packed into a single JSON row — so in the Supabase Table Editor every question and its answer sits on its own readable row. The table needs the new one-time SQL shown in Admin → Statements; your existing bank is read as before and the first Save Questions writes it into the new table row by row. Game sessions (<i>quiz_game_sessions</i>) and Strict 2-Player mode are unchanged from v28. Everything else is unchanged from v24–v28: the whole backend (live sync + question bank) in the dedicated quiz project <i>aylhgfftsokskgpgvemn</i>, ONE LINK (Host, Player 1, Player 2, Join and Admin are views on this single page), 10 statements at random per round, fastest-correct-only scoring, one room code per day, per-session names, and the fixed player join form that rebuilds never touch. Read this tag back to confirm you are on the new build; if it says anything else, you are looking at an older one.</p>
       </div>
       </div>
     </div>
@@ -808,7 +808,7 @@ function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeSt
 function designFingerprint(k){var d=liveDesign[k];if(!d)return k+": —";var bg=d.bgMode==="image"?"image":d.bgMode==="color"?("solid "+(d.bgColor||"")):("grad "+(d.bg1||"")+" → "+(d.bg2||""));return bg+(d.headline?(" · headline “"+d.headline+"”"):" · no headline");}
 function diagLines(admin){
   var L=[];
-  L.push(["Build","v28"]);
+  L.push(["Build","v29"]);
   L.push(["Live library (Supabase)",diag.supa]);
   L.push(["This screen's role",live.mode==="host"?"Host (room owner)":live.mode==="player"?("Player "+(live.mySlot!==null?live.mySlot+1:"?")):live.mode==="viewer"?"Host display (viewer)":"Offline / demo"]);
   L.push(["Room channel",diag.channel]);
@@ -827,7 +827,7 @@ function diagLines(admin){
   return L;
 }
 function diagHTML(admin){
-  return '<b class="diag-t">🔎 Diagnostics — Build v28</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
+  return '<b class="diag-t">🔎 Diagnostics — Build v29</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
 }
 function renderDiag(){
   var ad=$("adminDiag"); if(ad)ad.innerHTML=diagHTML(true);
@@ -2216,28 +2216,42 @@ try{
 }catch(e){designChannel=null;}
 function markSaved(what){var el=$("saveStatus");if(el)el.textContent="✓ Live now — "+what+" · "+new Date().toLocaleTimeString();toast("🚀 Live now — "+what+" is showing on the Host & Player screens.");}
 /* ================= QUESTION BANK STORE (Supabase) =================
-   v26: the bank now lives in Supabase — one shared bank for every device,
-   replacing the v25 browser-only store. Table: public.quiz_question_bank
-   (single row, id = 'default', questions = the whole bank as JSON).
+   v26: the bank moved into Supabase — one shared bank for every device,
+   replacing the v25 browser-only store.
    v27: whole quiz backend (this bank + live Realtime Broadcast sync) moved
    to the dedicated quiz project aylhgfftsokskgpgvemn via the single
    SUPABASE_URL / SUPABASE_ANON_KEY config above — no other backend refs.
+   v29: CLEAR TABLE — the bank no longer packs every statement into one
+   JSON row. Table: public.quiz_questions, ONE ROW PER QUESTION:
+     id (identity), sort_order (1,2,3…), statement (the question text),
+     answer (boolean — true = FACT, false = MYTH), created_at, updated_at.
+   In the Supabase Table Editor each question and its answer sits on its
+   own readable row. Each question object in state.questions carries its
+   row's id once loaded/saved, so Save updates rows in place, inserts new
+   statements as new rows and deletes rows whose statements were removed.
+   Migration: the previous single-row table (quiz_question_bank) is still
+   READ once when the new table is empty, so an existing bank is never
+   lost — the first Save Questions then writes it into quiz_questions row
+   by row. The app never writes to the old table again.
    This browser's localStorage is kept ONLY as an offline cache / fallback:
    it paints instantly at load and covers the period before the one-time
-   SQL setup has been run in the new Supabase project. Once the table exists,
+   SQL setup has been run in the Supabase project. Once the table exists,
    Save Questions writes to Supabase, every screen loads the bank from
    Supabase at startup, and a save on one device prompts the others to
    reload it (broadcast ping + Postgres Changes when enabled). */
 var QBANK_KEY="tfq-question-bank-v1";
-var QBANK_TABLE="quiz_question_bank";
-var QBANK_ROW_ID="default";
-var QBANK_SQL="create table if not exists public.quiz_question_bank (\n  id text primary key,\n  questions jsonb not null default '[]'::jsonb,\n  updated_at timestamptz not null default now()\n);\nalter table public.quiz_question_bank enable row level security;\ndrop policy if exists \"Quiz bank read\" on public.quiz_question_bank;\ndrop policy if exists \"Quiz bank insert\" on public.quiz_question_bank;\ndrop policy if exists \"Quiz bank update\" on public.quiz_question_bank;\ncreate policy \"Quiz bank read\" on public.quiz_question_bank for select using (true);\ncreate policy \"Quiz bank insert\" on public.quiz_question_bank for insert with check (true);\ncreate policy \"Quiz bank update\" on public.quiz_question_bank for update using (true) with check (true);";
+var QBANK_TABLE="quiz_questions";
+var QBANK_LEGACY_TABLE="quiz_question_bank"; /* v26–v28 single-JSON-row table — read-only migration source */
+var QBANK_LEGACY_ROW_ID="default";
+var QBANK_SQL="create table if not exists public.quiz_questions (\n  id bigint generated by default as identity primary key,\n  sort_order integer not null,\n  statement text not null,\n  answer boolean not null,\n  created_at timestamptz not null default now(),\n  updated_at timestamptz not null default now()\n);\nalter table public.quiz_questions enable row level security;\ndrop policy if exists \"Quiz questions read\" on public.quiz_questions;\ndrop policy if exists \"Quiz questions insert\" on public.quiz_questions;\ndrop policy if exists \"Quiz questions update\" on public.quiz_questions;\ndrop policy if exists \"Quiz questions delete\" on public.quiz_questions;\ncreate policy \"Quiz questions read\" on public.quiz_questions for select using (true);\ncreate policy \"Quiz questions insert\" on public.quiz_questions for insert with check (true);\ncreate policy \"Quiz questions update\" on public.quiz_questions for update using (true) with check (true);\ncreate policy \"Quiz questions delete\" on public.quiz_questions for delete using (true);";
 var qDirty=false, qSavedAt=null;
 var qBankSource="checking"; /* checking | supabase | local | defaults | setup */
 var qBankRemoteAt=null, qBankBusy=false, qBankChannel=null;
+var qBankRowIds=[]; /* ids of the rows currently in quiz_questions, as last loaded/saved — Save deletes any of these that are no longer in the bank */
+var qBankLegacyPending=false; /* true when the showing bank came from the old single-row table and still needs its first Save into quiz_questions */
 function cleanBank(qs){
   if(!Array.isArray(qs))return null;
-  var out=qs.filter(function(q){return q&&typeof q.text==="string"&&q.text.trim();}).map(function(q){return{text:q.text,answer:!!q.answer};});
+  var out=qs.filter(function(q){return q&&typeof q.text==="string"&&q.text.trim();}).map(function(q){var o={text:q.text,answer:!!q.answer};if(typeof q.id==="number")o.id=q.id;return o;});
   return out.length?out:null;
 }
 function persistQuestionBank(){
@@ -2269,12 +2283,13 @@ function renderBankStatus(){
   var box=$("qBankStatus"); if(!box)return;
   var when=qBankRemoteAt?(" · last saved "+new Date(qBankRemoteAt).toLocaleString()):(qSavedAt?(" · browser copy saved "+new Date(qSavedAt).toLocaleTimeString()):"");
   if(qBankBusy)box.innerHTML="☁️ Question bank: <b>talking to Supabase…</b>";
-  else if(qBankSource==="supabase")box.innerHTML="☁️ Question bank: <b style='color:#16A34A'>stored in Supabase</b> — shared by every device"+esc(when)+".";
-  else if(qBankSource==="setup")box.innerHTML="⚠️ Question bank: <b>Supabase table not set up yet</b> — edits are only in this browser for now. Run the one-time SQL below to switch the bank to Supabase.";
+  else if(qBankSource==="supabase"&&qBankLegacyPending)box.innerHTML="☁️ Question bank: <b>found your existing bank</b> in the old one-row table — tap <b>💾 Save Questions</b> below to copy it into the new clear table <b>quiz_questions</b>, one row per question.";
+  else if(qBankSource==="supabase")box.innerHTML="☁️ Question bank: <b style='color:#16A34A'>stored in Supabase</b> — clear table <b>quiz_questions</b>, <b>one row per question</b> ("+state.questions.length+" rows: sort_order · statement · answer), shared by every device"+esc(when)+". Open Table Editor → quiz_questions to see every question and its answer.";
+  else if(qBankSource==="setup")box.innerHTML="⚠️ Question bank: <b>the clear questions table (quiz_questions) is not set up yet</b> — edits are only in this browser for now. Run the one-time SQL below to create it.";
   else if(qBankSource==="local")box.innerHTML="☁️ Question bank: showing this browser's saved copy — checking Supabase…";
   else box.innerHTML="☁️ Question bank: using the built-in 40 statements — checking Supabase…";
   var setup=$("qBankSetup"); if(setup)setup.hidden=qBankSource!=="setup";
-  var pre=$("qBankSql"); if(pre&&!pre.textContent)pre.textContent=QBANK_SQL;
+  var pre=$("qBankSql"); if(pre)pre.textContent=QBANK_SQL;
 }
 function applyRemoteBank(qs,remoteAt){
   var clean=cleanBank(qs); if(!clean)return false;
@@ -2285,45 +2300,108 @@ function applyRemoteBank(qs,remoteAt){
   persistQuestionBank(); /* refresh the local cache from the shared bank */
   return true;
 }
+function loadLegacyBank(s){
+  /* v29 migration read: the new table exists but is empty — if the old
+     single-row table still holds a bank, adopt it (without its row ids)
+     and flag it so the first Save writes it into quiz_questions row by
+     row. Any failure here just means “no old bank” — the defaults/local
+     copy showing are the bank until the first Save. */
+  return s.from(QBANK_LEGACY_TABLE).select("questions,updated_at").eq("id",QBANK_LEGACY_ROW_ID).maybeSingle().then(function(res){
+    if(res.data&&res.data.questions){
+      var at=res.data.updated_at?Date.parse(res.data.updated_at):null;
+      if(applyRemoteBank(res.data.questions,isNaN(at)?null:at))qBankLegacyPending=true;
+      else {qBankSource="supabase";qBankRemoteAt=isNaN(at)?null:at;}
+    } else {
+      qBankSource="supabase";
+    }
+    renderBankStatus(); updateQSaveUI();
+    return true;
+  }).catch(function(){qBankSource="supabase";renderBankStatus();updateQSaveUI();return true;});
+}
 function loadBankFromSupabase(){
   var s=getSupa();
   if(!s){qBankSource="local";renderBankStatus();updateQSaveUI();return Promise.resolve(false);}
   qBankBusy=true; renderBankStatus();
-  return s.from(QBANK_TABLE).select("questions,updated_at").eq("id",QBANK_ROW_ID).maybeSingle().then(function(res){
+  return s.from(QBANK_TABLE).select("id,sort_order,statement,answer,updated_at").order("sort_order",{ascending:true}).order("id",{ascending:true}).then(function(res){
     qBankBusy=false;
     if(res.error){
       if(isBankTableMissing(res.error))qBankSource="setup";
       renderBankStatus(); updateQSaveUI();
       return false;
     }
-    if(res.data&&res.data.questions){
-      var at=res.data.updated_at?Date.parse(res.data.updated_at):null;
-      if(applyRemoteBank(res.data.questions,isNaN(at)?null:at)){render();toast("☁️ Question bank loaded from Supabase — "+state.questions.length+" statements, shared on every device");}
-      else {qBankSource="supabase";qBankRemoteAt=isNaN(at)?null:at;}
-    } else {
-      /* Table exists but holds no bank yet — the defaults showing are the
-         bank until the first Save pushes them up. */
-      qBankSource="supabase";
+    var rows=res.data||[];
+    qBankRowIds=rows.map(function(r){return r.id;});
+    if(rows.length){
+      qBankLegacyPending=false;
+      var qs=rows.map(function(r){return{id:r.id,text:r.statement,answer:!!r.answer};});
+      var at=null;
+      rows.forEach(function(r){if(r.updated_at){var t=Date.parse(r.updated_at);if(!isNaN(t)&&(at===null||t>at))at=t;}});
+      if(applyRemoteBank(qs,at)){render();toast("☁️ Question bank loaded from Supabase — "+state.questions.length+" questions, one row each in quiz_questions");}
+      else {qBankSource="supabase";qBankRemoteAt=at;}
+      renderBankStatus(); updateQSaveUI();
+      return true;
     }
-    renderBankStatus(); updateQSaveUI();
-    return true;
+    /* New table exists but holds no questions yet — try the old bank
+       before settling for the defaults/local copy. */
+    return loadLegacyBank(s);
   }).catch(function(){qBankBusy=false;renderBankStatus();updateQSaveUI();return false;});
 }
 function saveBankToSupabase(){
   var s=getSupa();
   if(!s)return Promise.resolve(false);
   qBankBusy=true; renderBankStatus();
-  var row={id:QBANK_ROW_ID,questions:state.questions,updated_at:new Date().toISOString()};
-  return s.from(QBANK_TABLE).upsert(row,{onConflict:"id"}).then(function(res){
-    qBankBusy=false;
-    if(res.error){
-      if(isBankTableMissing(res.error)){qBankSource="setup";renderBankStatus();}
-      return false;
+  var nowIso=new Date().toISOString();
+  var withId=[], withoutId=[];
+  state.questions.forEach(function(q,i){
+    var row={sort_order:i+1,statement:q.text,answer:!!q.answer,updated_at:nowIso};
+    if(typeof q.id==="number"){row.id=q.id;withId.push(row);}else withoutId.push(row);
+  });
+  var savedRows=[];
+  var p=Promise.resolve();
+  if(withId.length)p=p.then(function(){
+    return s.from(QBANK_TABLE).upsert(withId,{onConflict:"id"}).select("id,sort_order").then(function(res){
+      if(res.error)throw res.error;
+      savedRows=savedRows.concat(res.data||[]);
+    });
+  });
+  if(withoutId.length)p=p.then(function(){
+    return s.from(QBANK_TABLE).insert(withoutId).select("id,sort_order").then(function(res){
+      if(res.error)throw res.error;
+      savedRows=savedRows.concat(res.data||[]);
+    });
+  });
+  return p.then(function(){
+    /* Give every question its row id back (matched by sort_order), so the
+       next Save updates the same rows instead of duplicating them. */
+    var byOrder={};
+    savedRows.forEach(function(r){byOrder[r.sort_order]=r.id;});
+    state.questions.forEach(function(q,i){if(typeof byOrder[i+1]==="number")q.id=byOrder[i+1];});
+    var currentIds=state.questions.map(function(q){return q.id;}).filter(function(x){return typeof x==="number";});
+    var stale=qBankRowIds.filter(function(id){return currentIds.indexOf(id)===-1;});
+    qBankRowIds=currentIds.slice();
+    persistQuestionBank(); /* cache now carries the row ids too */
+    function finish(){
+      qBankBusy=false;
+      qBankSource="supabase"; qBankLegacyPending=false; qBankRemoteAt=Date.parse(nowIso);
+      renderBankStatus();
+      pingBankChanged();
+      return true;
     }
-    qBankSource="supabase"; qBankRemoteAt=Date.parse(row.updated_at);
-    pingBankChanged();
-    return true;
-  }).catch(function(){qBankBusy=false;return false;});
+    if(stale.length){
+      /* Statements deleted in Admin lose their rows too, so the table
+         always matches the bank exactly — one row per question. */
+      return s.from(QBANK_TABLE).delete().in("id",stale).then(function(res){
+        if(res.error){qBankBusy=false;if(isBankTableMissing(res.error))qBankSource="setup";renderBankStatus();return false;}
+        return finish();
+      });
+    }
+    return finish();
+  }).catch(function(err){
+    qBankBusy=false;
+    if(err&&isBankTableMissing(err))qBankSource="setup";
+    renderBankStatus();
+    return false;
+  });
 }
 function pingBankChanged(){
   /* Tell every other open device to reload the bank from Supabase now —
@@ -2344,7 +2422,9 @@ function subscribeBankChanges(){
     ch.on("broadcast",{event:"bank-changed"},function(m){var pl=(m&&m.payload)||{};if(pl.by===live.clientId)return;loadBankFromSupabase();});
     try{
       ch.on("postgres_changes",{event:"*",schema:"public",table:QBANK_TABLE},function(pl){
-        var row=pl&&(pl.new||pl.record); if(row&&row.questions){applyRemoteBank(row.questions,row.updated_at?Date.parse(row.updated_at):null);renderBankStatus();updateQSaveUI();render();}
+        /* Rows are one-per-question now, so a change means “reload the
+           whole bank in order” rather than reading one packed row. */
+        loadBankFromSupabase();
       });
     }catch(e){}
     ch.subscribe(function(){});
@@ -2354,16 +2434,17 @@ function updateQSaveUI(){
   renderBankStatus();
   var st=$("qSaveStatus"); if(!st)return;
   if(qDirty)st.textContent="● Unsaved changes — tap 💾 Save Questions to store the bank in Supabase.";
-  else if(qBankSource==="supabase")st.textContent="✓ Saved in Supabase"+(qBankRemoteAt?(" · "+new Date(qBankRemoteAt).toLocaleString()):"")+" — every device loads this bank.";
-  else if(qBankSource==="setup")st.textContent="⚠ Not in Supabase yet — run the one-time SQL above, then tap Save again.";
+  else if(qBankSource==="supabase"&&qBankLegacyPending)st.textContent="☁️ This bank still lives in the old one-row table — tap 💾 Save Questions to copy it into the clear quiz_questions table, one row per question.";
+  else if(qBankSource==="supabase")st.textContent="✓ Saved in Supabase — table quiz_questions, one row per question ("+state.questions.length+" rows)"+(qBankRemoteAt?(" · "+new Date(qBankRemoteAt).toLocaleString()):"")+" — every device loads this bank. See it in Supabase → Table Editor → quiz_questions.";
+  else if(qBankSource==="setup")st.textContent="⚠ Not in Supabase yet — run the one-time SQL above (it creates the clear quiz_questions table), then tap Save again.";
   else if(qSavedAt)st.textContent="✓ Saved in this browser · "+new Date(qSavedAt).toLocaleTimeString()+" — Supabase copy not confirmed yet.";
   else st.textContent="Edits show in the next game right away — tap Save to store the bank in Supabase.";
 }
 function saveQuestions(){
   persistQuestionBank(); /* cache first, so nothing is lost even offline */
   saveBankToSupabase().then(function(ok){
-    if(ok){qDirty=false;qSavedAt=Date.now();toast("☁️ Questions saved to Supabase — "+state.questions.length+" statements, shared on every device");}
-    else if(qBankSource==="setup"){toast("Saved in this browser only — run the one-time SQL in the Statements panel to put the bank in Supabase");}
+    if(ok){qDirty=false;qSavedAt=Date.now();toast("☁️ Questions saved to Supabase — "+state.questions.length+" questions, one row each in the quiz_questions table");}
+    else if(qBankSource==="setup"){toast("Saved in this browser only — run the one-time SQL in the Statements panel to create the clear quiz_questions table");}
     else toast("Couldn't reach Supabase — saved in this browser; tap Save again when you're back online");
     updateQSaveUI();
   });
@@ -2644,7 +2725,7 @@ $("saveScreenBtn").addEventListener("click",function(){ensureDesign();liveDesign
 restorePublishedDesign(); /* last Go Live design, restored before first paint so a reload keeps it */
 restoreQuestionBank(); /* instant paint from this browser's cache — Supabase load below overrides it with the shared bank */
 render(); updateLiveUI();
-loadBankFromSupabase(); /* v26: the shared bank lives in Supabase — load it over the cache as soon as it answers */
+loadBankFromSupabase(); /* v29: the shared bank lives in Supabase as the clear quiz_questions table (one row per question) — load it over the cache as soon as it answers */
 subscribeBankChanges(); /* …and follow later saves made on other devices */
 renderCurrentSession(); renderSessionsStatus(); loadSessionsFromSupabase(); /* v28: saved game sessions, loaded from the same Supabase project */
 var initialView=routeFromURL();
