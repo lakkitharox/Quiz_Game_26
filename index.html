@@ -354,6 +354,21 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
 .join-dock .jd-sub{font-size:13px;opacity:.88;line-height:1.5}
 .join-dock .jd-label{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;opacity:.85;margin-bottom:6px}
 .join-dock .jd-note{font-size:13px;opacity:.92;line-height:1.55;margin-top:9px}
+/* --- v39: Host login pop-up — the TV types its room code (masked) and logs in --- */
+.host-login-overlay{position:fixed;inset:0;z-index:80;background:rgba(3,5,10,.76);backdrop-filter:blur(9px);display:grid;place-items:center;padding:18px}
+.host-login-card{width:min(460px,94vw);background:#0F1420;color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:22px;padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.55);text-align:left}
+.host-login-card h2{font-size:23px;font-weight:900;line-height:1.1}
+.host-login-card p{font-size:13.5px;line-height:1.6;opacity:.88;margin:9px 0 0}
+.host-login-card label{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;opacity:.85;display:block;margin:16px 0 6px}
+.host-login-row{display:flex;gap:8px}
+.host-login-row input{flex:1;min-width:0;padding:14px;border-radius:13px;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.45);color:#fff;font-size:18px;font-weight:800;letter-spacing:.08em}
+.host-login-row .btn{flex:none}
+.host-login-status{font-size:13.5px;font-weight:700;line-height:1.55;margin-top:12px;min-height:20px}
+.host-login-status.wait{color:var(--amber)} .host-login-status.err{color:#FCA5A5} .host-login-status.ok{color:#4ADE80}
+.host-login-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.host-login-actions .btn{flex:1}
+.host-login-actions .btn.primary{background:var(--amber);color:#111;border-color:var(--amber)}
+.host-connect-btn{position:fixed;right:12px;bottom:12px;z-index:46;padding:11px 16px;border-radius:999px;background:var(--amber);color:#111;border:1px solid var(--amber);font-size:13.5px;font-weight:900;box-shadow:0 10px 28px rgba(0,0,0,.4);cursor:pointer}
 </style>
 </head>
 <body>
@@ -373,6 +388,30 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
 <section id="view-host">
   <div class="stage" id="hostStage"></div>
   <div class="conn-pill-fixed" id="hostConnPill">○ Not connected</div>
+  <button class="host-connect-btn" id="hostConnectBtn" onclick="openHostLogin(true)" hidden>🔑 Connect to room</button>
+  <!-- v39 HOST LOGIN POP-UP: the Host screen DOES need to connect to the room.
+       The operator types the code here (masked, like a password) and taps
+       Connect. The pop-up stays open with a “not connected yet” message until
+       a real game state actually arrives from the host — only then does it
+       close. After login the code is cleared from the field and is never
+       rendered anywhere on the Host screen. -->
+  <div class="host-login-overlay" id="hostLoginModal" hidden role="dialog" aria-modal="true" aria-labelledby="hostLoginTitle">
+    <div class="host-login-card">
+      <h2 id="hostLoginTitle">Connect Host to the room</h2>
+      <p>This screen needs to log in to the game room — like the players do — before it can show names, Ready states, scores or questions. Type today's room code from Admin.</p>
+      <label for="hostLoginCode">Room code</label>
+      <div class="host-login-row">
+        <input id="hostLoginCode" type="password" placeholder="Room code" maxlength="14" autocapitalize="characters" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();hostLoginSubmit();}">
+        <button class="btn" type="button" id="hostLoginShowBtn" onclick="toggleHostLoginCode()">Show</button>
+      </div>
+      <div class="host-login-status wait" id="hostLoginStatus">Not connected yet — enter today's room code to log in.</div>
+      <div class="host-login-actions">
+        <button class="btn primary" id="hostLoginBtn" onclick="hostLoginSubmit()">Connect / Log in</button>
+        <button class="btn" id="hostLoginCancelBtn" onclick="closeHostLogin(true)">Cancel</button>
+      </div>
+      <p style="font-size:12.5px;opacity:.75">The code is typed masked and is never shown on this screen after you connect. This screen is also listening for Admin's room announcement in the background — if that finds the room first, this pop-up closes by itself.</p>
+    </div>
+  </div>
 </section>
 
 <!-- ================= PLAYER 1 / 2 — full screen ================= -->
@@ -651,7 +690,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>About</h3>
         <p><b style="color:var(--text)">Myth or Fact</b> — 2 players · 10 random statements per round · fastest correct tap scores.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v38</b> · 28 Nov 2026 — Join connects for real: you move to your player screen only when the host confirms your seat — no fake joined state</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v39</b> · 28 Nov 2026 — Host login pop-up: type the room code (masked) on the Host screen to connect it directly to the room — it shows connected only when the game host actually answers</p>
       </div>
       </div>
     </div>
@@ -805,7 +844,7 @@ function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeSt
 function designFingerprint(k){var d=liveDesign[k];if(!d)return k+": —";var bg=d.bgMode==="image"?"image":d.bgMode==="color"?("solid "+(d.bgColor||"")):("grad "+(d.bg1||"")+" → "+(d.bg2||""));return bg+(d.headline?(" · headline “"+d.headline+"”"):" · no headline");}
 function diagLines(admin){
   var L=[];
-  L.push(["Build","v38"]);
+  L.push(["Build","v39"]);
   L.push(["Live library (Supabase)",diag.supa]);
   L.push(["This screen's role",live.mode==="host"?"Host (room owner)":live.mode==="player"?("Player "+(live.mySlot!==null?live.mySlot+1:"?")):live.mode==="viewer"?"Host display (viewer)":"Offline / demo"]);
   L.push(["Room channel",diag.channel]);
@@ -824,7 +863,7 @@ function diagLines(admin){
   return L;
 }
 function diagHTML(admin){
-  return '<b class="diag-t">🔎 Diagnostics — Build v38</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
+  return '<b class="diag-t">🔎 Diagnostics — Build v39</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
 }
 function renderDiag(){
   var ad=$("adminDiag"); if(ad)ad.innerHTML=diagHTML(true);
@@ -1419,6 +1458,10 @@ function onStateBroadcast(m){
   diag.stateRx="state · "+diagTime(Date.now()); diagNote();
   try{applyRemoteState((m&&m.payload)||{});}
   catch(e){diag.sync="ERROR applying a received state — "+(e&&e.message?e.message:e)+" · "+diagTime(Date.now());diagNote();}
+  /* v39: a real state just arrived on the Host viewer — this (and only
+     this) is what closes the Host login pop-up and lets the screen call
+     itself connected. */
+  try{if(typeof currentView!=="undefined"&&currentView==="host"&&live.mode==="viewer")hostLoginSuccess();}catch(e){}
 }
 function hostViewerJoin(code,viaStored){
   /* A Host screen opened on its own device: silently follow the room as a
@@ -1494,8 +1537,120 @@ function maybeHostViewer(){
       if(r){var nc=normalizeCode(r);if(nc.length>=3)code=nc;}
     }
     if(code){earlyRoomCode=code;diag.gate="PASS — room code found in this screen's link, joining as viewer · "+diagTime(Date.now());diagNote();stopHostDiscovery();hostViewerJoin(code);}
-    else {diag.gate="PASS (no code in link) — discovery started, listening for Admin's room announcement · "+diagTime(Date.now());diagNote();startHostDiscovery();}
+    else {diag.gate="PASS (no code in link) — discovery started, listening for Admin's room announcement · "+diagTime(Date.now());diagNote();startHostDiscovery();try{openHostLogin(false);}catch(e){}}
   }catch(e){diag.gate="ERROR — "+(e&&e.message?e.message:e)+" · "+diagTime(Date.now());diagNote();}
+}
+/* ================= HOST LOGIN POP-UP (v39) =================
+   The user asked for this directly: the Host DOES need to connect to the
+   room, so it now gets an explicit log-in like the players do — a pop-up
+   with a masked code field and a Connect button. Honest states only
+   (the user's rule): the pop-up says “not connected yet” while it waits,
+   it closes ONLY when a real game state broadcast arrives from the room
+   host (onStateBroadcast → hostLoginSuccess), and if no host answers for
+   the typed code within 14s it says plainly that the code did NOT connect
+   and stays open so the operator can fix the code. Discovery (above)
+   keeps running behind the pop-up as a second path — if an announcement
+   finds the room first, the arriving state closes the pop-up by itself.
+   The typed code is used only to join (normalizeCode → hostViewerJoin,
+   the same viewer path as ?room=) and is then cleared from the field;
+   it is never written into the Host stage, the lobby, the connection
+   pill or anywhere else on this screen. */
+var hostLoginPending=false, hostLoginTimer=null, hostLoginStartedAt=0, hostLoginAttemptCode=null, hostLoginDismissed=false;
+function hostIsReallyConnected(){return (live.mode==="host"&&live.connected)||(live.mode==="viewer"&&(!!lastHostState||!!live.lastStateAt));}
+function updateHostConnectUI(){
+  var btn=$("hostConnectBtn"); if(!btn)return;
+  var modal=$("hostLoginModal"); var modalOpen=modal&&!modal.hidden;
+  var show=(typeof currentView!=="undefined"&&currentView==="host"&&!hostIsReallyConnected()&&!modalOpen&&live.mode!=="host");
+  btn.hidden=!show;
+}
+function toggleHostLoginCode(){
+  var inp=$("hostLoginCode"); if(!inp)return;
+  var b=$("hostLoginShowBtn");
+  if(inp.type==="password"){inp.type="text";if(b)b.textContent="Hide";}
+  else{inp.type="password";if(b)b.textContent="Show";}
+  try{inp.focus();}catch(e){}
+}
+function openHostLogin(manual){
+  if(typeof currentView!=="undefined"&&currentView!=="host")return;
+  if(hostIsReallyConnected()){if(manual)toast("Host is already connected — it is receiving the game live");return;}
+  if(manual)hostLoginDismissed=false;
+  else if(hostLoginDismissed)return;
+  var modal=$("hostLoginModal"); if(!modal)return;
+  modal.hidden=false;
+  var inp=$("hostLoginCode");
+  if(inp&&!inp.value&&(earlyRoomCode||live.code)){inp.value=earlyRoomCode||live.code||"";}
+  var st=$("hostLoginStatus");
+  if(st&&!hostLoginPending){
+    if(live.mode==="viewer"){st.textContent="Connecting… waiting for the game host to send the first update. You are not connected until that arrives — or type the code and tap Connect.";st.className="host-login-status wait";}
+    else if(discovery.active){st.textContent="Not connected yet. Enter the code to log in now — this screen is also listening for Admin's room announcement in the background.";st.className="host-login-status wait";}
+    else{st.textContent="Not connected yet — enter today's room code to log in.";st.className="host-login-status wait";}
+  }
+  updateHostConnectUI(); modal.hidden=false; /* updateHostConnectUI hides the Connect button while the pop-up is open; the pop-up itself stays open */
+  if(inp)setTimeout(function(){try{inp.focus();}catch(e){}},60);
+}
+function closeHostLogin(userAction){
+  var modal=$("hostLoginModal"); if(modal)modal.hidden=true;
+  if(userAction){
+    hostLoginDismissed=true;
+    if(hostLoginPending){
+      hostLoginPending=false;
+      if(hostLoginTimer){clearTimeout(hostLoginTimer);hostLoginTimer=null;}
+      var b=$("hostLoginBtn"); if(b){b.disabled=false;b.textContent="Connect / Log in";}
+    }
+  }
+  updateHostConnectUI();
+}
+function hostLoginSubmit(){
+  var inp=$("hostLoginCode"); var raw=inp?inp.value:"";
+  var code=normalizeCode(raw);
+  var st=$("hostLoginStatus");
+  function setSt(msg,cls){if(st){st.textContent=msg;st.className="host-login-status "+(cls||"wait");}}
+  if(code.length<3){setSt("Enter the room code from Admin first — the 4-digit code after QUIZ- on the Admin screen.","err");if(inp)inp.focus();return;}
+  if(!getSupa()){setSt("✕ Live connection is not available in this browser — check this device's internet connection and reload this screen.","err");setLiveError("✕ Host could not connect — the live connection did not load on this screen. Check its internet connection, reload, then try the pop-up again.");return;}
+  if(live.mode==="host"){setSt("This tab is already hosting the room — the Host display is live here.","ok");return;}
+  hostLoginDismissed=false;
+  /* Tear down any current viewer/discovery attempt cleanly, WITHOUT the
+     disconnectLive() path — that one schedules maybeHostViewer, which
+     would immediately race this manual join with a discovery join. */
+  try{stopHostDiscovery();}catch(e){}
+  if(live.mode==="viewer"||live.mode==="player"){
+    if(live.syncTimer){clearInterval(live.syncTimer);live.syncTimer=null;}
+    if(live.viewerFallbackTimer){clearTimeout(live.viewerFallbackTimer);live.viewerFallbackTimer=null;}
+    if(live.channel){var oldCh=live.channel;live.channel=null;try{var s0=getSupa();if(s0)s0.removeChannel(oldCh);}catch(e){}}
+    live.mode="offline";live.code=null;live.connected=false;live.viewerRetries=0;lastHostState=null;live.lastStateAt=0;
+  }
+  hostLoginPending=true; hostLoginAttemptCode=code; hostLoginStartedAt=Date.now();
+  var btn=$("hostLoginBtn"); if(btn){btn.disabled=true;btn.textContent="Connecting…";}
+  setSt("Connecting — waiting for the game host to answer in that room… You are not connected yet.","wait");
+  diag.gate="Host pop-up log-in — joining as viewer with the typed code (code kept hidden) · "+diagTime(Date.now()); diagNote();
+  if(hostLoginTimer)clearTimeout(hostLoginTimer);
+  hostLoginTimer=setTimeout(function(){
+    hostLoginTimer=null;
+    if(!hostLoginPending)return;
+    hostLoginPending=false;
+    var b=$("hostLoginBtn"); if(b){b.disabled=false;b.textContent="Try again — Connect / Log in";}
+    setSt("✕ That code did not connect — no game host answered in that room within 14 seconds. Check the code is exactly today's code from Admin, that Admin has tapped Create Today's Room, and that this device is online. You are NOT connected.","err");
+    setLiveError("✕ Host did not connect — no host answered for the code entered in the pop-up. Check today's code in Admin and that the room is created, then tap Connect to room and try again.");
+    updateHostConnectUI();
+    var m=$("hostLoginModal"); if(m)m.hidden=false;
+  },14000);
+  hostViewerJoin(code,false); /* the existing viewer path — subscribes, sends viewer-hello + request-sync, rebuilds on drops */
+  updateLiveUI(); render();
+}
+function hostLoginSuccess(){
+  /* Called from onStateBroadcast the moment a real state arrives — the
+     ONLY moment this screen may call itself connected. */
+  var wasPending=hostLoginPending;
+  hostLoginPending=false;
+  if(hostLoginTimer){clearTimeout(hostLoginTimer);hostLoginTimer=null;}
+  var b=$("hostLoginBtn"); if(b){b.disabled=false;b.textContent="Connect / Log in";}
+  var inp=$("hostLoginCode"); if(inp)inp.value=""; /* the code leaves the field — it is never displayed on this screen */
+  var modal=$("hostLoginModal"); var wasOpen=modal&&!modal.hidden;
+  if(modal)modal.hidden=true;
+  hostLoginDismissed=false;
+  clearLiveError();
+  if(wasPending||wasOpen)toast("✓ Host connected — this screen is now receiving the game live");
+  updateHostConnectUI();
 }
 var sessionNameDraft=[null,null]; /* per-session name being typed on a player iPad — kept across stage re-renders, wiped when a new session starts */
 function applyRemoteState(pl){
@@ -1653,6 +1808,7 @@ function updateLiveUI(){
   renderJoinDocks();
   renderDiag();
   renderConnPills();
+  try{updateHostConnectUI();}catch(e){}
 }
 
 /* ================= HOST STAGE ================= */
@@ -1711,9 +1867,9 @@ function hostStageHTML(){
     } else if(live.mode==="player"){
       liveBit='';
     } else if(discovery.active){
-      liveBit='<p style="margin-top:14px">● Looking for the game…</p>';
+      liveBit='<p style="margin-top:14px">● Not connected — looking for the game…<br><span style="font-size:13.5px;opacity:.9">Use the 🔑 Connect to room pop-up to type the room code and log in directly.</span></p>';
     } else {
-      liveBit='<p style="margin-top:14px">Waiting for Start…</p>';
+      liveBit='<p style="margin-top:14px">○ Not connected to a room yet.<br><span style="font-size:13.5px;opacity:.9">Use the 🔑 Connect to room pop-up to type the room code and log in.</span></p>';
     }
     centre='<div class="lobby-panel"><h2>'+esc(state.players[0].name)+' vs '+esc(state.players[1].name)+'</h2><p>'+roundTotal+' statements · '+state.points+' pts — fastest correct only</p>'+liveBit+'</div>';
   } else if(state.phase==="finished"){
@@ -2503,6 +2659,14 @@ function switchView(v){
   prepareRememberedPlayer(); /* player screens: today's code prefilled, name left fresh for this session */
   renderAdminRoomPanel();
   refreshNavLinks();
+  /* v39: leaving the Host screen hides its login pop-up; arriving on the
+     Host screen while it is not really connected shows the pop-up (unless
+     the operator already dismissed it) and always shows the Connect
+     button as the manual way back in. */
+  try{
+    if(v!=="host"){var hm=$("hostLoginModal");if(hm)hm.hidden=true;var hb=$("hostConnectBtn");if(hb)hb.hidden=true;}
+    else{updateHostConnectUI();if(!hostIsReallyConnected()&&!hostLoginDismissed&&live.mode!=="host"&&!earlyRoomCode)setTimeout(function(){if(currentView==="host"&&!hostIsReallyConnected())openHostLogin(false);},450);}
+  }catch(e){}
 }
 function openScreen(v){
   /* Internal helper kept for programmatic in-tab switches that do NOT
@@ -3221,7 +3385,8 @@ setInterval(function(){
   try{
     if(currentView!=="host")return;
     if(live.mode==="offline"){maybeHostViewer();}
-    else if(live.mode==="viewer"&&live.joinedAt&&((!lastHostState&&Date.now()-live.joinedAt>15000)||(live.lastStateAt&&Date.now()-live.lastStateAt>30000))){var c=live.code;live.joinedAt=Date.now();live.lastStateAt=0;rejoinViewer(c);} /* v35: also rebuild when state WAS flowing and then silently stopped for 30s (the host heartbeats every 10s, so 30s of silence means the stream is dead even if no error ever fired) */
+    else if(live.mode==="viewer"&&live.joinedAt&&((!lastHostState&&Date.now()-live.joinedAt>15000)||(live.lastStateAt&&Date.now()-live.lastStateAt>30000))){var c=live.code;live.joinedAt=Date.now();live.lastStateAt=0;rejoinViewer(c);try{if(!hostLoginDismissed)openHostLogin(false);}catch(e){}} /* v35: also rebuild when state WAS flowing and then silently stopped for 30s (the host heartbeats every 10s, so 30s of silence means the stream is dead even if no error ever fired) · v39: a viewer that never heard the host gets the login pop-up so the operator can type the code directly */
+    try{updateHostConnectUI();}catch(e){}
   }catch(e){}
 },6000);
 /* v19: a Host tab that loaded in the background (or whose first join raced
