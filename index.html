@@ -650,7 +650,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>About</h3>
         <p><b style="color:var(--text)">Myth or Fact</b> — 2 players · 10 random statements per round · fastest correct tap scores.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v36</b> · 28 Nov 2026 — Automatic / Manual game control</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v37</b> · 28 Nov 2026 — Host hears every state: room code in the Host link, host-confirmed Ready</p>
       </div>
       </div>
     </div>
@@ -782,7 +782,7 @@ function getQ(){return state.active[state.idx]||state.questions[state.idx]||null
 
 /* ================= LIVE (Supabase Realtime Broadcast) ================= */
 var supa=null;
-var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],ready:[false,false],startPending:false,joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,lobbyChannel:null,lobbyTimer:null,joinedAt:0,heartbeatTimer:null,viewerFallbackTimer:null,joinedViaStored:false,forceRejoin:false,hostHbTimer:null,hostReconnectTimer:null,startPendingTimer:null,lastStateAt:0};
+var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],ready:[false,false],readyPending:false,readyWant:null,readyRetry:null,startPending:false,joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,lobbyChannel:null,lobbyTimer:null,joinedAt:0,heartbeatTimer:null,viewerFallbackTimer:null,joinedViaStored:false,forceRejoin:false,hostHbTimer:null,hostReconnectTimer:null,startPendingTimer:null,lastStateAt:0};
 var pendingWantSlot=null; /* set by a /PlayerN screen's own join form so the host pins that exact slot */
 var joinDraft={"c0":"","n0":"","c1":"","n1":""}; /* v19: text typed into a player screen's join form, kept across stage re-renders (see render()) */
 var lastHostState=null, liveMyAnswer=null, liveMyIdx=-1, broadcastQueued=false;
@@ -804,7 +804,7 @@ function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeSt
 function designFingerprint(k){var d=liveDesign[k];if(!d)return k+": —";var bg=d.bgMode==="image"?"image":d.bgMode==="color"?("solid "+(d.bgColor||"")):("grad "+(d.bg1||"")+" → "+(d.bg2||""));return bg+(d.headline?(" · headline “"+d.headline+"”"):" · no headline");}
 function diagLines(admin){
   var L=[];
-  L.push(["Build","v36"]);
+  L.push(["Build","v37"]);
   L.push(["Live library (Supabase)",diag.supa]);
   L.push(["This screen's role",live.mode==="host"?"Host (room owner)":live.mode==="player"?("Player "+(live.mySlot!==null?live.mySlot+1:"?")):live.mode==="viewer"?"Host display (viewer)":"Offline / demo"]);
   L.push(["Room channel",diag.channel]);
@@ -823,7 +823,7 @@ function diagLines(admin){
   return L;
 }
 function diagHTML(admin){
-  return '<b class="diag-t">🔎 Diagnostics — Build v36</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
+  return '<b class="diag-t">🔎 Diagnostics — Build v37</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
 }
 function renderDiag(){
   var ad=$("adminDiag"); if(ad)ad.innerHTML=diagHTML(true);
@@ -980,8 +980,9 @@ function renderAdminRoomPanel(){
   var ll=$("liveRoomLinks");
   if(ll){
     /* v34 — FULL LINKS, ONE-TAP COPY, PATH-ONLY: every screen's COMPLETE URL is shown
-       (this site's origin + its path; player links carry today's room code
-       as ?room=) with a Copy button per row and a Copy-all button on top,
+       (this site's origin + its path; player links — and v37 the Host link —
+       carry today's room code as ?room=) with a Copy button per row and a
+       Copy-all button on top,
        so sharing a link never means typing an address together by hand.
        “Open” is a real link to that screen's own path. */
     var litems=[
@@ -1162,7 +1163,7 @@ function hostAnnounceStart(){
     if(status==="SUBSCRIBED"){ announce(); if(live.lobbyTimer)clearInterval(live.lobbyTimer); live.lobbyTimer=setInterval(announce,5000); }
   });
 }
-var discovery={channel:null,timer:null,active:false};
+var discovery={channel:null,timer:null,active:false,stallTimer:null,fails:0,gotSub:false};
 /* v19 — second room-finding path for a standalone Host in the SAME browser
    as Admin (the usual one-laptop setup): creating a room also remembers its
    code in this browser's storage, and a discovering Host tab checks that
@@ -1185,12 +1186,34 @@ function storedRoomCode(){
 function startHostDiscovery(){
   if(discovery.active||live.mode!=="offline")return;
   var s=getSupa(); if(!s)return;
-  discovery.active=true;
+  discovery.active=true; discovery.gotSub=false;
   var ch=s.channel("quiz-host-lobby",{config:{broadcast:{self:false}}}); discovery.channel=ch;
-  ch.on("broadcast",{event:"room-announce"},function(m){var pl=m.payload||{};var code=normalizeCode(pl.code||"");if(code.length>=3&&live.mode==="offline"){stopHostDiscovery();hostViewerJoin(code);}});
+  ch.on("broadcast",{event:"room-announce"},function(m){var pl=m.payload||{};var code=normalizeCode(pl.code||"");if(code.length>=3&&live.mode==="offline"){discovery.fails=0;stopHostDiscovery();hostViewerJoin(code);}});
+  /* v37 STALL DEADLINE: before, discovery.active was set the moment the
+     channel was created and the ONLY exits were the subscribe callback's
+     own branches — if that subscribe stalled (the callback simply never
+     fired, e.g. a half-open socket on a TV browser), nothing ever retried:
+     the 6s watchdog called maybeHostViewer → startHostDiscovery, which
+     returned at once because active was already true, so the Host sat on
+     “Connecting…” forever and never heard a single player state. Now a
+     subscribe that hasn't completed within 10s is torn down and retried,
+     and repeated failures say so on screen instead of spinning silently. */
+  if(discovery.stallTimer)clearTimeout(discovery.stallTimer);
+  discovery.stallTimer=setTimeout(function(){
+    discovery.stallTimer=null;
+    if(!discovery.active||discovery.channel!==ch||discovery.gotSub||live.mode!=="offline")return;
+    discovery.fails++;
+    if(discovery.fails>=3)setLiveError("✕ This screen can't reach the game room — check this device's internet connection. It keeps trying by itself, and this message clears the moment it connects.");
+    diag.channel="discovery subscribe stalled (no answer in 10s) — restarting discovery · "+diagTime(Date.now()); diagNote();
+    stopHostDiscovery();
+    setTimeout(function(){if(currentView==="host"&&live.mode==="offline")startHostDiscovery();},3000);
+  },10000);
   ch.subscribe(function(status){
+    if(discovery.channel!==ch)return; /* a channel replaced by a restart must not drive state — its late CLOSED used to be counted as a fresh failure */
     diag.channel="discovery (host lobby) channel: "+status+" · "+diagTime(Date.now()); diagNote();
     if(status==="SUBSCRIBED"){
+      discovery.gotSub=true; discovery.fails=0;
+      if(discovery.stallTimer){clearTimeout(discovery.stallTimer);discovery.stallTimer=null;}
       var ask=function(){
         if(live.mode!=="offline"){stopHostDiscovery();return;}
         /* v19: same-browser fallback — if Admin in another tab of this
@@ -1208,6 +1231,8 @@ function startHostDiscovery(){
       /* v18: a dead discovery channel used to stay dead — the Host then sat
          in the lobby forever with no way to find the room. Tear it down and
          start discovery again while this tab is still a waiting Host. */
+      discovery.fails++;
+      if(discovery.fails>=3)setLiveError("✕ This screen can't reach the game room — check this device's internet connection. It keeps trying by itself, and this message clears the moment it connects.");
       stopHostDiscovery();
       setTimeout(function(){if(currentView==="host"&&live.mode==="offline")startHostDiscovery();},3000);
     }
@@ -1215,6 +1240,7 @@ function startHostDiscovery(){
 }
 function stopHostDiscovery(){
   discovery.active=false;
+  if(discovery.stallTimer){clearTimeout(discovery.stallTimer);discovery.stallTimer=null;}
   if(discovery.timer){clearInterval(discovery.timer);discovery.timer=null;}
   if(discovery.channel){var ch=discovery.channel;discovery.channel=null;try{var s=getSupa();if(s)s.removeChannel(ch);}catch(e){}}
 }
@@ -1263,7 +1289,7 @@ function playerJoinFrom(prefix){
   if(live.mode==="player"&&live.code===code&&!live.forceRejoin){switchView(live.mySlot===1?"p2":"p1");return;}
   live.forceRejoin=false; /* v32: a forced rejoin (dropped channel) falls through and rebuilds the connection below */
   if(live.mode!=="offline") disconnectLive(true);
-  live.mode="player"; live.code=code; live.myName=name.slice(0,18); live.connected=false; live.assigned=false; live.mySlot=null; live.wantSlot=pendingWantSlot; pendingWantSlot=null; lastHostState=null; liveMyAnswer=null; liveMyIdx=-1;
+  live.mode="player"; live.code=code; live.myName=name.slice(0,18); live.connected=false; live.assigned=false; live.mySlot=null; live.wantSlot=pendingWantSlot; pendingWantSlot=null; lastHostState=null; liveMyAnswer=null; liveMyIdx=-1; live.readyPending=false; live.readyWant=null; if(live.readyRetry){clearInterval(live.readyRetry);live.readyRetry=null;} /* v37: a (re)join starts with no unconfirmed Ready tap */
   savePlayerDaySession(code,live.wantSlot); /* v21: remember the CODE (and slot) for the whole day — the name is per-session and is never stored */
   var ch=freshRoomChannel(s,code); live.channel=ch;
   ch.on("broadcast",{event:"state"},onStateBroadcast);
@@ -1471,6 +1497,15 @@ function applyRemoteState(pl){
   if(pl.phase==="playing"&&pl.idx!==undefined) { /* question start approximated on phase change */ }
   state.players=(pl.players||state.players).map(function(p){return{name:p.name,score:p.score||0,correct:p.correct||0,streak:p.streak||0}});
   if(pl.ready)live.ready=[!!pl.ready[0],!!pl.ready[1]]; /* v30: Ready flags ride along with every state broadcast */
+  /* v37: the host's answer to THIS iPad's Ready tap. The pending flag
+     clears only when a state broadcast shows the wanted Ready state for
+     this slot — that arrival is the confirmation, and it is the first
+     moment this screen may claim “You're ready”. */
+  if(live.readyPending&&live.mode==="player"&&(live.mySlot===0||live.mySlot===1)&&live.ready[live.mySlot]===live.readyWant){
+    var confirmedWant=live.readyWant; live.readyPending=false; live.readyWant=null;
+    if(live.readyRetry){clearInterval(live.readyRetry);live.readyRetry=null;}
+    if(confirmedWant)toast("✅ Host confirmed — you're ready, "+dispName(live.mySlot));
+  }
   var qs=[]; for(var i=0;i<(pl.total||0);i++)qs.push({text:"",answer:false});
   if(pl.questionText!=null&&qs[pl.idx])qs[pl.idx]={text:pl.questionText,answer:pl.correctAnswer===null?false:pl.correctAnswer};
   if(qs.length)state.active=qs;
@@ -1498,6 +1533,8 @@ function disconnectLive(silent){
   if(live.viewerFallbackTimer){clearTimeout(live.viewerFallbackTimer);live.viewerFallbackTimer=null;}
   if(live.mode==="host"&&live.channel&&live.connected){try{live.channel.send({type:"broadcast",event:"room-closed",payload:{}});}catch(e){}}
   if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}
+  if(live.readyRetry){clearInterval(live.readyRetry);live.readyRetry=null;}
+  live.readyPending=false; live.readyWant=null; /* v37: no unconfirmed Ready tap survives leaving the room */
   if(live.hostReconnectTimer){clearTimeout(live.hostReconnectTimer);live.hostReconnectTimer=null;}
   if(live.startPendingTimer){clearTimeout(live.startPendingTimer);live.startPendingTimer=null;}
   if(live.pingTimer){clearInterval(live.pingTimer);live.pingTimer=null;}
@@ -1610,7 +1647,12 @@ function hostStageHTML(){
       liveBit='<div style="margin-top:16px"><div>'+chips+'</div><div class="statusline '+(live.connected?"ok":"wait")+'">'+(live.connected?("● Live — "+countJoined()+" of 2 joined · "+countReady()+" of 2 ready"):"Connecting…")+'</div></div>';
     } else if(live.mode==="viewer"){
       var vchips=""; for(var i=0;i<2;i++){var named=state.players[i].name!=="Player "+(i+1);vchips+='<span class="slot-chip '+(named?(live.ready[i]?"ready":"filled"):"")+'">'+(named?(esc(state.players[i].name)+(live.ready[i]?" — ✅ Ready":" — ⏳ Not ready")):("○ Player "+(i+1)+" — waiting…"))+'</span>';}
-      liveBit='<div style="margin-top:16px"><div>'+vchips+'</div></div>';
+      /* v37: freshness line — a viewer that joined a room but hears nothing
+         must LOOK different from one that is hearing the game. It shows the
+         time the last state actually arrived on THIS screen (stamped in
+         onStateBroadcast), or says plainly that none has arrived yet. */
+      var vstat=!live.connected?"◌ Connecting to the room…":(live.lastStateAt?("● Live — last update received · "+diagTime(live.lastStateAt)):"◌ Connected — waiting for the first update from the game…");
+      liveBit='<div style="margin-top:16px"><div>'+vchips+'</div><div class="statusline '+(live.connected&&live.lastStateAt?"ok":"wait")+'">'+vstat+'</div></div>';
     } else if(live.mode==="player"){
       liveBit='';
     } else if(discovery.active){
@@ -1653,15 +1695,34 @@ function playerUpdateName(i){
   if(!v){toast("Type the player's name for this session first");if(inp)inp.focus();return;}
   v=v.slice(0,18); sessionNameDraft[i]=null;
   state.players[i].name=v; live.ready[i]=false; /* v30: a (re)set name means not ready yet — the Ready button below is the next tap */
+  live.readyPending=false; live.readyWant=null; if(live.readyRetry){clearInterval(live.readyRetry);live.readyRetry=null;} /* v37: a name change cancels any unconfirmed Ready tap */
   if(live.mode==="player"&&live.mySlot===i&&live.channel){try{live.channel.send({type:"broadcast",event:"name-update",payload:{clientId:live.clientId,slot:i,name:v}});}catch(e){}}
   render(); toast("Name set: "+v+" — now tap I'm Ready ✓");
 }
 function playerSetReady(i,val){
-  /* v30: the Ready button on a player iPad. It appears once a name is set;
-     tapping it tells the host, and the Host screen + Admin monitor flip
-     that player to “✅ Ready” by name. Tapping “Not ready” undoes it. */
+  /* v37: Ready is HOST-CONFIRMED. Before, tapping set the flag locally and
+     announced “You're ready ✅” at once — a claim this iPad could not back
+     up: if the ready message never reached the host, the Host screen kept
+     showing “Not ready” while this iPad insisted it was ready. Now the tap
+     only SENDS the word; live.ready for a player changes solely from the
+     host's own state broadcasts (applyRemoteState), so “You're ready” on
+     this screen is shown only once the host's broadcast comes back with
+     this player ready. While unconfirmed the tap is re-sent every 4s (a
+     lost message heals itself) and the dock says it is still waiting. */
+  if(live.mode==="player"&&live.mySlot===i&&live.channel){
+    live.readyWant=!!val; live.readyPending=true;
+    var sendReady=function(){try{live.channel.send({type:"broadcast",event:"ready",payload:{clientId:live.clientId,slot:i,ready:!!val}});}catch(e){}};
+    sendReady();
+    if(live.readyRetry)clearInterval(live.readyRetry);
+    live.readyRetry=setInterval(function(){
+      if(!live.readyPending||live.mode!=="player"){clearInterval(live.readyRetry);live.readyRetry=null;return;}
+      sendReady();
+    },4000);
+    render();
+    toast(val?"Telling the host you're ready…":"Telling the host you're not ready…");
+    return;
+  }
   live.ready[i]=!!val;
-  if(live.mode==="player"&&live.mySlot===i&&live.channel){try{live.channel.send({type:"broadcast",event:"ready",payload:{clientId:live.clientId,slot:i,ready:!!val}});}catch(e){}}
   render(); toast(val?("You're ready, "+state.players[i].name+" ✅ — the host can see it"):"Not ready — tap I'm Ready when you are");
 }
 
@@ -1694,7 +1755,7 @@ function renderJoinDocks(){
       var mode=dockMode(i);
       var rem=mode==="join"?getPlayerDaySession():null;
       var isDefaultName=(state.players[i].name==="Player "+(i+1));
-      var sig=mode+"|"+(rem?rem.code:"")+"|"+(isDefaultName?"d":"n")+"|"+state.players[i].name+"|"+state.sessionId+"|"+(live.ready[i]?"R":"-"); /* v30: Ready state is part of the signature so the dock flips between the Ready button and the “You're ready” state */
+      var sig=mode+"|"+(rem?rem.code:"")+"|"+(isDefaultName?"d":"n")+"|"+state.players[i].name+"|"+state.sessionId+"|"+(live.ready[i]?"R":"-")+"|"+((live.readyPending&&live.mySlot===i)?"P":"-"); /* v30: Ready state is part of the signature so the dock flips between the Ready button and the “You're ready” state · v37: the unconfirmed (pending) state is in the signature too, so the dock flips to “waiting for the host” the moment Ready is tapped */
       if(sig===dockSig[i]&&dock.hidden===(mode==="hidden"))return; /* unchanged — leave the live inputs exactly as they are */
       dockSig[i]=sig;
       if(mode==="hidden"){dock.hidden=true;dock.innerHTML="";return;}
@@ -1719,8 +1780,9 @@ function renderJoinDocks(){
            name bar. Tapping it marks this player ready on the Host screen
            and in Admin — by name, not “Player N”. Ready can be undone. */
         var readyBit="";
-        if(!isDefaultName&&!live.ready[i])readyBit='<button class="btn primary jd-ready-btn" onclick="playerSetReady('+i+',true)">✓ I\'m Ready</button>';
-        else if(!isDefaultName&&live.ready[i])readyBit='<div class="jd-ready-done">✅ You\'re ready, '+esc(state.players[i].name)+'!</div><div style="margin-top:8px"><button class="btn small" onclick="playerSetReady('+i+',false)">Not ready</button></div>';
+        if(!isDefaultName&&live.readyPending&&live.mySlot===i)readyBit='<div class="jd-ready-done">⏳ '+(live.readyWant?("Telling the host… — “You're ready” shows here only when the host confirms it."):("Telling the host you're not ready…"))+'</div>';
+        else if(!isDefaultName&&!live.ready[i])readyBit='<button class="btn primary jd-ready-btn" onclick="playerSetReady('+i+',true)">✓ I\'m Ready</button>';
+        else if(!isDefaultName&&live.ready[i])readyBit='<div class="jd-ready-done">✅ You\'re ready, '+esc(state.players[i].name)+'! <span style="font-weight:600;opacity:.85">(confirmed by the host)</span></div><div style="margin-top:8px"><button class="btn small" onclick="playerSetReady('+i+',false)">Not ready</button></div>';
         dock.innerHTML='<div class="jd-label">✎ '+(isDefaultName?("Your name — Player "+(i+1)):("You are "+esc(state.players[i].name)))+'</div>'
           +'<div class="join-mini"><input id="pNameEdit'+i+'" placeholder="Your name" maxlength="18" autocomplete="off" value="'+esc(nameVal)+'"><button class="btn primary" onclick="playerUpdateName('+i+')">Set name ✓</button></div>'
           +readyBit;
@@ -1756,8 +1818,10 @@ function playerStageHTML(i){
        stage that renders never touch — see renderJoinDocks(). This panel
        only points at it. */
     var joinBit="";
-    if(isLiveMine&&live.ready[i]){
-      joinBit='<div style="font-size:13.5px;opacity:.92;margin-top:8px">✅ <b>You\'re ready!</b></div>';
+    if(isLiveMine&&live.readyPending){
+      joinBit='<div style="font-size:13.5px;opacity:.92;margin-top:8px">⏳ <b>Waiting for the host to confirm you\'re ready…</b></div>';
+    } else if(isLiveMine&&live.ready[i]){
+      joinBit='<div style="font-size:13.5px;opacity:.92;margin-top:8px">✅ <b>You\'re ready!</b> <span style="opacity:.85">(the host confirmed it)</span></div>';
     }
     body='<div class="p-wait"><b style="font-size:18px">'+(live.mode==="player"?"You're in, "+esc(p.name)+" 👋":"Player "+(i+1))+'</b><br>Waiting for Start…'+joinBit+'</div>';
   } else if(state.phase==="finished"){
@@ -2321,16 +2385,17 @@ $("resetAllDesignBtn").addEventListener("click",function(){design=clone(DEFAULT_
    path per screen, nothing jumbled or mixed. Old hash links are NOT
    read: if a hash is present on load it is stripped and ignored, so
    /Admin#host can never open the wrong screen again. A room code may
-   ride along as ?room=1234 on player links only. */
+   ride along as ?room=1234 on the player links and (v37) the Host link. */
 var VIEWS=["host","p1","p2","join","admin"];
 var currentView="host"; /* the screen actually on display — set by switchView, read by the Host auto-join gate */
 function refreshNavLinks(){
   /* Topbar tabs are real <a> links to separate paths. Player hrefs carry
-     today's room code so the join form arrives filled in. */
+     today's room code so the join form arrives filled in; v37: the Host
+     href carries it too, so the TV joins the room directly as a viewer. */
   try{
     var code=getDailyRoomCode();
     var set=function(id,href){var el=$(id);if(el)el.setAttribute("href",href);};
-    set("nav-host","/host");
+    set("nav-host","/host?room="+code);
     set("nav-p1","/player1?room="+code);
     set("nav-p2","/player2?room="+code);
     set("nav-join","/join");
@@ -2401,8 +2466,12 @@ function screenPath(v){
   /* A screen's own path — put it after the site's address on the
      device that screen belongs to (e.g. the site address + /player1).
      Player paths carry today's room code, so an iPad opening one finds
-     its join form already filled in. */
-  return "/"+PATH_FOR_VIEW[v]+((v==="p1"||v==="p2")?("?room="+getDailyRoomCode()):"");
+     its join form already filled in. v37: the HOST path carries the code
+     too — a TV opening its link joins today's room directly as a viewer
+     instead of depending on lobby discovery, which could stall and leave
+     the Host deaf to every player state. The code is never SHOWN on the
+     Host screen; it only tells that screen which room to follow. */
+  return "/"+PATH_FOR_VIEW[v]+((v==="p1"||v==="p2"||v==="host")?("?room="+getDailyRoomCode()):"");
 }
 function routeFromURL(){
   /* v34 PATH-ONLY: screen comes from the PATH only. No hash is read,
