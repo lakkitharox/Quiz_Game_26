@@ -409,7 +409,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <button class="btn primary" id="hostLoginBtn" onclick="hostLoginSubmit()">Connect / Log in</button>
         <button class="btn" id="hostLoginCancelBtn" onclick="closeHostLogin(true)">Cancel</button>
       </div>
-      <p style="font-size:12.5px;opacity:.75">The code is typed masked and is never shown on this screen after you connect. This screen is also listening for Admin's room announcement in the background — if that finds the room first, this pop-up closes by itself.</p>
+      <p style="font-size:12.5px;opacity:.75">The code is typed masked and is never shown on this screen after you connect. This screen also checks the game-server table for today's room in the background — if that finds the room first, this pop-up closes by itself.</p>
     </div>
   </div>
 </section>
@@ -582,6 +582,23 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       </div>
       </div>
       <div class="admin-sec" data-sec="live" hidden>
+      <!-- GAME SERVER — Supabase tables (v40): the live game state lives in
+           the quiz_rooms table; every screen reads it, so a screen that
+           joins late or drops for a moment just reads the current state
+           again instead of waiting for a message that may never come. -->
+      <div class="panel">
+        <h3>☁️ Game server — Supabase</h3>
+        <p>The live game — room, players, Ready states, question, scores — is stored in the <b style="color:var(--text)">quiz_rooms</b> table in the quiz Supabase project. The Host (this Admin tab) writes it; the Host TV and both iPads read it and follow changes live. Player taps (join, answers, names, Ready) arrive as rows in <b style="color:var(--text)">quiz_room_events</b>, which the host picks up — including any that arrived while it was briefly offline.</p>
+        <div id="roomsStatus" style="font-size:13px;line-height:1.55;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:0 0 14px;background:var(--card2)">☁️ Checking…</div>
+        <div id="roomsSetup" hidden style="border:1.5px dashed var(--amber);border-radius:12px;padding:13px 14px;margin:0 0 14px">
+          <b style="font-size:14px">One-time setup — run this SQL once</b>
+          <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:6px 0 10px">Supabase project <b style="color:var(--text)">aylhgfftsokskgpgvemn</b> → SQL Editor → paste → Run. Creates the <b style="color:var(--text)">quiz_rooms</b> and <b style="color:var(--text)">quiz_room_events</b> tables and turns on live updates for them. Until it has run, no screen can connect — the app says so plainly instead of pretending.</p>
+          <pre id="roomsSql" style="white-space:pre-wrap;word-break:break-word;font-size:11.5px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px;overflow-x:auto;margin:0 0 10px"></pre>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="copyRoomsSqlBtn" type="button">Copy SQL</button><button class="btn small primary" id="retryRoomsBtn" type="button">I've run it — check again</button></div>
+        </div>
+      </div>
+      </div>
+      <div class="admin-sec" data-sec="live" hidden>
       <!-- LIVE MONITOR — connections, player info, timer, question -->
       <div class="panel">
         <h3>● Live monitor</h3>
@@ -690,7 +707,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>About</h3>
         <p><b style="color:var(--text)">Myth or Fact</b> — 2 players · 10 random statements per round · fastest correct tap scores.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v39</b> · 28 Nov 2026 — Host login pop-up: type the room code (masked) on the Host screen to connect it directly to the room — it shows connected only when the game host actually answers</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v40</b> · 28 Nov 2026 — Supabase is now the game server: the live game state lives in the quiz_rooms table and every screen reads it (player taps arrive as quiz_room_events rows), so a screen that joins late or drops for a moment picks the game up again from the table instead of waiting for a lost message. Needs the one-time SQL in Admin → Live → Game server.</p>
       </div>
       </div>
     </div>
@@ -820,9 +837,9 @@ var timerId=null;
 function getTotal(){return state.active.length||state.questions.length}
 function getQ(){return state.active[state.idx]||state.questions[state.idx]||null}
 
-/* ================= LIVE (Supabase Realtime Broadcast) ================= */
+/* ================= LIVE (v40: Supabase tables — see the game-server section below) ================= */
 var supa=null;
-var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],ready:[false,false],readyPending:false,readyWant:null,readyRetry:null,startPending:false,joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,lobbyChannel:null,lobbyTimer:null,joinedAt:0,heartbeatTimer:null,viewerFallbackTimer:null,joinedViaStored:false,forceRejoin:false,hostHbTimer:null,hostReconnectTimer:null,startPendingTimer:null,lastStateAt:0,joinPending:false,joinStartedAt:0,joinFromSlot:null,joinWaitTimer:null};
+var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],ready:[false,false],readyPending:false,readyWant:null,readyRetry:null,startPending:false,joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,joinedAt:0,heartbeatTimer:null,viewerFallbackTimer:null,viewerPollTimer:null,joinedViaStored:false,forceRejoin:false,hostHbTimer:null,hostReconnectTimer:null,startPendingTimer:null,lastStateAt:0,joinPending:false,joinStartedAt:0,joinFromSlot:null,joinWaitTimer:null,processedEv:{},lastRejectAt:{}};
 var pendingWantSlot=null; /* set by a /PlayerN screen's own join form so the host pins that exact slot */
 var joinDraft={"c0":"","n0":"","c1":"","n1":""}; /* v19: text typed into a player screen's join form, kept across stage re-renders (see render()) */
 var lastHostState=null, liveMyAnswer=null, liveMyIdx=-1, broadcastQueued=false;
@@ -838,13 +855,13 @@ var designPublished=false, hasRemoteDesign=false; /* set when THIS tab has press
    handler the moment a state broadcast ARRIVES, before any processing — so
    “nothing ever arrived” and “arrived but failed to apply” are finally two
    different, readable facts. */
-var diag={restore:"not checked yet",gate:"not evaluated yet",channel:"no channel yet",sync:"no sync message received yet",syncCount:0,stateRx:"no state broadcast received yet",publish:"nothing published from this tab yet",join:"—",supa:"not checked yet"};
+var diag={restore:"not checked yet",gate:"not evaluated yet",channel:"no channel yet",sync:"no sync message received yet",syncCount:0,stateRx:"no room state read yet",publish:"nothing published from this tab yet",join:"—",supa:"not checked yet"};
 var designScreenTs={host:0,player1:0,player2:0}; /* per-screen publish stamps — a screen only accepts a design for a screen if its stamp is not older than the one it already has, so publishing one screen can never roll another screen back */
 function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeString();}catch(e){return "—";}}
 function designFingerprint(k){var d=liveDesign[k];if(!d)return k+": —";var bg=d.bgMode==="image"?"image":d.bgMode==="color"?("solid "+(d.bgColor||"")):("grad "+(d.bg1||"")+" → "+(d.bg2||""));return bg+(d.headline?(" · headline “"+d.headline+"”"):" · no headline");}
 function diagLines(admin){
   var L=[];
-  L.push(["Build","v39"]);
+  L.push(["Build","v40"]);
   L.push(["Live library (Supabase)",diag.supa]);
   L.push(["This screen's role",live.mode==="host"?"Host (room owner)":live.mode==="player"?("Player "+(live.mySlot!==null?live.mySlot+1:"?")):live.mode==="viewer"?"Host display (viewer)":"Offline / demo"]);
   L.push(["Room channel",diag.channel]);
@@ -852,7 +869,7 @@ function diagLines(admin){
   else L.push(["Room code received",live.code?"yes (kept hidden on this screen)":(earlyRoomCode?"yes, from this screen's link (kept hidden)":"no — looking for the game by discovery")]);
   L.push(["Join gate (last check)",diag.gate]);
   L.push(["Design read from this browser's storage at load",diag.restore]);
-  L.push(["Last state broadcast arrived (raw)",diag.stateRx]);
+  L.push(["Last room state read (raw)",diag.stateRx]);
   L.push(["Last sync message received",diag.sync+(diag.syncCount?" · "+diag.syncCount+" state message"+(diag.syncCount===1?"":"s")+" so far":"")]);
   L.push(["Last publish from this tab",diag.publish]);
   if(diag.join&&diag.join!=="—")L.push(["Player join",diag.join]);
@@ -863,7 +880,7 @@ function diagLines(admin){
   return L;
 }
 function diagHTML(admin){
-  return '<b class="diag-t">🔎 Diagnostics — Build v39</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
+  return '<b class="diag-t">🔎 Diagnostics — Build v40</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
 }
 function renderDiag(){
   var ad=$("adminDiag"); if(ad)ad.innerHTML=diagHTML(true);
@@ -1068,14 +1085,92 @@ function prepareRememberedPlayer(){
     joinDraft["n"+slot]=""; /* name always fresh — never carried into a new session */
   }
 }
-function channelName(code){return "quiz-room-"+code}
-function broadcastState(){
-  if(live.mode!=="host"||!live.channel||!live.connected) return Promise.resolve(false);
+/* ================= SUPABASE AS THE GAME SERVER (v40) =================
+   Up to v39 the game state existed ONLY inside Realtime Broadcast
+   messages: the host tab re-sent it and every other screen had to catch
+   each message. A screen that joined a second late, dropped for a
+   moment, or whose host tab hiccuped missed the message and sat stuck —
+   the Host TV never hearing a single state was the final straw.
+   v40 makes Supabase the server instead:
+   • public.quiz_rooms — ONE ROW PER ROOM. The host (Admin tab) upserts
+     the full game state into it; the Host TV and both iPads READ the row
+     and follow it with Postgres Changes. Joining late or reconnecting
+     just means reading the row again — nothing can be “missed”.
+   • public.quiz_room_events — player → host taps (join, answer, name,
+     Ready, ping) are INSERTED as rows. The host follows inserts live AND
+     fetches any unprocessed rows whenever it (re)connects, then deletes
+     each row it has handled — so a tap sent while the host was briefly
+     away is still picked up, and a join rejection is a row addressed to
+     that one iPad (to_id), never a broadcast that can be lost.
+   The publishable key cannot create tables, so both tables need the
+   one-time SQL in Admin → Live → Game server. Until it has run, every
+   connect path fails honestly: roomsSource becomes “setup”, the setup
+   panel appears, and the persistent error line says the server is not
+   set up — no screen ever claims to be connected (the user's rule). */
+var ROOMS_TABLE="quiz_rooms";
+var EVENTS_TABLE="quiz_room_events";
+var ROOMS_SQL="create table if not exists public.quiz_rooms (\n  code text primary key,\n  state jsonb not null default '{}'::jsonb,\n  time_left integer not null default 0,\n  updated_at timestamptz not null default now()\n);\ncreate table if not exists public.quiz_room_events (\n  id bigint generated by default as identity primary key,\n  code text not null,\n  client_id text not null,\n  to_id text,\n  type text not null,\n  payload jsonb not null default '{}'::jsonb,\n  created_at timestamptz not null default now()\n);\ncreate index if not exists quiz_room_events_code_idx on public.quiz_room_events (code, id);\nalter table public.quiz_rooms enable row level security;\nalter table public.quiz_room_events enable row level security;\ndrop policy if exists \"Quiz rooms read\" on public.quiz_rooms;\ndrop policy if exists \"Quiz rooms insert\" on public.quiz_rooms;\ndrop policy if exists \"Quiz rooms update\" on public.quiz_rooms;\ndrop policy if exists \"Quiz rooms delete\" on public.quiz_rooms;\ncreate policy \"Quiz rooms read\" on public.quiz_rooms for select using (true);\ncreate policy \"Quiz rooms insert\" on public.quiz_rooms for insert with check (true);\ncreate policy \"Quiz rooms update\" on public.quiz_rooms for update using (true) with check (true);\ncreate policy \"Quiz rooms delete\" on public.quiz_rooms for delete using (true);\ndrop policy if exists \"Quiz room events read\" on public.quiz_room_events;\ndrop policy if exists \"Quiz room events insert\" on public.quiz_room_events;\ndrop policy if exists \"Quiz room events update\" on public.quiz_room_events;\ndrop policy if exists \"Quiz room events delete\" on public.quiz_room_events;\ncreate policy \"Quiz room events read\" on public.quiz_room_events for select using (true);\ncreate policy \"Quiz room events insert\" on public.quiz_room_events for insert with check (true);\ncreate policy \"Quiz room events update\" on public.quiz_room_events for update using (true) with check (true);\ncreate policy \"Quiz room events delete\" on public.quiz_room_events for delete using (true);\ndo $$ begin alter publication supabase_realtime add table public.quiz_rooms; exception when duplicate_object then null; end $$;\ndo $$ begin alter publication supabase_realtime add table public.quiz_room_events; exception when duplicate_object then null; end $$;";
+var roomsSource="checking"; /* checking | ok | setup | error */
+function renderRoomsStatus(){
+  var box=$("roomsStatus"); if(!box)return;
+  if(roomsSource==="ok")box.innerHTML="☁️ <b style='color:#16A34A'>Supabase is the game server</b> — the live game state is stored in the quiz_rooms table and every screen reads it from there.";
+  else if(roomsSource==="setup")box.innerHTML="⚠️ <b>Not set up yet</b> — the game-server tables don't exist in the quiz Supabase project, so no screen can connect. Run the SQL below once.";
+  else if(roomsSource==="error")box.innerHTML="⚠️ Couldn't reach the game-server tables just now — screens keep retrying by themselves; tap “I've run it — check again” to re-check.";
+  else box.innerHTML="☁️ Checking the game server…";
+  var setup=$("roomsSetup"); if(setup)setup.hidden=roomsSource!=="setup";
+  var pre=$("roomsSql"); if(pre)pre.textContent=ROOMS_SQL;
+}
+function noteRoomsError(err){
+  /* A failed rooms/events call sorts itself into the one fact the user
+     needs: tables missing (→ show the SQL) or a transient failure. */
+  if(err&&isBankTableMissing(err)){if(roomsSource!=="setup"){roomsSource="setup";renderRoomsStatus();}return "setup";}
+  if(roomsSource==="checking"){roomsSource="error";renderRoomsStatus();}
+  return "error";
+}
+function markRoomsOk(){if(roomsSource!=="ok"){roomsSource="ok";renderRoomsStatus();}}
+function roomsSetupErrorText(){
+  return "✕ The Supabase game server is not set up yet — the quiz_rooms table doesn't exist, so no screen can connect. In Admin → Live → Game server, run the one-time SQL, then try again. Nothing is connected until that is done.";
+}
+function dbChannel(s,topic){
+  /* Build a Postgres-Changes channel on a clean slate (same lesson as
+     the old freshRoomChannel): supabase-js hands back the EXISTING
+     channel when a topic is requested twice, handlers and all — so a
+     leftover channel from an earlier role in this tab could be returned
+     with a subscribe callback that never fires again. Remove every
+     channel on this topic first, then create ours. */
+  try{
+    var existing=s.getChannels?s.getChannels():[];
+    existing.slice().forEach(function(c){if(c&&(c.topic===topic||c.topic==="realtime:"+topic)){try{s.removeChannel(c);}catch(e){}}});
+  }catch(e){}
+  return s.channel(topic);
+}
+function fetchRoomRow(code){
+  /* Read the room's row — THE way a screen learns the game in v40.
+     Resolves the row, or null when there is no such room (or the read
+     failed; a missing table is recorded in roomsSource either way). */
+  var s=getSupa(); if(!s)return Promise.resolve(null);
+  return s.from(ROOMS_TABLE).select("code,state,time_left,updated_at").eq("code",code).maybeSingle().then(function(res){
+    if(res.error){noteRoomsError(res.error);return null;}
+    markRoomsOk();
+    return res.data||null;
+  }).catch(function(){return null;});
+}
+function sendRoomEvent(type,payload,toId){
+  /* A player → host tap, stored as a row the host cannot miss. Resolves
+     true only when the row actually landed in the table. */
+  var s=getSupa(); if(!s||!live.code)return Promise.resolve(false);
+  return s.from(EVENTS_TABLE).insert({code:live.code,client_id:live.clientId,to_id:toId||null,type:type,payload:payload||{}}).then(function(res){
+    if(res.error){noteRoomsError(res.error);return false;}
+    markRoomsOk(); return true;
+  }).catch(function(){return false;});
+}
+function buildStatePayload(){
   var q=getQ();
-  var payload={phase:state.phase,idx:state.idx,total:getTotal(),sessionId:state.sessionId,
+  return {phase:state.phase,idx:state.idx,total:getTotal(),sessionId:state.sessionId,
     questionText:(state.phase==="playing"||state.phase==="reveal")&&q?q.text:null,
     correctAnswer:(state.phase==="reveal"||state.phase==="finished")&&q?q.answer:null,
     players:state.players.map(function(p){return{name:p.name,score:p.score,correct:p.correct,streak:p.streak}}),
+    occupied:live.occupied.slice(), /* v40: who sits in each slot (client ids) — a player confirms its own seat from the room row, and sees a reset the moment its id leaves the row */
     ready:live.ready.slice(), /* v30: per-player Ready flags — Host TV, Admin monitor and the other screens all show who is ready */
     answersLocked:[state.answers[0]!==null,state.answers[1]!==null],
     playerAnswers:state.phase==="reveal"?state.answers.slice():[null,null],
@@ -1084,69 +1179,98 @@ function broadcastState(){
     orderMode:state.orderMode, timerStyle:state.timerStyle, timeoutMode:state.timeoutMode, paused:state.paused, strict2p:state.strict2p, gameMode:state.gameMode,
     buttonStyle:state.buttonStyle, buttonScale:state.buttonScale, trueColor:state.trueColor, falseColor:state.falseColor, trueLabel:state.trueLabel, falseLabel:state.falseLabel,
     design:clone(liveDesign), screenTs:clone(designScreenTs), ts:Date.now()};
-  /* v35: return the send's own verdict — supabase resolves "ok" only when
-     the message actually went out on the live socket. A caller that makes a
-     claim to the user (Start) checks this instead of assuming delivery. */
-  try{
-    var sent=live.channel.send({type:"broadcast",event:"state",payload:payload});
-    if(sent&&typeof sent.then==="function")return sent.then(function(r){return r==="ok";},function(){return false;});
-    return Promise.resolve(true);
-  }catch(e){return Promise.resolve(false);}
+}
+function broadcastState(){
+  /* v40: “broadcast” now means WRITE THE ROOM ROW. Every screen reads
+     the state back out of the table (immediately on join, then live via
+     Postgres Changes), so delivery no longer depends on a message
+     arriving at the right second. Resolves true only when the write
+     actually landed — callers that make a claim to the user (Start)
+     check this instead of assuming delivery (the v35 rule, kept). */
+  if(live.mode!=="host"||!live.code) return Promise.resolve(false);
+  var s=getSupa(); if(!s)return Promise.resolve(false);
+  var payload=buildStatePayload();
+  return s.from(ROOMS_TABLE).upsert({code:live.code,state:payload,time_left:state.timeLeft,updated_at:new Date().toISOString()},{onConflict:"code"}).then(function(res){
+    if(res.error){noteRoomsError(res.error);return false;}
+    markRoomsOk(); return true;
+  }).catch(function(){return false;});
 }
 function queueBroadcast(){ if(broadcastQueued) return; broadcastQueued=true; setTimeout(function(){broadcastQueued=false;broadcastState();},60); }
-function broadcastTick(){ if(live.mode!=="host"||!live.channel||!live.connected) return; try{live.channel.send({type:"broadcast",event:"tick",payload:{timeLeft:state.timeLeft,timerDur:state.timerDur}});}catch(e){} }
-/* ================= HOST CHANNEL + AUTO-RECONNECT (v35) =================
-   v34 and earlier built the host's room channel inline in hostCreateRoom
-   with a bare s.channel() and, when the socket dropped, the subscribe
-   callback just set connected=false and gave up: the Admin tab stopped
-   broadcasting forever while its own screen kept looking alive — the
-   players and the Host TV froze mid-lobby and Admin's local game (if any)
-   reached nobody. The channel now gets the same clean-slate treatment as
-   every other role (freshRoomChannel), and a dropped host channel rebuilds
-   itself and re-broadcasts the full current state the moment it is back,
-   so every screen converges on the real game again by itself. */
-function hostOpenChannel(isReconnect){
+function broadcastTick(){
+  /* v40: the per-second timer tick is a one-column update of the room
+     row (time_left) — cheap, and every screen's row subscription picks
+     it up, so the countdown stays in step everywhere. */
+  if(live.mode!=="host"||!live.code||!live.connected) return;
   var s=getSupa(); if(!s)return;
-  var ch=freshRoomChannel(s,live.code); live.channel=ch;
-  ch.on("broadcast",{event:"join"},function(m){handleHostJoin(m.payload||{})});
-  ch.on("broadcast",{event:"answer"},function(m){handleHostAnswer(m.payload||{})});
-  ch.on("broadcast",{event:"name-update"},function(m){var pl=m.payload||{};var sl=+pl.slot;if(sl!==0&&sl!==1)return;if(live.occupied[sl]!==pl.clientId)return;var nm=String(pl.name||"").trim().slice(0,18);if(!nm)return;state.players[sl].name=nm;live.ready[sl]=false;render();queueBroadcast();toast(nm+" set their name for this session");}); /* v21: per-session name change from an iPad already in the room — no code needed again · v30: a fresh name clears Ready until they tap it again */
-  ch.on("broadcast",{event:"ready"},function(m){var pl=m.payload||{};var sl=+pl.slot;if(sl!==0&&sl!==1)return;if(live.occupied[sl]!==pl.clientId)return;live.ready[sl]=!!pl.ready;render();queueBroadcast();if(pl.ready)toast(state.players[sl].name+" is ready ✅");}); /* v30: a player tapped “I'm Ready” on their iPad */
-  ch.on("broadcast",{event:"ping"},function(m){var pl=m.payload||{};var sl=live.occupied.indexOf(pl.clientId);if(sl!==-1){live.lastSeen[sl]=Date.now();if(live.stale[sl]){live.stale[sl]=false;render();}}});
-  ch.on("broadcast",{event:"request-sync"},function(){queueBroadcast()});
-  ch.on("broadcast",{event:"viewer-hello"},function(){queueBroadcast()}); /* a display screen announcing itself gets the full state at once */
+  try{s.from(ROOMS_TABLE).update({time_left:state.timeLeft}).eq("code",live.code).then(function(res){if(res&&res.error)noteRoomsError(res.error);},function(){});}catch(e){}
+}
+/* ================= HOST EVENTS + AUTO-RECONNECT (v40) =================
+   The host no longer listens on a broadcast channel. It follows INSERTs
+   on quiz_room_events for its room (Postgres Changes) and — crucially —
+   FETCHES every unprocessed event row for the room each time it
+   (re)connects, so taps that landed while this tab was briefly offline
+   are still handled, in order. Each handled row is deleted, so the
+   backlog fetch stays tiny and a row is never handled twice (an
+   in-memory id set also dedupes a row that arrives both ways at once).
+   A dropped events subscription rebuilds itself and re-writes the full
+   room row the moment it is back, so every screen converges on the real
+   game again by itself (the v35 reconnect rule, kept). */
+function processRoomEvent(ev){
+  if(live.mode!=="host"||!ev)return;
+  if(ev.to_id)return; /* addressed to one player (e.g. a join rejection) — not the host's to handle, and not the host's to delete */
+  if(ev.id){if(live.processedEv[ev.id])return;live.processedEv[ev.id]=1;}
+  var p=ev.payload||{}; p.clientId=ev.client_id;
+  if(ev.type==="join")handleHostJoin(p);
+  else if(ev.type==="answer")handleHostAnswer(p);
+  else if(ev.type==="name"){var sl=+p.slot;if(sl===0||sl===1){if(live.occupied[sl]===p.clientId){var nm=String(p.name||"").trim().slice(0,18);if(nm){state.players[sl].name=nm;live.ready[sl]=false;live.lastSeen[sl]=Date.now();live.stale[sl]=false;render();queueBroadcast();toast(nm+" set their name for this session");}}}} /* v21: per-session name change from an iPad already in the room — no code needed again · v30: a fresh name clears Ready until they tap it again */
+  else if(ev.type==="ready"){var sl2=+p.slot;if(sl2===0||sl2===1){if(live.occupied[sl2]===p.clientId){live.ready[sl2]=!!p.ready;live.lastSeen[sl2]=Date.now();live.stale[sl2]=false;render();queueBroadcast();if(p.ready)toast(state.players[sl2].name+" is ready ✅");}}} /* v30: a player tapped “I'm Ready” on their iPad */
+  else if(ev.type==="ping"){var sl3=live.occupied.indexOf(p.clientId);if(sl3!==-1){live.lastSeen[sl3]=Date.now();if(live.stale[sl3]){live.stale[sl3]=false;render();}}}
+  if(ev.id){var s=getSupa();if(s){try{s.from(EVENTS_TABLE).delete().eq("id",ev.id).then(function(){},function(){});}catch(e){}}}
+}
+function hostSubscribeEvents(isReconnect){
+  var s=getSupa(); if(!s)return;
+  var ch=dbChannel(s,"db-events-"+live.code+"-"+live.clientId); live.channel=ch;
+  ch.on("postgres_changes",{event:"INSERT",schema:"public",table:EVENTS_TABLE,filter:"code=eq."+live.code},function(pl){if(pl&&pl.new)processRoomEvent(pl.new);});
   ch.subscribe(function(status){
     if(live.channel!==ch)return; /* a channel replaced by a reconnect must not touch live state */
-    diag.channel="room channel (as host): "+status+" · "+diagTime(Date.now()); diagNote();
+    diag.channel="room events table (as host): "+status+" · "+diagTime(Date.now()); diagNote();
     if(status==="SUBSCRIBED"){
-      live.connected=true; clearLiveError(); queueBroadcast(); /* re-broadcast the full state — on a reconnect this is what un-freezes every other screen */
-      if(isReconnect)toast("Reconnected to the room — the current game state was re-sent to every screen");
+      live.connected=true; clearLiveError(); queueBroadcast(); /* re-write the full room row — on a reconnect this is what un-freezes every other screen */
+      if(isReconnect)toast("Reconnected to the room — the current game state was saved to the room again for every screen");
       else toast("Today's room QUIZ-"+live.code+" is open — this one code works all day!");
       if(live.startPending){live.startPending=false;startGame();} /* Start was pressed before the room connected — start NOW, for real, on every screen */
     }
     else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){
       live.connected=false;
       if(live.mode==="host"){
-        if(live.startPending){live.startPending=false;disarmStartPendingTimeout();setLiveError("✕ Game NOT started — this tab lost its connection to the room before the game could start. Wait until the connection line shows Live, then press Start again.");}
-        else setLiveError("✕ This tab lost its connection to the room — the Host screen and the iPads are NOT receiving updates. Reconnecting automatically…");
+        if(live.startPending){live.startPending=false;disarmStartPendingTimeout();setLiveError("✕ Game NOT started — this tab lost its connection to the game server before the game could start. Wait until the connection line shows Live, then press Start again.");}
+        else setLiveError("✕ This tab lost its connection to the game server — the Host screen and the iPads are NOT receiving updates. Reconnecting automatically…");
         scheduleHostReconnect();
       }
     }
     updateLiveUI(); render();
   });
+  /* Backlog: rows that arrived while this tab wasn't listening. They are
+     handled in id order; processRoomEvent deletes each one as it goes. */
+  s.from(EVENTS_TABLE).select("*").eq("code",live.code).is("to_id",null).order("id",{ascending:true}).limit(200).then(function(res){
+    if(res.error){noteRoomsError(res.error);return;}
+    markRoomsOk();
+    (res.data||[]).forEach(function(ev){processRoomEvent(ev);});
+  }).catch(function(){});
 }
 function scheduleHostReconnect(){
   if(live.hostReconnectTimer)return;
   live.hostReconnectTimer=setTimeout(function(){
     live.hostReconnectTimer=null;
     if(live.mode!=="host")return;
-    hostOpenChannel(true);
+    hostSubscribeEvents(true);
   },2500);
 }
 function hostReconnect(){
   if(live.mode!=="host")return;
   if(live.hostReconnectTimer){clearTimeout(live.hostReconnectTimer);live.hostReconnectTimer=null;}
-  hostOpenChannel(true);
+  broadcastState(); /* write the current game into the room row again… */
+  hostSubscribeEvents(true); /* …and re-follow the events table (its SUBSCRIBED handler re-writes the row once more) */
 }
 function hostCreateRoom(){
   var s=getSupa();
@@ -1159,9 +1283,26 @@ function hostCreateRoom(){
      create that finds a heartbeat from ANOTHER tab less than 12s old
      refuses, and says why, instead of silently splitting the room. */
   try{var hb0=window.localStorage?JSON.parse(localStorage.getItem(HOST_HB_KEY)||"null"):null;if(hb0&&hb0.code===getDailyRoomCode()&&hb0.clientId!==live.clientId&&(Date.now()-hb0.ts)<12000){toast("⚠ Another tab in this browser is already hosting today's room — control the game from that tab, or close it and try again.");return;}}catch(e){}
-  live.code=getDailyRoomCode(); live.mode="host"; live.connected=false; live.occupied=[null,null]; live.ready=[false,false]; live.lastSeen=[0,0]; live.stale=[false,false]; /* v21: today's code — the same room all day, reopening never changes it */
-  try{if(window.localStorage)localStorage.setItem(OPEN_ROOM_KEY,live.code);}catch(e){} /* v19: same-browser Host tabs can find this room even if an announce is missed */
-  hostOpenChannel(false);
+  live.code=getDailyRoomCode(); live.mode="host"; live.connected=false; live.occupied=[null,null]; live.ready=[false,false]; live.lastSeen=[0,0]; live.stale=[false,false]; live.processedEv={}; /* v21: today's code — the same room all day, reopening never changes it */
+  try{if(window.localStorage)localStorage.setItem(OPEN_ROOM_KEY,live.code);}catch(e){} /* v19: same-browser Host tabs can find this room in this browser's storage too */
+  /* v40: creating the room = writing its row into quiz_rooms. Stale event
+     rows from an earlier closed room are cleared first, then the row is
+     written, then the events subscription starts. If the write fails
+     because the tables don't exist yet, the room is NOT created and the
+     app says so — with the one-time SQL one tap away in Admin → Live. */
+  try{s.from(EVENTS_TABLE).delete().eq("code",live.code).then(function(){},function(){});}catch(e){}
+  broadcastState().then(function(wrote){
+    if(live.mode!=="host")return;
+    if(!wrote&&roomsSource==="setup"){
+      live.mode="offline"; live.code=null; live.connected=false;
+      if(live.startPending){live.startPending=false;disarmStartPendingTimeout();setLiveError("✕ Game NOT started — "+roomsSetupErrorText());}
+      else setLiveError(roomsSetupErrorText());
+      toast("✕ Room NOT created — the game-server tables are not set up yet");
+      updateLiveUI(); render();
+      return;
+    }
+    hostSubscribeEvents(false);
+  });
   if(live.presenceTimer)clearInterval(live.presenceTimer);
   live.presenceTimer=setInterval(function(){
     if(live.mode!=="host")return;
@@ -1177,10 +1318,10 @@ function hostCreateRoom(){
     else if(!$("view-admin").hidden)renderLiveMonitor();
   },3000);
   updateLiveUI(); render();
-  stopHostDiscovery(); hostAnnounceStart();
-  /* Heartbeat: re-send the full state every 10s so a display screen that
-     missed a broadcast (or whose request-sync raced) still converges on the
-     live game within seconds instead of sitting in the lobby. */
+  stopHostDiscovery();
+  /* Heartbeat: re-write the full room row every 10s, so the row's
+     updated_at stays fresh and any screen that somehow missed a change
+     still converges on the live game within seconds. */
   if(live.heartbeatTimer)clearInterval(live.heartbeatTimer);
   live.heartbeatTimer=setInterval(function(){if(live.mode==="host"&&live.connected)broadcastState();},10000);
   /* v32: host heartbeat for the single-host guard above — refreshed every
@@ -1190,19 +1331,13 @@ function hostCreateRoom(){
   writeHb(); live.hostHbTimer=setInterval(writeHb,4000);
 }
 /* ================= ROOM DISCOVERY (standalone Host finds the game) =================
-   The host announces its room on a well-known lobby channel. A Host screen
-   opened on its own — even from the bare root address, with no room in its
-   link — asks on that channel, learns the code internally, and joins the room
-   as a display viewer. The code is never printed on the Host screen. */
-function hostAnnounceStart(){
-  var s=getSupa(); if(!s||live.lobbyChannel)return;
-  var ch=s.channel("quiz-host-lobby",{config:{broadcast:{self:false}}}); live.lobbyChannel=ch;
-  var announce=function(){ if(live.mode==="host"&&live.code){try{ch.send({type:"broadcast",event:"room-announce",payload:{code:live.code,clientId:live.clientId}});}catch(e){}} };
-  ch.on("broadcast",{event:"host-discover"},function(){announce();});
-  ch.subscribe(function(status){
-    if(status==="SUBSCRIBED"){ announce(); if(live.lobbyTimer)clearInterval(live.lobbyTimer); live.lobbyTimer=setInterval(announce,5000); }
-  });
-}
+   v40: there is no announce to miss any more. Today's room code is
+   derived from the date, so a Host screen opened on its own — even from
+   the bare root address, with no room in its link — simply READS the
+   quiz_rooms table for today's code (plus the same-browser stored code,
+   the v19 path) every few seconds until the room's row exists, then
+   follows it as a display viewer. The code is never printed on the Host
+   screen. */
 var discovery={channel:null,timer:null,active:false,stallTimer:null,fails:0,gotSub:false};
 /* v19 — second room-finding path for a standalone Host in the SAME browser
    as Admin (the usual one-laptop setup): creating a room also remembers its
@@ -1226,63 +1361,49 @@ function storedRoomCode(){
 function startHostDiscovery(){
   if(discovery.active||live.mode!=="offline")return;
   var s=getSupa(); if(!s)return;
-  discovery.active=true; discovery.gotSub=false;
-  var ch=s.channel("quiz-host-lobby",{config:{broadcast:{self:false}}}); discovery.channel=ch;
-  ch.on("broadcast",{event:"room-announce"},function(m){var pl=m.payload||{};var code=normalizeCode(pl.code||"");if(code.length>=3&&live.mode==="offline"){discovery.fails=0;stopHostDiscovery();hostViewerJoin(code);}});
-  /* v37 STALL DEADLINE: before, discovery.active was set the moment the
-     channel was created and the ONLY exits were the subscribe callback's
-     own branches — if that subscribe stalled (the callback simply never
-     fired, e.g. a half-open socket on a TV browser), nothing ever retried:
-     the 6s watchdog called maybeHostViewer → startHostDiscovery, which
-     returned at once because active was already true, so the Host sat on
-     “Connecting…” forever and never heard a single player state. Now a
-     subscribe that hasn't completed within 10s is torn down and retried,
-     and repeated failures say so on screen instead of spinning silently. */
-  if(discovery.stallTimer)clearTimeout(discovery.stallTimer);
-  discovery.stallTimer=setTimeout(function(){
-    discovery.stallTimer=null;
-    if(!discovery.active||discovery.channel!==ch||discovery.gotSub||live.mode!=="offline")return;
-    discovery.fails++;
-    if(discovery.fails>=3)setLiveError("✕ This screen can't reach the game room — check this device's internet connection. It keeps trying by itself, and this message clears the moment it connects.");
-    diag.channel="discovery subscribe stalled (no answer in 10s) — restarting discovery · "+diagTime(Date.now()); diagNote();
-    stopHostDiscovery();
-    setTimeout(function(){if(currentView==="host"&&live.mode==="offline")startHostDiscovery();},3000);
-  },10000);
-  ch.subscribe(function(status){
-    if(discovery.channel!==ch)return; /* a channel replaced by a restart must not drive state — its late CLOSED used to be counted as a fresh failure */
-    diag.channel="discovery (host lobby) channel: "+status+" · "+diagTime(Date.now()); diagNote();
-    if(status==="SUBSCRIBED"){
-      discovery.gotSub=true; discovery.fails=0;
-      if(discovery.stallTimer){clearTimeout(discovery.stallTimer);discovery.stallTimer=null;}
-      var ask=function(){
-        if(live.mode!=="offline"){stopHostDiscovery();return;}
-        /* v19: same-browser fallback — if Admin in another tab of this
-           browser already opened a room, its code is in storage; join it
-           directly instead of waiting for an announce that may be missed. */
-        var sc=storedRoomCode();
-        if(sc){stopHostDiscovery();hostViewerJoin(sc,true);return;}
-        try{ch.send({type:"broadcast",event:"host-discover",payload:{clientId:live.clientId}});}catch(e){}
-      };
-      ask();
-      if(live.mode!=="offline")return; /* the first ask already joined via the stored code — no discovery interval needed */
-      if(discovery.timer)clearInterval(discovery.timer);
-      discovery.timer=setInterval(function(){if(live.mode!=="offline"){stopHostDiscovery();return;}ask();},3000);
-    } else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){
-      /* v18: a dead discovery channel used to stay dead — the Host then sat
-         in the lobby forever with no way to find the room. Tear it down and
-         start discovery again while this tab is still a waiting Host. */
-      discovery.fails++;
-      if(discovery.fails>=3)setLiveError("✕ This screen can't reach the game room — check this device's internet connection. It keeps trying by itself, and this message clears the moment it connects.");
-      stopHostDiscovery();
-      setTimeout(function(){if(currentView==="host"&&live.mode==="offline")startHostDiscovery();},3000);
-    }
-  });
+  discovery.active=true; discovery.gotSub=true; discovery.channel=null;
+  diag.channel="discovery: reading the rooms table for today's room · "+diagTime(Date.now()); diagNote();
+  var check=function(){
+    if(live.mode!=="offline"){stopHostDiscovery();return;}
+    /* v19 same-browser path first (a room Admin opened in another tab of
+       this browser), then today's derived code — both are plain table
+       reads, so there is no announcement left to miss. */
+    var sc=storedRoomCode();
+    var cand=sc||getDailyRoomCode();
+    fetchRoomRow(cand).then(function(row){
+      if(live.mode!=="offline")return;
+      if(row){discovery.fails=0;stopHostDiscovery();hostViewerJoin(cand,!!sc);return;}
+      if(roomsSource==="setup"){setLiveError(roomsSetupErrorText());return;}
+      /* No row yet is NOT an error — Admin may simply not have created
+         today's room yet. The poll keeps checking every 4s. */
+      if(sc&&cand!==getDailyRoomCode()){
+        fetchRoomRow(getDailyRoomCode()).then(function(row2){
+          if(live.mode!=="offline")return;
+          if(row2){discovery.fails=0;stopHostDiscovery();hostViewerJoin(getDailyRoomCode(),false);}
+        });
+      }
+    });
+  };
+  check();
+  if(discovery.timer)clearInterval(discovery.timer);
+  discovery.timer=setInterval(function(){if(live.mode!=="offline"){stopHostDiscovery();return;}check();},4000);
 }
 function stopHostDiscovery(){
   discovery.active=false;
   if(discovery.stallTimer){clearTimeout(discovery.stallTimer);discovery.stallTimer=null;}
   if(discovery.timer){clearInterval(discovery.timer);discovery.timer=null;}
   if(discovery.channel){var ch=discovery.channel;discovery.channel=null;try{var s=getSupa();if(s)s.removeChannel(ch);}catch(e){}}
+}
+function rejectJoin(clientId,reason){
+  /* v40: a rejection is an event row ADDRESSED to that one iPad (to_id).
+     It stays in the table until that iPad reads and deletes it, so it
+     cannot be lost the way a broadcast could. Throttled per iPad — a
+     refused iPad re-knocks every few seconds, and one stored reason is
+     enough for it to act on. */
+  var now=Date.now();
+  if(now-(live.lastRejectAt[clientId]||0)<5000)return;
+  live.lastRejectAt[clientId]=now;
+  sendRoomEvent("join-rejected",{reason:reason},clientId);
 }
 function handleHostJoin(p){
   if(live.mode!=="host"||!p.clientId) return;
@@ -1295,22 +1416,25 @@ function handleHostJoin(p){
     var want=(p.wantSlot===0||p.wantSlot===1)?p.wantSlot:null;
     if(want!==null){
       if(live.occupied[want]===null)slot=want;
-      else { try{live.channel.send({type:"broadcast",event:"join-rejected",payload:{clientId:p.clientId,reason:"Player "+(want+1)+" is already taken on this device set — that iPad is already in. Use the other player's screen, or reset Player "+(want+1)+" in Admin."}});}catch(e){} diag.join=name+" asked for Player "+(want+1)+" but that slot is taken — rejected · "+diagTime(Date.now()); diagNote(); return; }
+      else { rejectJoin(p.clientId,"Player "+(want+1)+" is already taken on this device set — that iPad is already in. Use the other player's screen, or reset Player "+(want+1)+" in Admin."); diag.join=name+" asked for Player "+(want+1)+" but that slot is taken — rejected · "+diagTime(Date.now()); diagNote(); return; }
     } else {
       slot=live.occupied[0]===null?0:live.occupied[1]===null?1:-1;
-      if(slot===-1){try{live.channel.send({type:"broadcast",event:"join-rejected",payload:{clientId:p.clientId,reason:state.strict2p?"Strict 2-Player mode — both player slots are taken. This game takes exactly 2 players; Admin must reset a player to free a slot.":"Room is full — two players are already in."}});}catch(e){} diag.join=name+" tried to join but both slots are taken — refused (strict 2-player) · "+diagTime(Date.now()); diagNote(); return;}
+      if(slot===-1){rejectJoin(p.clientId,state.strict2p?"Strict 2-Player mode — both player slots are taken. This game takes exactly 2 players; Admin must reset a player to free a slot.":"Room is full — two players are already in."); diag.join=name+" tried to join but both slots are taken — refused (strict 2-player) · "+diagTime(Date.now()); diagNote(); return;}
     }
     live.occupied[slot]=p.clientId; live.ready[slot]=false; /* v30: a fresh join is never “ready” until they tap I'm Ready */
   }
   diag.join=name+" joined as Player "+(slot+1)+(p.wantSlot===0||p.wantSlot===1?" (pinned by the Player "+(p.wantSlot+1)+" screen)":" (first free slot)")+" · "+diagTime(Date.now()); diagNote();
   live.lastSeen[slot]=Date.now(); live.stale[slot]=false;
   state.players[slot].name=name;
-  try{live.channel.send({type:"broadcast",event:"joined",payload:{clientId:p.clientId,slot:slot,name:name,code:live.code}});}catch(e){}
+  /* v40: no “joined” message — writing the room row with this iPad's id
+     in occupied[] IS the confirmation; the iPad sees its own seat in the
+     row it reads and only then calls itself in (the v38 rule, kept). */
   render(); queueBroadcast(); updateLiveUI(); toast(name+" joined 📱 — waiting for them to tap I'm Ready");
 }
 function handleHostAnswer(p){
   if(live.mode!=="host"||state.phase!=="playing") return;
   var slot=+p.slot; if(slot!==0&&slot!==1) return;
+  if(typeof p.idx==="number"&&p.idx!==state.idx) return; /* v40: a stored answer row for an earlier question (e.g. retried late) must never answer the current one */
   if(live.occupied[slot]!==p.clientId||state.answers[slot]!==null) return;
   live.lastSeen[slot]=Date.now(); live.stale[slot]=false;
   state.answers[slot]=!!p.value;
@@ -1376,138 +1500,194 @@ function playerJoinFrom(prefix){
   savePlayerDaySession(code,live.wantSlot); /* v21: remember the CODE (and slot) for the whole day — the name is per-session and is never stored */
   setStatus("Connecting to the room…");
   armJoinWaitNotice(); syncJoinBusyUI();
-  var ch=freshRoomChannel(s,code); live.channel=ch;
-  ch.on("broadcast",{event:"state"},onStateBroadcast);
-  ch.on("broadcast",{event:"tick"},function(m){var pl=m.payload||{};state.timeLeft=pl.timeLeft;state.timerDur=pl.timerDur;render();});
-  ch.on("broadcast",{event:"joined"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;live.mySlot=+pl.slot;live.assigned=true;live.joinPending=false;if(live.joinWaitTimer){clearTimeout(live.joinWaitTimer);live.joinWaitTimer=null;}clearLiveError();syncJoinBusyUI();savePlayerDaySession(live.code,live.mySlot);if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}setStatus("");updateLiveUI();toast("You're in as "+(pl.name||live.myName)+" 🎉 — now tap I'm Ready on your screen");switchView(live.mySlot===1?"p2":"p1");try{live.channel.send({type:"broadcast",event:"request-sync",payload:{clientId:live.clientId}});}catch(e){}
-    if(live.pingTimer)clearInterval(live.pingTimer);
-    var sendPing=function(){try{if(live.channel)live.channel.send({type:"broadcast",event:"ping",payload:{clientId:live.clientId,slot:live.mySlot}});}catch(e){}};
-    sendPing(); live.pingTimer=setInterval(sendPing,4000);
-  });
-  ch.on("broadcast",{event:"join-rejected"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}setStatus("✕ "+(pl.reason||"Could not join."));disconnectLive(true);syncJoinBusyUI();});
-  ch.on("broadcast",{event:"kicked"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;var myView=live.mySlot===1?"p2":"p1";toast("Admin reset your player slot — use the join form on this screen to rejoin");disconnectLive(true);switchView(myView);});
-  ch.on("broadcast",{event:"room-closed"},function(){var myView=live.mySlot===1?"p2":"p1";toast("Admin closed the room — you can join a new room from this screen");disconnectLive(true);switchView(myView);});
-  ch.subscribe(function(status){
-    diag.channel="room channel (as player): "+status+" · "+diagTime(Date.now()); diagNote();
+  /* v40: follow the room ROW (read it now, then live via Postgres
+     Changes) and knock by INSERTING a join event row. The seat is
+     confirmed only when the room row comes back with this device's id
+     in occupied[] — see playerSeatCheck, called from onRoomRow. */
+  subscribeRoomRow(code,function(status){
+    diag.channel="room row (as player): "+status+" · "+diagTime(Date.now()); diagNote();
     if(status==="SUBSCRIBED"){
-      live.connected=true; updateLiveUI();
-      var sendJoin=function(){try{ch.send({type:"broadcast",event:"join",payload:{clientId:live.clientId,name:live.myName,wantSlot:live.wantSlot}});}catch(e){}};
-      sendJoin(); if(live.joinRetry)clearInterval(live.joinRetry);
-      /* v32 JOIN FIX: knock every 2.5s UNTIL the host lets this iPad in.
-         v31 stopped after ~15 seconds, so an iPad that joined before Admin
-         had created the room — or whose knock was simply lost — sat
-         unassigned forever: its name never left the iPad and the Host
-         screen showed “waiting…” no matter what the player did. */
-      var waited=0;
-      live.joinRetry=setInterval(function(){
-        if(live.assigned||live.mode!=="player"){clearInterval(live.joinRetry);live.joinRetry=null;return;}
-        waited+=2.5; sendJoin();
-        if(waited===20)setStatus("Still trying to reach the host… keep this screen open — it joins by itself once the room is up.");
-      },2500);
+      live.connected=true; clearLiveError(); updateLiveUI();
       setStatus("Connected to the room — waiting for the host to confirm your seat… You are not in yet.");
     } else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){
-      /* v32: a dropped player channel used to stay dropped. Rebuild the
-         connection and knock again (the join form still holds the code
-         and name, so the rejoin needs no typing). */
+      /* A dropped row subscription is rebuilt and the knock below keeps
+         going — the join rows already sent stay in the table for the
+         host, so nothing about this join is lost with the socket. */
       live.connected=false;
-      setLiveError("✕ This iPad lost its connection to the room — reconnecting…");
-      if(!live.assigned){setStatus("Connection dropped — reconnecting…");setTimeout(function(){if(live.mode==="player"&&!live.assigned){live.forceRejoin=true;playerJoinFrom("join2");}},3000);}
-      else setTimeout(function(){if(live.mode==="player"&&live.assigned&&!live.connected){live.forceRejoin=true;playerJoinFrom("join2");}},3000); /* v35: an ASSIGNED iPad whose channel dropped used to stay dropped — it now rebuilds and rejoins too */
+      setLiveError("✕ This iPad lost its connection to the game server — reconnecting…");
+      setStatus("Connection dropped — reconnecting…");
+      setTimeout(function(){if(live.mode==="player"&&!live.connected){live.forceRejoin=true;playerJoinFrom("join2");}},3000);
     }
     updateLiveUI();
   });
+  fetchRoomRow(code).then(function(row){if(row&&live.mode==="player"&&live.code===code)onRoomRow(row);});
+  /* A rejection the host stored for this iPad while its subscription was
+     down is still sitting in the table — read those too, don't just wait
+     for live delivery. */
+  (function(){var s2=getSupa();if(!s2)return;s2.from(EVENTS_TABLE).select("*").eq("code",code).eq("to_id",live.clientId).order("id",{ascending:true}).then(function(res){(res.data||[]).forEach(function(ev){if(live.mode==="player"&&live.code===code)handleAddressedEvent(ev);});}).catch(function(){});})();
+  var sendJoin=function(){sendRoomEvent("join",{name:live.myName,wantSlot:live.wantSlot});};
+  sendJoin(); if(live.joinRetry)clearInterval(live.joinRetry);
+  /* Knock every 4s UNTIL the host seats this iPad (the v32 join fix,
+     kept): an iPad that joins before Admin has created the room — or
+     whose first knock landed while the host tab was away — keeps
+     knocking. Each knock is a stored row, and the host also fetches its
+     backlog when it returns, so the name reaches the host in the end.
+     The room row is re-read on each knock too, in case a change event
+     was missed — reading the current state is the whole point of v40. */
+  var waited=0;
+  live.joinRetry=setInterval(function(){
+    if(live.assigned||live.mode!=="player"){clearInterval(live.joinRetry);live.joinRetry=null;return;}
+    waited+=4; sendJoin();
+    fetchRoomRow(code).then(function(row){if(row&&live.mode==="player"&&live.code===code)onRoomRow(row);});
+    if(waited===20)setStatus("Still trying to reach the host… keep this screen open — it joins by itself once the room is up.");
+  },4000);
   updateLiveUI();
+  /* v40: seat confirmation + the presence ping live in playerSeatCheck /
+     startPlayerPing — the room row confirms the seat, not a message. */
+  /* v40: join rejections arrive as event rows addressed to this iPad
+     (handled in onJoinRejected); a reset/kick is seen in playerSeatCheck
+     when this device's id leaves occupied[] in the room row; a closed
+     room is the row's DELETE, handled in onRoomRow. */
+}
+/* ================= FOLLOWING THE ROOM ROW (v40) =================
+   One subscription serves both followers (the Host TV viewer and the
+   player iPads): Postgres Changes on this room's quiz_rooms row, plus
+   INSERTs on quiz_room_events ADDRESSED to this device (join
+   rejections). Every row that arrives goes through onRoomRow — the same
+   door a fresh fetch uses — so “read it now” and “it changed live” can
+   never disagree. */
+function subscribeRoomRow(code,onStatus){
+  var s=getSupa(); if(!s)return null;
+  var ch=dbChannel(s,"db-room-"+code+"-"+live.clientId); live.channel=ch;
+  ch.on("postgres_changes",{event:"*",schema:"public",table:ROOMS_TABLE,filter:"code=eq."+code},function(pl){
+    if(!pl)return;
+    if(pl.eventType==="DELETE"){onRoomRow(null);return;}
+    if(pl.new)onRoomRow(pl.new);
+  });
+  ch.on("postgres_changes",{event:"INSERT",schema:"public",table:EVENTS_TABLE,filter:"code=eq."+code},function(pl){
+    var ev=pl&&pl.new; if(!ev)return;
+    if(ev.to_id&&ev.to_id===live.clientId)handleAddressedEvent(ev);
+  });
+  ch.subscribe(function(status){ if(live.channel===ch&&onStatus)onStatus(status); });
+  return ch;
+}
+function handleAddressedEvent(ev){
+  /* An event row the host addressed to THIS device. It is deleted once
+     read, so it is delivered exactly once even across reloads. */
+  var s=getSupa();
+  if(ev.id&&s){try{s.from(EVENTS_TABLE).delete().eq("id",ev.id).then(function(){},function(){});}catch(e){}}
+  if(ev.type==="join-rejected")onJoinRejected((ev.payload||{}).reason);
+}
+function onJoinRejected(reason){
+  if(live.mode!=="player"||live.assigned)return;
+  if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}
+  if(live.joinWaitTimer){clearTimeout(live.joinWaitTimer);live.joinWaitTimer=null;}
+  var el=$("joinStatus2"); if(el){el.textContent="✕ "+(reason||"Could not join.");el.className="statusline wait";}
+  disconnectLive(true); syncJoinBusyUI();
+  var el2=$("joinStatus2"); if(el2){el2.textContent="✕ "+(reason||"Could not join.");el2.className="statusline wait";} /* disconnectLive re-renders — say it again on the fresh form */
+}
+function onRoomRow(row){
+  /* The one door for room state in v40 — used by the initial fetch, the
+     discovery/viewer polls, the join knock and every live change. */
+  if(row===null){
+    /* The room row was DELETED — the host closed the room. */
+    if(live.mode==="viewer"){disconnectLive(true);toast("Admin closed the room — this screen is back to demo mode");}
+    else if(live.mode==="player"){var mv=live.mySlot===1?"p2":"p1";toast("Admin closed the room — you can join a new room from this screen");disconnectLive(true);switchView(mv);}
+    return;
+  }
+  live.lastStateAt=Date.now(); /* v35 freshness stamp — the Host watchdog rebuilds a viewer whose row stream has silently gone quiet */
+  diag.stateRx="room row · "+diagTime(Date.now()); diagNote();
+  var pl=row.state||{};
+  var merged={}; for(var k in pl)merged[k]=pl[k];
+  if(typeof row.time_left==="number"&&pl.phase==="playing")merged.timeLeft=row.time_left; /* the tick column is fresher than the state copy during play */
+  try{applyRemoteState(merged);}
+  catch(e){diag.sync="ERROR applying a received room state — "+(e&&e.message?e.message:e)+" · "+diagTime(Date.now());diagNote();}
+  /* A real state just arrived on the Host viewer — this (and only this)
+     is what closes the Host login pop-up and lets the screen call itself
+     connected (the v39 rule, kept). */
+  try{if(typeof currentView!=="undefined"&&currentView==="host"&&live.mode==="viewer")hostLoginSuccess();}catch(e){}
+  if(live.mode==="player")playerSeatCheck(merged);
+}
+function playerSeatCheck(pl){
+  /* v40: the room row itself confirms — or ends — this iPad's seat.
+     Confirmation: while a join is pending, the first row whose
+     occupied[] contains this device's id seats it (the v38 rule: the
+     device moves to its player screen only now, never before).
+     Ending: a seated device whose id has left occupied[] was reset by
+     Admin — it leaves the game and its join form comes back. */
+  if(!pl||!pl.occupied)return;
+  var idx=pl.occupied.indexOf(live.clientId);
+  if(live.joinPending&&!live.assigned&&idx!==-1){
+    live.mySlot=idx; live.assigned=true; live.joinPending=false;
+    if(live.joinWaitTimer){clearTimeout(live.joinWaitTimer);live.joinWaitTimer=null;}
+    if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}
+    clearLiveError(); syncJoinBusyUI();
+    savePlayerDaySession(live.code,live.mySlot);
+    var st=$("joinStatus2"); if(st)st.textContent="";
+    updateLiveUI();
+    toast("You're in as "+dispName(live.mySlot)+" 🎉 — now tap I'm Ready on your screen");
+    switchView(live.mySlot===1?"p2":"p1");
+    startPlayerPing();
+  } else if(live.assigned&&(live.mySlot===0||live.mySlot===1)&&pl.occupied[live.mySlot]!==live.clientId){
+    var myView=live.mySlot===1?"p2":"p1";
+    toast("Admin reset your player slot — use the join form on this screen to rejoin");
+    disconnectLive(true); switchView(myView);
+  }
+}
+function startPlayerPing(){
+  /* Presence as stored rows: a ping event every 10s keeps the host's
+     “seen Xs ago” honest, and a missed ping loses nothing — the next
+     one lands in the table just the same. */
+  if(live.pingTimer)clearInterval(live.pingTimer);
+  var sendPing=function(){sendRoomEvent("ping",{slot:live.mySlot});};
+  sendPing(); live.pingTimer=setInterval(sendPing,10000);
 }
 function rejoinViewer(code){
-  /* Rebuild the viewer connection after a channel error, keeping the room.
-     v19: the rebuild is now a true clean slate — v18 removed only channels
-     on the room topic, so a wedged leftover channel of any other kind on
-     this client survived every retry and the “rebuilt” connection could
-     inherit the wedge. A viewer tab owns no other live channels (discovery
-     is stopped before a join, and the design channel is not a realtime
-     channel), so ALL realtime channels go before the fresh subscribe. */
+  /* Rebuild the viewer connection after a subscription error, keeping
+     the room: drop every realtime channel this tab owns, then follow
+     the room row again — the fresh read alone restores the game. */
   if(live.syncTimer){clearInterval(live.syncTimer);live.syncTimer=null;}
   if(live.viewerFallbackTimer){clearTimeout(live.viewerFallbackTimer);live.viewerFallbackTimer=null;}
+  if(live.viewerPollTimer){clearInterval(live.viewerPollTimer);live.viewerPollTimer=null;}
   live.channel=null;
   try{var s0=getSupa();if(s0&&s0.removeAllChannels)s0.removeAllChannels();}catch(e){}
   live.mode="offline"; live.connected=false;
   hostViewerJoin(code,live.joinedViaStored);
 }
-function freshRoomChannel(s,code){
-  /* v18: build the room channel on a clean slate. supabase-js returns the
-     EXISTING channel when a topic is requested twice, handlers and all — so
-     a channel left over from an earlier role in this tab (player, host, or a
-     previous viewer attempt) could be handed back here, its subscribe
-     callback never firing again and its state handler never the one
-     registered below: the screen looked joined yet received nothing, which
-     is exactly the v17 live failure. Remove every channel on this topic
-     first, then create ours. */
-  var topic=channelName(code);
-  try{
-    var existing=s.getChannels?s.getChannels():[];
-    existing.slice().forEach(function(c){if(c&&(c.topic===topic||c.topic==="realtime:"+topic)){try{s.removeChannel(c);}catch(e){}}});
-  }catch(e){}
-  return s.channel(topic,{config:{broadcast:{self:false}}});
-}
-function onStateBroadcast(m){
-  live.lastStateAt=Date.now(); /* v35: freshness stamp — the Host watchdog rebuilds a viewer whose state stream has silently gone quiet */
-  /* Shared by the viewer and player receive paths. The raw arrival is
-     stamped into the diagnostics BEFORE any processing, and a failure while
-     applying the state is recorded instead of dying silently inside the
-     realtime callback — the two cases the v17 test could not tell apart. */
-  diag.stateRx="state · "+diagTime(Date.now()); diagNote();
-  try{applyRemoteState((m&&m.payload)||{});}
-  catch(e){diag.sync="ERROR applying a received state — "+(e&&e.message?e.message:e)+" · "+diagTime(Date.now());diagNote();}
-  /* v39: a real state just arrived on the Host viewer — this (and only
-     this) is what closes the Host login pop-up and lets the screen call
-     itself connected. */
-  try{if(typeof currentView!=="undefined"&&currentView==="host"&&live.mode==="viewer")hostLoginSuccess();}catch(e){}
-}
+/* (v40 removed freshRoomChannel + onStateBroadcast: channels no longer
+   carry the game — dbChannel above builds the row subscriptions, and
+   onRoomRow is the single receive door for state.) */
 function hostViewerJoin(code,viaStored){
-  /* A Host screen opened on its own device: silently follow the room as a
-     display-only viewer. The code comes from the link (?room=) or from room
-     discovery and is never shown on this screen. After subscribing it keeps
-     asking the host for a sync until the host's state arrives, and rebuilds
-     the connection if the channel drops. */
+  /* A Host screen opened on its own device: follow the room as a
+     display-only viewer by READING its row. The code comes from the link
+     (?room=), the login pop-up, or discovery, and is never shown on this
+     screen. The row is read immediately and then followed live; if the
+     room doesn't exist yet, a poll keeps reading until Admin creates it —
+     there is no sync request left that could be missed. */
   var s=getSupa(); if(!s)return;
   if(live.mode!=="offline")return;
   live.mode="viewer"; live.code=code; live.connected=false; live.mySlot=null; live.assigned=false; lastHostState=null; liveMyAnswer=null; liveMyIdx=-1; live.joinedAt=Date.now(); live.lastStateAt=0; live.joinedViaStored=!!viaStored;
-  /* v19: a join made from the stored code gets a 12-second proof window —
-     if no game state arrives in it, the stored code was stale (an old room
-     from an earlier session): blacklist it for this session, drop back to
-     discovery, and let the live host's announce find this screen instead.
-     Joins from the link or an announce don't need it — the watchdog's
-     rebuild already covers those. */
+  /* v19, kept for v40: a join made from the stored code gets a proof
+     window — if no room row exists for it after 12s, the stored code was
+     stale (an old room from an earlier day): blacklist it for this
+     session, drop back to discovery, and let today's real room be found
+     by reading the table instead. */
   if(live.viewerFallbackTimer)clearTimeout(live.viewerFallbackTimer);
   live.viewerFallbackTimer=setTimeout(function(){
     live.viewerFallbackTimer=null;
     if(live.mode!=="viewer"||lastHostState||!live.joinedViaStored)return;
     storedCodeBlacklist=live.code;
-    diag.gate="stored room code led to a silent room — treating it as stale, back to discovery · "+diagTime(Date.now()); diagNote();
+    diag.gate="stored room code has no room row — treating it as stale, back to discovery · "+diagTime(Date.now()); diagNote();
+    if(live.viewerPollTimer){clearInterval(live.viewerPollTimer);live.viewerPollTimer=null;}
     var ch2=live.channel; live.channel=null; live.mode="offline"; live.connected=false; live.code=null;
     if(ch2){try{var s2=getSupa();if(s2)s2.removeChannel(ch2);}catch(e){}}
     updateLiveUI(); render();
     if(currentView==="host")startHostDiscovery();
   },12000);
-  var ch=freshRoomChannel(s,code); live.channel=ch;
-  ch.on("broadcast",{event:"state"},onStateBroadcast);
-  ch.on("broadcast",{event:"tick"},function(m){var pl=m.payload||{};state.timeLeft=pl.timeLeft;state.timerDur=pl.timerDur;var hs=$("hostStage");if(hs){hs.innerHTML=hostStageHTML();applyAccent(hs,liveDesign.host);}});
-  ch.on("broadcast",{event:"room-closed"},function(){disconnectLive(true);toast("Admin closed the room — this screen is back to demo mode");});
-  ch.subscribe(function(status){
-    if(live.channel!==ch)return; /* a stale channel replaced by a rejoin must not tear down the healthy one */
-    diag.channel="room channel (as viewer): "+status+" · "+diagTime(Date.now()); diagNote();
+  subscribeRoomRow(code,function(status){
+    diag.channel="room row (as viewer): "+status+" · "+diagTime(Date.now()); diagNote();
     if(status==="SUBSCRIBED"){
       live.connected=true; live.viewerRetries=0; clearLiveError();
-      var ask=function(){
-        try{ch.send({type:"broadcast",event:"viewer-hello",payload:{clientId:live.clientId}});}catch(e){}
-        try{ch.send({type:"broadcast",event:"request-sync",payload:{clientId:live.clientId}});}catch(e){}
-      };
-      ask();
-      if(live.syncTimer)clearInterval(live.syncTimer);
-      live.syncTimer=setInterval(function(){
-        if(lastHostState){clearInterval(live.syncTimer);live.syncTimer=null;return;}
-        ask();
-      },2000);
     } else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){
       live.connected=false;
       if(live.viewerRetries<8){
@@ -1515,11 +1695,33 @@ function hostViewerJoin(code,viaStored){
         var c=live.code;
         setTimeout(function(){if(live.mode==="viewer")rejoinViewer(c);},3500);
       }
-      else setLiveError("✕ This screen lost its connection to the room and could not reconnect — check this device's internet connection, then reload this screen.");
+      else setLiveError("✕ This screen lost its connection to the game server and could not reconnect — check this device's internet connection, then reload this screen.");
     }
     updateLiveUI(); render();
   });
+  fetchRoomRow(code).then(function(row){
+    if(live.mode!=="viewer"||live.code!==code)return;
+    if(row)onRoomRow(row);
+    else{
+      if(roomsSource==="setup")setLiveError(roomsSetupErrorText());
+      startViewerPoll(code); /* no room yet — keep reading until Admin creates it */
+    }
+  });
   updateLiveUI();
+}
+function startViewerPoll(code){
+  /* A viewer following a room that doesn't exist yet (Admin hasn't
+     created it, or the typed code's room isn't up): re-read the row
+     every 4s. The moment the row appears, the game is on this screen —
+     no announce, no sync request, nothing to miss. */
+  if(live.viewerPollTimer)clearInterval(live.viewerPollTimer);
+  live.viewerPollTimer=setInterval(function(){
+    if(live.mode!=="viewer"||live.code!==code||lastHostState){clearInterval(live.viewerPollTimer);live.viewerPollTimer=null;return;}
+    fetchRoomRow(code).then(function(row){
+      if(row&&live.mode==="viewer"&&live.code===code){clearInterval(live.viewerPollTimer);live.viewerPollTimer=null;onRoomRow(row);}
+      else if(roomsSource==="setup")setLiveError(roomsSetupErrorText());
+    });
+  },4000);
 }
 function maybeHostViewer(){
   try{
@@ -1537,7 +1739,7 @@ function maybeHostViewer(){
       if(r){var nc=normalizeCode(r);if(nc.length>=3)code=nc;}
     }
     if(code){earlyRoomCode=code;diag.gate="PASS — room code found in this screen's link, joining as viewer · "+diagTime(Date.now());diagNote();stopHostDiscovery();hostViewerJoin(code);}
-    else {diag.gate="PASS (no code in link) — discovery started, listening for Admin's room announcement · "+diagTime(Date.now());diagNote();startHostDiscovery();try{openHostLogin(false);}catch(e){}}
+    else {diag.gate="PASS (no code in link) — discovery started, reading the rooms table for today's room · "+diagTime(Date.now());diagNote();startHostDiscovery();try{openHostLogin(false);}catch(e){}}
   }catch(e){diag.gate="ERROR — "+(e&&e.message?e.message:e)+" · "+diagTime(Date.now());diagNote();}
 }
 /* ================= HOST LOGIN POP-UP (v39) =================
@@ -1545,12 +1747,12 @@ function maybeHostViewer(){
    room, so it now gets an explicit log-in like the players do — a pop-up
    with a masked code field and a Connect button. Honest states only
    (the user's rule): the pop-up says “not connected yet” while it waits,
-   it closes ONLY when a real game state broadcast arrives from the room
-   host (onStateBroadcast → hostLoginSuccess), and if no host answers for
-   the typed code within 14s it says plainly that the code did NOT connect
+   it closes ONLY when a real game state is read from the room's table
+   row (onRoomRow → hostLoginSuccess), and if no room is found for the
+   typed code within 14s it says plainly that the code did NOT connect
    and stays open so the operator can fix the code. Discovery (above)
-   keeps running behind the pop-up as a second path — if an announcement
-   finds the room first, the arriving state closes the pop-up by itself.
+   keeps running behind the pop-up as a second path — if it finds the
+   room first, the arriving state closes the pop-up by itself.
    The typed code is used only to join (normalizeCode → hostViewerJoin,
    the same viewer path as ?room=) and is then cleared from the field;
    it is never written into the Host stage, the lobby, the connection
@@ -1582,7 +1784,7 @@ function openHostLogin(manual){
   var st=$("hostLoginStatus");
   if(st&&!hostLoginPending){
     if(live.mode==="viewer"){st.textContent="Connecting… waiting for the game host to send the first update. You are not connected until that arrives — or type the code and tap Connect.";st.className="host-login-status wait";}
-    else if(discovery.active){st.textContent="Not connected yet. Enter the code to log in now — this screen is also listening for Admin's room announcement in the background.";st.className="host-login-status wait";}
+    else if(discovery.active){st.textContent="Not connected yet. Enter the code to log in now — this screen is also checking the rooms table for today's room in the background.";st.className="host-login-status wait";}
     else{st.textContent="Not connected yet — enter today's room code to log in.";st.className="host-login-status wait";}
   }
   updateHostConnectUI(); modal.hidden=false; /* updateHostConnectUI hides the Connect button while the pop-up is open; the pop-up itself stays open */
@@ -1616,6 +1818,7 @@ function hostLoginSubmit(){
   if(live.mode==="viewer"||live.mode==="player"){
     if(live.syncTimer){clearInterval(live.syncTimer);live.syncTimer=null;}
     if(live.viewerFallbackTimer){clearTimeout(live.viewerFallbackTimer);live.viewerFallbackTimer=null;}
+    if(live.viewerPollTimer){clearInterval(live.viewerPollTimer);live.viewerPollTimer=null;}
     if(live.channel){var oldCh=live.channel;live.channel=null;try{var s0=getSupa();if(s0)s0.removeChannel(oldCh);}catch(e){}}
     live.mode="offline";live.code=null;live.connected=false;live.viewerRetries=0;lastHostState=null;live.lastStateAt=0;
   }
@@ -1629,16 +1832,16 @@ function hostLoginSubmit(){
     if(!hostLoginPending)return;
     hostLoginPending=false;
     var b=$("hostLoginBtn"); if(b){b.disabled=false;b.textContent="Try again — Connect / Log in";}
-    setSt("✕ That code did not connect — no game host answered in that room within 14 seconds. Check the code is exactly today's code from Admin, that Admin has tapped Create Today's Room, and that this device is online. You are NOT connected.","err");
-    setLiveError("✕ Host did not connect — no host answered for the code entered in the pop-up. Check today's code in Admin and that the room is created, then tap Connect to room and try again.");
+    setSt("✕ That code did not connect — no room was found for that code within 14 seconds. Check the code is exactly today's code from Admin, that Admin has tapped Create Today's Room, and that this device is online. You are NOT connected.","err");
+    setLiveError("✕ Host did not connect — no room was found for the code entered in the pop-up. Check today's code in Admin and that the room is created, then tap Connect to room and try again.");
     updateHostConnectUI();
     var m=$("hostLoginModal"); if(m)m.hidden=false;
   },14000);
-  hostViewerJoin(code,false); /* the existing viewer path — subscribes, sends viewer-hello + request-sync, rebuilds on drops */
+  hostViewerJoin(code,false); /* the viewer path — reads the room row now, follows it live, polls until the room exists, rebuilds on drops */
   updateLiveUI(); render();
 }
 function hostLoginSuccess(){
-  /* Called from onStateBroadcast the moment a real state arrives — the
+  /* Called from onRoomRow the moment a real room state is read — the
      ONLY moment this screen may call itself connected. */
   var wasPending=hostLoginPending;
   hostLoginPending=false;
@@ -1717,13 +1920,24 @@ function applyRemoteState(pl){
   render(); updateLiveUI();
 }
 function playerSendAnswer(val){
-  if(live.mode!=="player"||live.mySlot===null||!live.channel)return;
+  if(live.mode!=="player"||live.mySlot===null)return;
   if(state.phase!=="playing"||liveMyAnswer!==null)return;
   liveMyAnswer=val;
   var taken=state.timerDur>0?Math.max(0,state.timerDur-state.timeLeft):Math.round(elapsedNow()*10)/10;
   taken=Math.round(taken*10)/10;
   if(live.mySlot===0||live.mySlot===1)state.answerTimes[live.mySlot]=taken;
-  try{live.channel.send({type:"broadcast",event:"answer",payload:{clientId:live.clientId,slot:live.mySlot,value:val,timeTaken:taken,timeLeft:state.timeLeft}});}catch(e){}
+  /* v40: the answer is an event ROW. If the insert itself fails (a
+     momentary drop), it is retried every 2s until the host's room row
+     shows this answer locked in — the tap cannot evaporate the way a
+     broadcast could. */
+  var myIdx=liveMyIdx; /* the question this tap belongs to — a retry after the game moved on must never answer the NEXT question */
+  var sendAns=function(){sendRoomEvent("answer",{slot:live.mySlot,value:val,timeTaken:taken,timeLeft:state.timeLeft,idx:myIdx});};
+  sendAns();
+  var ansRetry=setInterval(function(){
+    if(live.mode!=="player"||state.phase!=="playing"||liveMyAnswer!==val||liveMyIdx!==myIdx){clearInterval(ansRetry);return;}
+    sendAns(); /* duplicates are harmless — the host ignores an answer for a slot that already has one, and any with a stale question index */
+  },2000);
+  setTimeout(function(){clearInterval(ansRetry);},30000);
   render();
 }
 function disconnectLive(silent){
@@ -1732,7 +1946,12 @@ function disconnectLive(silent){
   if(live.hostHbTimer){clearInterval(live.hostHbTimer);live.hostHbTimer=null;}
   if(live.mode==="host"){try{if(window.localStorage)localStorage.removeItem(HOST_HB_KEY);}catch(e){}} /* v32: room closed — the single-host guard releases this browser */
   if(live.viewerFallbackTimer){clearTimeout(live.viewerFallbackTimer);live.viewerFallbackTimer=null;}
-  if(live.mode==="host"&&live.channel&&live.connected){try{live.channel.send({type:"broadcast",event:"room-closed",payload:{}});}catch(e){}}
+  if(live.viewerPollTimer){clearInterval(live.viewerPollTimer);live.viewerPollTimer=null;}
+  /* v40: closing the room = DELETING its row. Every follower's row
+     subscription sees the DELETE and leaves by itself — there is no
+     “room-closed” message left to lose. The room's leftover event rows
+     go with it. */
+  if(live.mode==="host"&&live.code){var sDc=getSupa();if(sDc){try{sDc.from(ROOMS_TABLE).delete().eq("code",live.code).then(function(){},function(){});sDc.from(EVENTS_TABLE).delete().eq("code",live.code).then(function(){},function(){});}catch(e){}}}
   if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}
   if(live.joinWaitTimer){clearTimeout(live.joinWaitTimer);live.joinWaitTimer=null;}
   live.joinPending=false; live.joinStartedAt=0; live.joinFromSlot=null; /* v38: leaving the room ends any unconfirmed join — no pending state survives it */
@@ -1744,8 +1963,6 @@ function disconnectLive(silent){
   if(live.presenceTimer){clearInterval(live.presenceTimer);live.presenceTimer=null;}
   if(live.syncTimer){clearInterval(live.syncTimer);live.syncTimer=null;}
   if(live.heartbeatTimer){clearInterval(live.heartbeatTimer);live.heartbeatTimer=null;}
-  if(live.lobbyTimer){clearInterval(live.lobbyTimer);live.lobbyTimer=null;}
-  if(live.lobbyChannel){var lch=live.lobbyChannel;live.lobbyChannel=null;try{var ls=getSupa();if(ls)ls.removeChannel(lch);}catch(e){}}
   stopHostDiscovery();
   live.viewerRetries=0;
   live.lastSeen=[0,0]; live.stale=[false,false];
@@ -1860,8 +2077,8 @@ function hostStageHTML(){
       var vchips=""; for(var i=0;i<2;i++){var named=state.players[i].name!=="Player "+(i+1);vchips+='<span class="slot-chip '+(named?(live.ready[i]?"ready":"filled"):"")+'">'+(named?(esc(state.players[i].name)+(live.ready[i]?" — ✅ Ready":" — ⏳ Not ready")):("○ Player "+(i+1)+" — waiting…"))+'</span>';}
       /* v37: freshness line — a viewer that joined a room but hears nothing
          must LOOK different from one that is hearing the game. It shows the
-         time the last state actually arrived on THIS screen (stamped in
-         onStateBroadcast), or says plainly that none has arrived yet. */
+         time the last room state actually arrived on THIS screen (stamped
+         in onRoomRow), or says plainly that none has arrived yet. */
       var vstat=!live.connected?"◌ Connecting to the room…":(live.lastStateAt?("● Live — last update received · "+diagTime(live.lastStateAt)):"◌ Connected — waiting for the first update from the game…");
       liveBit='<div style="margin-top:16px"><div>'+vchips+'</div><div class="statusline '+(live.connected&&live.lastStateAt?"ok":"wait")+'">'+vstat+'</div></div>';
     } else if(live.mode==="player"){
@@ -1907,7 +2124,7 @@ function playerUpdateName(i){
   v=v.slice(0,18); sessionNameDraft[i]=null;
   state.players[i].name=v; live.ready[i]=false; /* v30: a (re)set name means not ready yet — the Ready button below is the next tap */
   live.readyPending=false; live.readyWant=null; if(live.readyRetry){clearInterval(live.readyRetry);live.readyRetry=null;} /* v37: a name change cancels any unconfirmed Ready tap */
-  if(live.mode==="player"&&live.mySlot===i&&live.channel){try{live.channel.send({type:"broadcast",event:"name-update",payload:{clientId:live.clientId,slot:i,name:v}});}catch(e){}}
+  if(live.mode==="player"&&live.mySlot===i)sendRoomEvent("name",{slot:i,name:v}); /* v40: a stored row — the host picks it up live or from its backlog */
   render(); toast("Name set: "+v+" — now tap I'm Ready ✓");
 }
 function playerSetReady(i,val){
@@ -1920,9 +2137,9 @@ function playerSetReady(i,val){
      this screen is shown only once the host's broadcast comes back with
      this player ready. While unconfirmed the tap is re-sent every 4s (a
      lost message heals itself) and the dock says it is still waiting. */
-  if(live.mode==="player"&&live.mySlot===i&&live.channel){
+  if(live.mode==="player"&&live.mySlot===i){
     live.readyWant=!!val; live.readyPending=true;
-    var sendReady=function(){try{live.channel.send({type:"broadcast",event:"ready",payload:{clientId:live.clientId,slot:i,ready:!!val}});}catch(e){}};
+    var sendReady=function(){sendRoomEvent("ready",{slot:i,ready:!!val});}; /* v40: a stored row, re-sent below until the host's room row confirms it */
     sendReady();
     if(live.readyRetry)clearInterval(live.readyRetry);
     live.readyRetry=setInterval(function(){
@@ -2301,8 +2518,7 @@ function newSession(){
   render(); toast("New session — names & scores cleared, name bars are showing on both iPads for the next players. Room code unchanged: QUIZ-"+(live.code||getDailyRoomCode()));
 }
 function resetPlayer(i){
-  var kicked=live.mode==="host"?live.occupied[i]:null;
-  if(live.mode==="host"){live.occupied[i]=null;live.lastSeen[i]=0;live.stale[i]=false;if(kicked&&live.channel){try{live.channel.send({type:"broadcast",event:"kicked",payload:{clientId:kicked}});}catch(e){}}state.players[i].name="Player "+(i+1);}
+  if(live.mode==="host"){live.occupied[i]=null;live.lastSeen[i]=0;live.stale[i]=false;state.players[i].name="Player "+(i+1);} /* v40: no kick message — the next room row no longer holds that iPad's id in occupied[], and the iPad sees that and leaves by itself (playerSeatCheck) */
   live.ready[i]=false; /* v30: a reset player is not ready */
   state.answerLog=state.answerLog.filter(function(en){return en.player!==i;}); if(state.answers)state.answerTimes[i]=null;
   state.players[i].score=0;state.players[i].streak=0;state.players[i].correct=0;if(state.answers)state.answers[i]=null;if(state.answerSeq)state.answerSeq[i]=null;
@@ -2761,7 +2977,7 @@ $("resetScoresBtn").addEventListener("click",function(){state.players.forEach(fu
 $("resetP1Btn").addEventListener("click",function(){resetPlayer(0);});
 $("resetP2Btn").addEventListener("click",function(){resetPlayer(1);});
 $("resetPlayersBtn").addEventListener("click",function(){
-  if(live.mode==="host"){live.occupied.forEach(function(cid){if(cid&&live.channel){try{live.channel.send({type:"broadcast",event:"kicked",payload:{clientId:cid}});}catch(e){}}});live.occupied=[null,null];live.lastSeen=[0,0];live.stale=[false,false];}
+  if(live.mode==="host"){live.occupied=[null,null];live.lastSeen=[0,0];live.stale=[false,false];} /* v40: both iPads see their ids leave the room row and free themselves — no kick message to lose */
   state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];state.answers=[null,null];state.answerTimes=[null,null];state.answerLog=[];render();toast("Both players reset — iPad slots freed");
 });
 $("resetGameBtn").addEventListener("click",function(){state.players.forEach(function(p){p.score=0;p.correct=0;p.streak=0;});state.active=[];resetGame();toast("Whole game reset");});
@@ -2788,6 +3004,21 @@ var refreshSessBtn=$("refreshSessBtn");
 if(refreshSessBtn)refreshSessBtn.addEventListener("click",function(){loadSessionsFromSupabase();});
 var retryBankBtn=$("retryBankBtn");
 if(retryBankBtn)retryBankBtn.addEventListener("click",function(){loadBankFromSupabase().then(function(ok){if(ok&&qBankSource==="supabase"){toast("☁️ Supabase bank table found — tap 💾 Save Questions to push this bank up");saveQuestions();}else if(qBankSource==="setup")toast("Table still not found — check the SQL ran in the same Supabase project");});});
+var copyRoomsSqlBtn=$("copyRoomsSqlBtn");
+if(copyRoomsSqlBtn)copyRoomsSqlBtn.addEventListener("click",function(){
+  function done(){toast("SQL copied — paste it into Supabase → SQL Editor and Run");}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(ROOMS_SQL).then(done).catch(function(){toast("Copy failed — the SQL is shown in the box above");});}
+  else toast("The SQL is shown in the box above — select and copy it");
+});
+var retryRoomsBtn=$("retryRoomsBtn");
+if(retryRoomsBtn)retryRoomsBtn.addEventListener("click",function(){
+  fetchRoomRow(getDailyRoomCode()).then(function(){
+    renderRoomsStatus();
+    if(roomsSource==="ok")toast("☁️ Game-server tables found — Supabase is the server now. Tap Create Today's Room to go live.");
+    else if(roomsSource==="setup")toast("Tables still not found — check the SQL ran in the quiz project (aylhgfftsokskgpgvemn)");
+    else toast("Still can't reach the game server — check the connection and try again");
+  });
+});
 
 /* ================= V5 WIRING: control, timer/button options, branding, save ================= */
 $("ctlNewSession").addEventListener("click",function(){newSession();});
@@ -3373,6 +3604,7 @@ render(); updateLiveUI();
 loadBankFromSupabase(); /* v29: the shared bank lives in Supabase as the clear quiz_questions table (one row per question) — load it over the cache as soon as it answers */
 subscribeBankChanges(); /* …and follow later saves made on other devices */
 renderCurrentSession(); renderSessionsStatus(); loadSessionsFromSupabase(); /* v28: saved game sessions, loaded from the same Supabase project */
+renderRoomsStatus(); fetchRoomRow(getDailyRoomCode()); /* v40: probe the game-server tables up front, so Admin → Live shows their real state — and the one-time SQL if they don't exist yet — before anyone tries to connect */
 var initialView=routeFromURL();
 switchView(initialView||"host");
 maybeHostViewer();
