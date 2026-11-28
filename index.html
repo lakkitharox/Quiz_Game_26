@@ -389,7 +389,8 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <input id="joinCode2" placeholder="e.g. 4821" maxlength="10" autocapitalize="characters" autocomplete="off">
       <label style="font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Your name</label>
       <input id="joinName2" placeholder="Your name" maxlength="18" autocomplete="off">
-      <button class="btn primary" onclick="playerJoinFrom('join2')">Join Game →</button>
+      <button class="btn primary join-go-btn" id="joinGoBtn" onclick="playerJoinFrom('join2')">Join Game →</button>
+      <button class="btn" id="joinCancelBtn" onclick="cancelJoin()" hidden style="width:100%;margin-top:8px">Cancel — stop trying</button>
       <div class="statusline" id="joinStatus2"></div>
       <div class="remembered-note" id="joinRememberedNote" hidden></div>
     </div>
@@ -650,7 +651,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>About</h3>
         <p><b style="color:var(--text)">Myth or Fact</b> — 2 players · 10 random statements per round · fastest correct tap scores.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v37</b> · 28 Nov 2026 — Host hears every state: room code in the Host link, host-confirmed Ready</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v38</b> · 28 Nov 2026 — Join connects for real: you move to your player screen only when the host confirms your seat — no fake joined state</p>
       </div>
       </div>
     </div>
@@ -782,7 +783,7 @@ function getQ(){return state.active[state.idx]||state.questions[state.idx]||null
 
 /* ================= LIVE (Supabase Realtime Broadcast) ================= */
 var supa=null;
-var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],ready:[false,false],readyPending:false,readyWant:null,readyRetry:null,startPending:false,joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,lobbyChannel:null,lobbyTimer:null,joinedAt:0,heartbeatTimer:null,viewerFallbackTimer:null,joinedViaStored:false,forceRejoin:false,hostHbTimer:null,hostReconnectTimer:null,startPendingTimer:null,lastStateAt:0};
+var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],ready:[false,false],readyPending:false,readyWant:null,readyRetry:null,startPending:false,joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,lobbyChannel:null,lobbyTimer:null,joinedAt:0,heartbeatTimer:null,viewerFallbackTimer:null,joinedViaStored:false,forceRejoin:false,hostHbTimer:null,hostReconnectTimer:null,startPendingTimer:null,lastStateAt:0,joinPending:false,joinStartedAt:0,joinFromSlot:null,joinWaitTimer:null};
 var pendingWantSlot=null; /* set by a /PlayerN screen's own join form so the host pins that exact slot */
 var joinDraft={"c0":"","n0":"","c1":"","n1":""}; /* v19: text typed into a player screen's join form, kept across stage re-renders (see render()) */
 var lastHostState=null, liveMyAnswer=null, liveMyIdx=-1, broadcastQueued=false;
@@ -804,7 +805,7 @@ function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeSt
 function designFingerprint(k){var d=liveDesign[k];if(!d)return k+": —";var bg=d.bgMode==="image"?"image":d.bgMode==="color"?("solid "+(d.bgColor||"")):("grad "+(d.bg1||"")+" → "+(d.bg2||""));return bg+(d.headline?(" · headline “"+d.headline+"”"):" · no headline");}
 function diagLines(admin){
   var L=[];
-  L.push(["Build","v37"]);
+  L.push(["Build","v38"]);
   L.push(["Live library (Supabase)",diag.supa]);
   L.push(["This screen's role",live.mode==="host"?"Host (room owner)":live.mode==="player"?("Player "+(live.mySlot!==null?live.mySlot+1:"?")):live.mode==="viewer"?"Host display (viewer)":"Offline / demo"]);
   L.push(["Room channel",diag.channel]);
@@ -823,7 +824,7 @@ function diagLines(admin){
   return L;
 }
 function diagHTML(admin){
-  return '<b class="diag-t">🔎 Diagnostics — Build v37</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
+  return '<b class="diag-t">🔎 Diagnostics — Build v38</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
 }
 function renderDiag(){
   var ad=$("adminDiag"); if(ad)ad.innerHTML=diagHTML(true);
@@ -1280,26 +1281,71 @@ function handleHostAnswer(p){
   toast(state.answers[0]!==null&&state.answers[1]!==null?"Both players in — revealing the answer!":state.players[slot].name+" locked in ✓");
   maybeAutoReveal();
 }
+/* ================= JOIN CONFIRMATION (v38) =================
+   A join has exactly three honest states on screen: connecting (the form
+   stays visible, the button says “Connecting…”, Cancel is offered),
+   confirmed (the host's “joined” message arrived — only then does this
+   device move to its player screen and say “You're in”), and stopped or
+   still-waiting (a plain message that the device is NOT in). */
+function syncJoinBusyUI(){
+  var busy=!!(live.joinPending&&!live.assigned);
+  document.querySelectorAll(".join-go-btn").forEach(function(b){b.disabled=busy;});
+  var gb=$("joinGoBtn"); if(gb)gb.textContent=busy?"Connecting…":"Join Game →";
+  var cb=$("joinCancelBtn"); if(cb)cb.hidden=!busy;
+}
+function armJoinWaitNotice(){
+  if(live.joinWaitTimer){clearTimeout(live.joinWaitTimer);live.joinWaitTimer=null;}
+  if(!live.joinPending||live.assigned)return;
+  var wait=Math.max(0,20000-(Date.now()-(live.joinStartedAt||Date.now())));
+  live.joinWaitTimer=setTimeout(function(){
+    live.joinWaitTimer=null;
+    if(!live.joinPending||live.assigned||live.mode!=="player")return;
+    setLiveError("✕ Not joined yet — the host has not confirmed your seat, so you are NOT in the game. Check that Admin has created today's room and that the code is exactly today's code. This device keeps trying by itself — the moment the host confirms, it moves to your player screen on its own. Or tap Cancel to stop.");
+  },wait);
+}
+function cancelJoin(){
+  if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}
+  if(live.joinWaitTimer){clearTimeout(live.joinWaitTimer);live.joinWaitTimer=null;}
+  live.joinPending=false; live.joinStartedAt=0;
+  disconnectLive(true); /* back to offline — the join form returns, and nothing anywhere claims “joined” */
+  clearLiveError();
+  var el=$("joinStatus2"); if(el){el.textContent="Join stopped — you are NOT in the game. Tap Join again when the room is ready.";el.className="statusline wait";}
+  syncJoinBusyUI(); updateLiveUI();
+  toast("Join stopped — this device is not in the game");
+}
 function playerJoinFrom(prefix){
   var code=normalizeCode($("joinCode2").value), name=$("joinName2").value.trim();
   function setStatus(m,c){var el=$("joinStatus2");if(el){el.textContent=m;el.className="statusline "+(c||"wait")}}
   if(code.length<3){setStatus("Enter the room code from Admin first.");return;}
   if(!name){setStatus("Enter your name so the host knows who you are.");$("joinName2").focus();return;}
   var s=getSupa(); if(!s){setStatus("⚠ Live connection unavailable in this browser.");return;}
-  if(live.mode==="player"&&live.code===code&&!live.forceRejoin){switchView(live.mySlot===1?"p2":"p1");return;}
+  /* v38 NO FAKE JOINS: before, this shortcut switched straight to a player
+     screen whenever this tab was already in “player” mode for the same code
+     — even while the first join was still unconfirmed and mySlot was still
+     null, so it landed on Player 1 by default: the device LOOKED joined
+     while the host had never heard of it. Now the shortcut applies only to
+     a CONFIRMED seat; a tap during a pending join just says it is still
+     connecting, and the move to the player screen happens only in the
+     “joined” handler below, when the host's confirmation actually arrives. */
+  if(live.mode==="player"&&live.code===code&&live.assigned){switchView(live.mySlot===1?"p2":"p1");return;}
+  if(live.mode==="player"&&live.code===code&&live.joinPending&&!live.forceRejoin){setStatus("Still connecting — waiting for the host to confirm your seat… You are not in yet.");return;}
   live.forceRejoin=false; /* v32: a forced rejoin (dropped channel) falls through and rebuilds the connection below */
+  var keepJoinStart=live.joinPending?live.joinStartedAt:0; /* an internal rejoin keeps the original tap time, so the not-joined notice is measured from the user's tap, not from the last rebuild */
   if(live.mode!=="offline") disconnectLive(true);
-  live.mode="player"; live.code=code; live.myName=name.slice(0,18); live.connected=false; live.assigned=false; live.mySlot=null; live.wantSlot=pendingWantSlot; pendingWantSlot=null; lastHostState=null; liveMyAnswer=null; liveMyIdx=-1; live.readyPending=false; live.readyWant=null; if(live.readyRetry){clearInterval(live.readyRetry);live.readyRetry=null;} /* v37: a (re)join starts with no unconfirmed Ready tap */
+  live.joinPending=true; live.joinStartedAt=keepJoinStart||Date.now();
+  live.mode="player"; live.code=code; live.myName=name.slice(0,18); live.connected=false; live.assigned=false; live.mySlot=null; live.wantSlot=pendingWantSlot; pendingWantSlot=null; live.joinFromSlot=live.wantSlot; lastHostState=null; liveMyAnswer=null; liveMyIdx=-1; live.readyPending=false; live.readyWant=null; if(live.readyRetry){clearInterval(live.readyRetry);live.readyRetry=null;} /* v37: a (re)join starts with no unconfirmed Ready tap */
   savePlayerDaySession(code,live.wantSlot); /* v21: remember the CODE (and slot) for the whole day — the name is per-session and is never stored */
+  setStatus("Connecting to the room…");
+  armJoinWaitNotice(); syncJoinBusyUI();
   var ch=freshRoomChannel(s,code); live.channel=ch;
   ch.on("broadcast",{event:"state"},onStateBroadcast);
   ch.on("broadcast",{event:"tick"},function(m){var pl=m.payload||{};state.timeLeft=pl.timeLeft;state.timerDur=pl.timerDur;render();});
-  ch.on("broadcast",{event:"joined"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;live.mySlot=+pl.slot;live.assigned=true;clearLiveError();savePlayerDaySession(live.code,live.mySlot);if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}setStatus("");updateLiveUI();toast("You're in as "+(pl.name||live.myName)+" 🎉 — now tap I'm Ready on your screen");switchView(live.mySlot===1?"p2":"p1");try{live.channel.send({type:"broadcast",event:"request-sync",payload:{clientId:live.clientId}});}catch(e){}
+  ch.on("broadcast",{event:"joined"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;live.mySlot=+pl.slot;live.assigned=true;live.joinPending=false;if(live.joinWaitTimer){clearTimeout(live.joinWaitTimer);live.joinWaitTimer=null;}clearLiveError();syncJoinBusyUI();savePlayerDaySession(live.code,live.mySlot);if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}setStatus("");updateLiveUI();toast("You're in as "+(pl.name||live.myName)+" 🎉 — now tap I'm Ready on your screen");switchView(live.mySlot===1?"p2":"p1");try{live.channel.send({type:"broadcast",event:"request-sync",payload:{clientId:live.clientId}});}catch(e){}
     if(live.pingTimer)clearInterval(live.pingTimer);
     var sendPing=function(){try{if(live.channel)live.channel.send({type:"broadcast",event:"ping",payload:{clientId:live.clientId,slot:live.mySlot}});}catch(e){}};
     sendPing(); live.pingTimer=setInterval(sendPing,4000);
   });
-  ch.on("broadcast",{event:"join-rejected"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}setStatus("✕ "+(pl.reason||"Could not join."));disconnectLive(true);});
+  ch.on("broadcast",{event:"join-rejected"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}setStatus("✕ "+(pl.reason||"Could not join."));disconnectLive(true);syncJoinBusyUI();});
   ch.on("broadcast",{event:"kicked"},function(m){var pl=m.payload||{};if(pl.clientId!==live.clientId)return;var myView=live.mySlot===1?"p2":"p1";toast("Admin reset your player slot — use the join form on this screen to rejoin");disconnectLive(true);switchView(myView);});
   ch.on("broadcast",{event:"room-closed"},function(){var myView=live.mySlot===1?"p2":"p1";toast("Admin closed the room — you can join a new room from this screen");disconnectLive(true);switchView(myView);});
   ch.subscribe(function(status){
@@ -1319,7 +1365,7 @@ function playerJoinFrom(prefix){
         waited+=2.5; sendJoin();
         if(waited===20)setStatus("Still trying to reach the host… keep this screen open — it joins by itself once the room is up.");
       },2500);
-      setStatus("Connected — waiting for the host to let you in…");
+      setStatus("Connected to the room — waiting for the host to confirm your seat… You are not in yet.");
     } else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){
       /* v32: a dropped player channel used to stay dropped. Rebuild the
          connection and knock again (the join form still holds the code
@@ -1533,6 +1579,8 @@ function disconnectLive(silent){
   if(live.viewerFallbackTimer){clearTimeout(live.viewerFallbackTimer);live.viewerFallbackTimer=null;}
   if(live.mode==="host"&&live.channel&&live.connected){try{live.channel.send({type:"broadcast",event:"room-closed",payload:{}});}catch(e){}}
   if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}
+  if(live.joinWaitTimer){clearTimeout(live.joinWaitTimer);live.joinWaitTimer=null;}
+  live.joinPending=false; live.joinStartedAt=0; live.joinFromSlot=null; /* v38: leaving the room ends any unconfirmed join — no pending state survives it */
   if(live.readyRetry){clearInterval(live.readyRetry);live.readyRetry=null;}
   live.readyPending=false; live.readyWant=null; /* v37: no unconfirmed Ready tap survives leaving the room */
   if(live.hostReconnectTimer){clearTimeout(live.hostReconnectTimer);live.hostReconnectTimer=null;}
@@ -1588,8 +1636,15 @@ function renderConnPills(){
 }
 function updateLiveUI(){
   var isHost=live.mode==="host", isPlayer=live.mode==="player";
-  $("joinOfflineBox").hidden=isPlayer;
-  $("livePlayerNote").hidden=!isPlayer;
+  /* v38: the /join form is replaced by the “You're in” note ONLY once the
+     host has confirmed the seat (assigned). Before, mode “player” alone —
+     set the instant Join is tapped — hid the form and showed “You're in”
+     while the host had confirmed nothing: the fake join. While a join is
+     pending, the form stays on screen with its connecting status + Cancel. */
+  var isIn=isPlayer&&live.assigned;
+  $("joinOfflineBox").hidden=isIn;
+  $("livePlayerNote").hidden=!isIn;
+  syncJoinBusyUI();
   var dot=$("connDot");
   dot.className="conn-dot "+(live.connected?"on":(live.mode!=="offline"?"wait":""));
   $("roomCodeDisplay").textContent=live.code?("QUIZ-"+live.code):"—";
@@ -1744,6 +1799,7 @@ function playerSetReady(i,val){
 function dockMode(i){
   if(state.phase!=="lobby")return "hidden";
   if(live.mode==="offline")return "join";
+  if(live.mode==="player"&&!live.assigned&&live.joinPending&&live.joinFromSlot===i)return "joining"; /* v38: a tapped-but-unconfirmed join keeps a visible “waiting for the host” dock on the screen it was started from — it no longer just vanishes */
   if(live.mode==="player"&&live.mySlot===i)return "name";
   return "hidden";
 }
@@ -1755,7 +1811,7 @@ function renderJoinDocks(){
       var mode=dockMode(i);
       var rem=mode==="join"?getPlayerDaySession():null;
       var isDefaultName=(state.players[i].name==="Player "+(i+1));
-      var sig=mode+"|"+(rem?rem.code:"")+"|"+(isDefaultName?"d":"n")+"|"+state.players[i].name+"|"+state.sessionId+"|"+(live.ready[i]?"R":"-")+"|"+((live.readyPending&&live.mySlot===i)?"P":"-"); /* v30: Ready state is part of the signature so the dock flips between the Ready button and the “You're ready” state · v37: the unconfirmed (pending) state is in the signature too, so the dock flips to “waiting for the host” the moment Ready is tapped */
+      var sig=mode+"|"+(rem?rem.code:"")+"|"+(isDefaultName?"d":"n")+"|"+state.players[i].name+"|"+state.sessionId+"|"+(live.ready[i]?"R":"-")+"|"+((live.readyPending&&live.mySlot===i)?"P":"-")+"|"+(live.joinPending?"J":"-"); /* v38: the unconfirmed-join state is in the signature too, so the dock flips to “joining” the moment Join is tapped and back when the host confirms or the join stops */ /* v30: Ready state is part of the signature so the dock flips between the Ready button and the “You're ready” state · v37: the unconfirmed (pending) state is in the signature too, so the dock flips to “waiting for the host” the moment Ready is tapped */
       if(sig===dockSig[i]&&dock.hidden===(mode==="hidden"))return; /* unchanged — leave the live inputs exactly as they are */
       dockSig[i]=sig;
       if(mode==="hidden"){dock.hidden=true;dock.innerHTML="";return;}
@@ -1766,8 +1822,16 @@ function renderJoinDocks(){
            v21 never offered the link's code to this form at all. */
         var codeVal=joinDraft["c"+i]||(rem?rem.code:"")||earlyRoomCode||"";
         dock.innerHTML='<h3>Join — Player '+(i+1)+'</h3>'
-          +'<div class="join-mini" style="text-align:left"><input id="pJoinCode'+i+'" placeholder="ROOM CODE" maxlength="10" autocapitalize="characters" autocomplete="off" value="'+esc(codeVal)+'"><input id="pJoinName'+i+'" placeholder="Your name" maxlength="18" autocomplete="off" value="'+esc(joinDraft["n"+i]||"")+'"><button class="btn primary" onclick="playerJoinAs('+i+')">Join →</button></div>'
+          +'<div class="join-mini" style="text-align:left"><input id="pJoinCode'+i+'" placeholder="ROOM CODE" maxlength="10" autocapitalize="characters" autocomplete="off" value="'+esc(codeVal)+'"><input id="pJoinName'+i+'" placeholder="Your name" maxlength="18" autocomplete="off" value="'+esc(joinDraft["n"+i]||"")+'"><button class="btn primary join-go-btn" onclick="playerJoinAs('+i+')">Join →</button></div>'
           +(rem?'<div style="margin-top:8px"><button class="btn small" onclick="forgetTodaysRoom()">Forget today\'s code</button></div>':"");
+      } else if(mode==="joining"){
+        /* v38: while the host has not confirmed, the dock says exactly that.
+           Before, it simply vanished the moment Join was tapped (the mode was
+           no longer “offline” and no slot was assigned yet), so the tap looked
+           like it did nothing at all. */
+        dock.innerHTML='<h3>Joining — Player '+(i+1)+'</h3>'
+          +'<div class="jd-note">⏳ Connected — waiting for the host to confirm your seat…<br><b>You are not in yet.</b> This screen moves to your player screen by itself the moment the host confirms.</div>'
+          +'<div style="margin-top:10px"><button class="btn" onclick="cancelJoin()">Cancel — stop trying</button></div>';
       } else {
         /* The name bar comes back at the start of EVERY session, even though
            this iPad is already in today's room (v21 rule, kept): new guests
@@ -1823,7 +1887,13 @@ function playerStageHTML(i){
     } else if(isLiveMine&&live.ready[i]){
       joinBit='<div style="font-size:13.5px;opacity:.92;margin-top:8px">✅ <b>You\'re ready!</b> <span style="opacity:.85">(the host confirmed it)</span></div>';
     }
-    body='<div class="p-wait"><b style="font-size:18px">'+(live.mode==="player"?"You're in, "+esc(p.name)+" 👋":"Player "+(i+1))+'</b><br>Waiting for Start…'+joinBit+'</div>';
+    /* v38: “You're in” appears only for the device the host actually seated
+       on THIS screen (isLiveMine). Before, any tab in player mode showed
+       “You're in” on both player stages — including one whose join the host
+       had never confirmed. An unconfirmed device is told it is not in yet. */
+    var lobbyHead=isLiveMine?("You're in, "+esc(p.name)+" 👋"):((live.mode==="player"&&!live.assigned)?"Joining…":"Player "+(i+1));
+    var lobbySub=(live.mode==="player"&&!live.assigned&&!isLiveMine)?"Waiting for the host to confirm your seat — you are not in yet.":"Waiting for Start…";
+    body='<div class="p-wait"><b style="font-size:18px">'+lobbyHead+'</b><br>'+lobbySub+joinBit+'</div>';
   } else if(state.phase==="finished"){
     var win=state.players[0].score===state.players[1].score?"It's a tie! 🤝":(p.score>other.score?"🏆 You win!":esc(other.name)+" wins — good game!");
     body='<div class="p-wait"><b style="font-size:19px">Game over — '+win+'</b><br>You scored <b>'+p.score+' points</b> · '+p.correct+' correct.</div>';
