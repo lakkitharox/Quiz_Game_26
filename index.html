@@ -36,8 +36,8 @@ a{color:inherit}
 .conn-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#94A3B8;margin-right:6px;vertical-align:middle}
 .conn-dot.on{background:var(--green);box-shadow:0 0 0 4px rgba(34,197,94,.18)} .conn-dot.wait{background:var(--amber)}
 .tabs{display:flex;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
-.tabs button{border:0;background:transparent;color:var(--muted);font-weight:700;font-size:13px;padding:8px 13px;border-radius:999px;min-height:36px;white-space:nowrap}
-.tabs button.active{background:var(--text);color:var(--bg)}
+.tabs a,.tabs button{border:0;background:transparent;color:var(--muted);font-weight:700;font-size:13px;padding:8px 13px;border-radius:999px;min-height:36px;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center}
+.tabs a.active,.tabs button.active{background:var(--text);color:var(--bg)}
 .btn{border:1px solid var(--line);background:var(--card);color:var(--text);padding:11px 16px;border-radius:999px;font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:8px;justify-content:center}
 .btn.primary{background:var(--amber);color:#111;border-color:var(--amber)}
 .btn.dark{background:var(--text);color:var(--bg);border-color:var(--text)}
@@ -89,6 +89,9 @@ a{color:inherit}
 @media(max-width:560px){.join-mini{grid-template-columns:1fr}}
 .join-mini input{padding:12px 13px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.4);color:#fff;font-weight:700;width:100%}
 .statusline{font-size:13px;font-weight:700;margin-top:9px}.statusline.ok{color:#4ADE80}.statusline.wait{color:var(--amber)}
+/* v32: one-line Live / Waiting status on the full-screen stages */
+.conn-pill-fixed{position:fixed;left:10px;bottom:10px;z-index:46;padding:7px 12px;border-radius:999px;background:rgba(9,11,17,.78);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:12.5px;font-weight:800;backdrop-filter:blur(8px);pointer-events:none}
+.conn-pill-fixed.on{border-color:var(--green)} .conn-pill-fixed.wait{border-color:var(--amber)}
 
 /* player stage */
 .p-head{min-width:min(420px,88vw);padding:16px 22px;border-radius:20px;background:rgba(0,0,0,.42);border:1px solid rgba(255,255,255,.25);backdrop-filter:blur(8px)}
@@ -355,23 +358,24 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
 <header class="topbar" id="topbar"><div class="topbar-in">
   <div class="brand"><span class="mark"><span>✓</span><span>✕</span></span> MYTH or FACT</div>
   <div class="room"><span class="conn-dot" id="connDot"></span>ROOM <i id="roomCodeDisplay">—</i> · <span id="connStatus">Demo mode</span></div>
-  <nav class="tabs" id="viewTabs" aria-label="Screens — all on this one link">
-    <button data-view="host">🖥 Host</button>
-    <button data-view="p1">Player 1</button>
-    <button data-view="p2">Player 2</button>
-    <button data-view="join">Join</button>
-    <button data-view="admin">⚙ Admin</button>
+  <nav class="tabs" id="viewTabs" aria-label="Screens">
+    <a data-view="host" id="nav-host" href="/host">🖥 Host</a>
+    <a data-view="p1" id="nav-p1" href="/player1">Player 1</a>
+    <a data-view="p2" id="nav-p2" href="/player2">Player 2</a>
+    <a data-view="join" id="nav-join" href="/join">Join</a>
+    <a data-view="admin" id="nav-admin" href="/admin">⚙ Admin</a>
   </nav>
 </div></header>
 
 <!-- ================= HOST — full screen ================= -->
 <section id="view-host">
   <div class="stage" id="hostStage"></div>
+  <div class="conn-pill-fixed" id="hostConnPill">○ Not connected</div>
 </section>
 
 <!-- ================= PLAYER 1 / 2 — full screen ================= -->
-<section id="view-p1" hidden><div class="stage" id="p1Stage"></div><div class="join-dock" id="p1Dock" hidden></div></section>
-<section id="view-p2" hidden><div class="stage" id="p2Stage"></div><div class="join-dock" id="p2Dock" hidden></div></section>
+<section id="view-p1" hidden><div class="stage" id="p1Stage"></div><div class="join-dock" id="p1Dock" hidden></div><div class="conn-pill-fixed" id="p1ConnPill">○ Not connected</div></section>
+<section id="view-p2" hidden><div class="stage" id="p2Stage"></div><div class="join-dock" id="p2Dock" hidden></div><div class="conn-pill-fixed" id="p2ConnPill">○ Not connected</div></section>
 
 <!-- ================= IPAD JOIN (live) ================= -->
 <section id="view-join" hidden>
@@ -638,7 +642,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>About</h3>
         <p><b style="color:var(--text)">Myth or Fact</b> — 2 players · 10 random statements per round · fastest correct tap scores.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v30</b> · 27 Nov 2026</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v34</b> · 28 Nov 2026</p>
       </div>
       </div>
     </div>
@@ -769,7 +773,7 @@ function getQ(){return state.active[state.idx]||state.questions[state.idx]||null
 
 /* ================= LIVE (Supabase Realtime Broadcast) ================= */
 var supa=null;
-var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],ready:[false,false],startPending:false,joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,lobbyChannel:null,lobbyTimer:null,joinedAt:0,heartbeatTimer:null,viewerFallbackTimer:null,joinedViaStored:false};
+var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],ready:[false,false],startPending:false,joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,lobbyChannel:null,lobbyTimer:null,joinedAt:0,heartbeatTimer:null,viewerFallbackTimer:null,joinedViaStored:false,forceRejoin:false,hostHbTimer:null};
 var pendingWantSlot=null; /* set by a /PlayerN screen's own join form so the host pins that exact slot */
 var joinDraft={"c0":"","n0":"","c1":"","n1":""}; /* v19: text typed into a player screen's join form, kept across stage re-renders (see render()) */
 var lastHostState=null, liveMyAnswer=null, liveMyIdx=-1, broadcastQueued=false;
@@ -791,7 +795,7 @@ function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeSt
 function designFingerprint(k){var d=liveDesign[k];if(!d)return k+": —";var bg=d.bgMode==="image"?"image":d.bgMode==="color"?("solid "+(d.bgColor||"")):("grad "+(d.bg1||"")+" → "+(d.bg2||""));return bg+(d.headline?(" · headline “"+d.headline+"”"):" · no headline");}
 function diagLines(admin){
   var L=[];
-  L.push(["Build","v30"]);
+  L.push(["Build","v34"]);
   L.push(["Live library (Supabase)",diag.supa]);
   L.push(["This screen's role",live.mode==="host"?"Host (room owner)":live.mode==="player"?("Player "+(live.mySlot!==null?live.mySlot+1:"?")):live.mode==="viewer"?"Host display (viewer)":"Offline / demo"]);
   L.push(["Room channel",diag.channel]);
@@ -810,7 +814,7 @@ function diagLines(admin){
   return L;
 }
 function diagHTML(admin){
-  return '<b class="diag-t">🔎 Diagnostics — Build v30</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
+  return '<b class="diag-t">🔎 Diagnostics — Build v34</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
 }
 function renderDiag(){
   var ad=$("adminDiag"); if(ad)ad.innerHTML=diagHTML(true);
@@ -822,7 +826,7 @@ function normalizeCode(s){return String(s||"").toUpperCase().replace(/[^A-Z0-9]/
    routing or view switching can touch the URL. A standalone Host screen uses
    this to join its room — the code itself is never shown on that screen. */
 var earlyRoomCode=null;
-try{var _q0=new URLSearchParams(location.search);var _r0=_q0.get("room")||_q0.get("code");if(!_r0&&(location.hash||"").indexOf("?")>-1){var _qh=new URLSearchParams((location.hash||"").split("?")[1]);_r0=_qh.get("room")||_qh.get("code");}if(_r0){var _n0=normalizeCode(_r0);if(_n0.length>=3)earlyRoomCode=_n0;}}catch(e){}
+try{var _q0=new URLSearchParams(location.search);var _r0=_q0.get("room")||_q0.get("code");if(_r0){var _n0=normalizeCode(_r0);if(_n0.length>=3)earlyRoomCode=_n0;}}catch(e){}
 function genCode(){return String(Math.floor(1000+Math.random()*9000))}
 /* ================= ONE ROOM FOR THE FULL DAY (v21) =================
    One room code per calendar day. The Host reuses the same code for every
@@ -889,7 +893,39 @@ function copyTodaysCode(){
   function fallback(){try{var ta=document.createElement("textarea");ta.value=code;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);done();}catch(e){toast("Today's code is "+code);}}
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(code).then(done).catch(fallback);}else fallback();
 }
+/* v34 — FULL SCREEN LINKS + COPY: Admin → Live shows the complete URL for
+   every screen (the game's public address + the screen's path), never just
+   a path ending, so copying a link is one tap — no typing an address
+   together. The public address is the deployed site, not this tab's own
+   address, so a copied link always points at the real game. */
+var PUBLIC_ORIGIN="https://quizgame26.vercel.app";
+function screenURL(v){
+  return PUBLIC_ORIGIN+screenPath(v);
+}
+function copyTextGeneric(text,okMsg,btn){
+  function done(){
+    toast(okMsg||"Copied ✓");
+    if(btn){var old=btn.textContent;btn.textContent="Copied ✓";btn.disabled=true;setTimeout(function(){btn.textContent=old;btn.disabled=false;},1600);}
+  }
+  function fallback(){
+    try{var ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta);done();}
+    catch(e){toast("Copy failed — long-press the link to copy it");}
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done).catch(fallback);}else fallback();
+}
+function copyScreenLink(v,btn){var u=screenURL(v);copyTextGeneric(u,"Copied ✓  "+u,btn);}
+function copyAllScreenLinks(btn){
+  var lines=[
+    "Host: "+screenURL("host"),
+    "Player 1: "+screenURL("p1"),
+    "Player 2: "+screenURL("p2"),
+    "Join: "+screenURL("join"),
+    "Admin: "+screenURL("admin")
+  ];
+  copyTextGeneric(lines.join("\n"),"Copied ✓  All 5 screen links",btn);
+}
 function renderAdminRoomPanel(){
+  try{if(typeof refreshNavLinks==="function")refreshNavLinks();}catch(e){}
   var big=$("adminRoomCodeBig"); if(!big)return;
   var daily=getDailyRoom(), code=daily.code;
   big.innerHTML="QUIZ-<b>"+esc(code)+"</b>";
@@ -915,17 +951,22 @@ function renderAdminRoomPanel(){
   var lcb=$("liveRoomCreateBtn"); if(lcb){lcb.textContent=(live.mode==="host"&&live.code===code)?("● Room Live — QUIZ-"+code):"● Create Today's Room";lcb.disabled=(live.mode==="host"&&live.code===code);}
   var ll=$("liveRoomLinks");
   if(ll){
-    /* ONE LINK: these are not addresses — they switch THIS page to that
-       screen (the #screen ending of the one link changes, nothing else).
-       On another device the same link is opened and the screen is tapped
-       there. Player screens get today's code filled in automatically. */
+    /* v34 — FULL LINKS, ONE-TAP COPY, PATH-ONLY: every screen's COMPLETE URL is shown
+       (this site's origin + its path; player links carry today's room code
+       as ?room=) with a Copy button per row and a Copy-all button on top,
+       so sharing a link never means typing an address together by hand.
+       “Open” is a real link to that screen's own path. */
     var litems=[
-      ["🖥 Host — main screen","host","Open Host here"],
-      ["Player 1 — code filled in","p1","Open Player 1 here"],
-      ["Player 2 — code filled in","p2","Open Player 2 here"]
+      ["🖥 Host — main screen","host"],
+      ["📱 Player 1","p1"],
+      ["📱 Player 2","p2"],
+      ["📱 Join","join"],
+      ["⚙ Admin","admin"]
     ];
-    ll.innerHTML=litems.map(function(it){
-      return '<div class="linkrow"><div><b style="font-size:14px">'+it[0]+'</b></div><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="openScreen(\''+it[1]+'\')">'+it[2]+'</button></span></div>';
+    ll.innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:2px 0 8px"><p style="font-size:13px;color:var(--muted);margin:0">Full link for each screen — tap Copy and send it to that device:</p><button class="btn small primary" onclick="copyAllScreenLinks(this)">Copy all links</button></div>'+litems.map(function(it){
+      var u=screenURL(it[1]);
+      var p=screenPath(it[1]);
+      return '<div class="linkrow"><div style="flex:1 1 240px;min-width:0"><b style="font-size:14px">'+it[0]+'</b><br><code style="display:inline-block;margin-top:5px">'+esc(u)+'</code></div><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small primary" onclick="copyScreenLink(\''+it[1]+'\',this)">Copy</button><a class="btn small" href="'+esc(p)+'" style="text-decoration:none">Open</a></span></div>';
     }).join("");
   }
   var note=$("joinRememberedNote");
@@ -982,6 +1023,13 @@ function hostCreateRoom(){
   var s=getSupa();
   if(!s){toast("Live unavailable in this browser — demo mode still works");return;}
   if(live.mode!=="offline"){toast("Already in a live room");return;}
+  /* v32 SINGLE-HOST GUARD: a second Admin tab in this browser used to be
+     able to create a rival host for the same room — two hosts broadcasting
+     different states is exactly how screens end up disagreeing. The live
+     host leaves a heartbeat in this browser's storage (see below); a fresh
+     create that finds a heartbeat from ANOTHER tab less than 12s old
+     refuses, and says why, instead of silently splitting the room. */
+  try{var hb0=window.localStorage?JSON.parse(localStorage.getItem(HOST_HB_KEY)||"null"):null;if(hb0&&hb0.code===getDailyRoomCode()&&hb0.clientId!==live.clientId&&(Date.now()-hb0.ts)<12000){toast("⚠ Another tab in this browser is already hosting today's room — control the game from that tab, or close it and try again.");return;}}catch(e){}
   live.code=getDailyRoomCode(); live.mode="host"; live.connected=false; live.occupied=[null,null]; live.ready=[false,false]; live.lastSeen=[0,0]; live.stale=[false,false]; /* v21: today's code — the same room all day, reopening never changes it */
   try{if(window.localStorage)localStorage.setItem(OPEN_ROOM_KEY,live.code);}catch(e){} /* v19: same-browser Host tabs can find this room even if an announce is missed */
   var ch=s.channel(channelName(live.code),{config:{broadcast:{self:false}}}); live.channel=ch;
@@ -996,7 +1044,13 @@ function hostCreateRoom(){
   live.presenceTimer=setInterval(function(){
     if(live.mode!=="host")return;
     var changed=false, now=Date.now();
-    for(var i=0;i<2;i++){ if(live.occupied[i]){ var isStale=live.lastSeen[i]&&(now-live.lastSeen[i]>14000); if(!!isStale!==!!live.stale[i]){live.stale[i]=!!isStale;changed=true;} } }
+    for(var i=0;i<2;i++){ if(live.occupied[i]){ var isStale=live.lastSeen[i]&&(now-live.lastSeen[i]>14000); if(!!isStale!==!!live.stale[i]){live.stale[i]=!!isStale;changed=true;}
+      /* v32: a slot whose iPad has been silent for a full minute while the
+         game is in the lobby is FREED — before, it was only marked stale
+         and stayed locked, so a reloaded iPad was refused forever with
+         “slot already taken” and its name never reached this screen. */
+      if(state.phase==="lobby"&&live.lastSeen[i]&&(now-live.lastSeen[i]>60000)){live.occupied[i]=null;live.ready[i]=false;live.stale[i]=false;live.lastSeen[i]=0;state.players[i].name="Player "+(i+1);changed=true;toast("Player "+(i+1)+"'s iPad went quiet — its slot is free, it can join again");}
+    } }
     if(changed)render();
     else if(!$("view-admin").hidden)renderLiveMonitor();
   },3000);
@@ -1013,6 +1067,11 @@ function hostCreateRoom(){
      live game within seconds instead of sitting in the lobby. */
   if(live.heartbeatTimer)clearInterval(live.heartbeatTimer);
   live.heartbeatTimer=setInterval(function(){if(live.mode==="host"&&live.connected)broadcastState();},10000);
+  /* v32: host heartbeat for the single-host guard above — refreshed every
+     4s while this tab hosts, removed when the room closes. */
+  if(live.hostHbTimer)clearInterval(live.hostHbTimer);
+  var writeHb=function(){try{if(window.localStorage)localStorage.setItem(HOST_HB_KEY,JSON.stringify({code:live.code,clientId:live.clientId,ts:Date.now()}));}catch(e){}};
+  writeHb(); live.hostHbTimer=setInterval(writeHb,4000);
 }
 /* ================= ROOM DISCOVERY (standalone Host finds the game) =================
    The host announces its room on a well-known lobby channel. A Host screen
@@ -1038,6 +1097,7 @@ var discovery={channel:null,timer:null,active:false};
    for the rest of the session so a stale stored code can't loop forever;
    a live host's announce can still deliver the same code afterwards. */
 var OPEN_ROOM_KEY="tfq-open-room";
+var HOST_HB_KEY="tfq-host-hb"; /* v32: single-host guard heartbeat (see hostCreateRoom) */
 var storedCodeBlacklist=null;
 function storedRoomCode(){
   try{
@@ -1125,7 +1185,8 @@ function playerJoinFrom(prefix){
   if(code.length<3){setStatus("Enter the room code from Admin first.");return;}
   if(!name){setStatus("Enter your name so the host knows who you are.");$("joinName2").focus();return;}
   var s=getSupa(); if(!s){setStatus("⚠ Live connection unavailable in this browser.");return;}
-  if(live.mode==="player"&&live.code===code){switchView(live.mySlot===1?"p2":"p1");return;}
+  if(live.mode==="player"&&live.code===code&&!live.forceRejoin){switchView(live.mySlot===1?"p2":"p1");return;}
+  live.forceRejoin=false; /* v32: a forced rejoin (dropped channel) falls through and rebuilds the connection below */
   if(live.mode!=="offline") disconnectLive(true);
   live.mode="player"; live.code=code; live.myName=name.slice(0,18); live.connected=false; live.assigned=false; live.mySlot=null; live.wantSlot=pendingWantSlot; pendingWantSlot=null; lastHostState=null; liveMyAnswer=null; liveMyIdx=-1;
   savePlayerDaySession(code,live.wantSlot); /* v21: remember the CODE (and slot) for the whole day — the name is per-session and is never stored */
@@ -1146,10 +1207,25 @@ function playerJoinFrom(prefix){
       live.connected=true; updateLiveUI();
       var sendJoin=function(){try{ch.send({type:"broadcast",event:"join",payload:{clientId:live.clientId,name:live.myName,wantSlot:live.wantSlot}});}catch(e){}};
       sendJoin(); if(live.joinRetry)clearInterval(live.joinRetry);
-      var tries=0;
-      live.joinRetry=setInterval(function(){if(live.assigned||tries++>6){clearInterval(live.joinRetry);live.joinRetry=null;if(!live.assigned)setStatus("Still waiting for the host… check the code, and that the host screen is open with this room created.");return;}sendJoin();},2500);
+      /* v32 JOIN FIX: knock every 2.5s UNTIL the host lets this iPad in.
+         v31 stopped after ~15 seconds, so an iPad that joined before Admin
+         had created the room — or whose knock was simply lost — sat
+         unassigned forever: its name never left the iPad and the Host
+         screen showed “waiting…” no matter what the player did. */
+      var waited=0;
+      live.joinRetry=setInterval(function(){
+        if(live.assigned||live.mode!=="player"){clearInterval(live.joinRetry);live.joinRetry=null;return;}
+        waited+=2.5; sendJoin();
+        if(waited===20)setStatus("Still trying to reach the host… keep this screen open — it joins by itself once the room is up.");
+      },2500);
       setStatus("Connected — waiting for the host to let you in…");
-    } else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"){setStatus("⚠ Couldn't connect — check your internet and try again.");}
+    } else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){
+      /* v32: a dropped player channel used to stay dropped. Rebuild the
+         connection and knock again (the join form still holds the code
+         and name, so the rejoin needs no typing). */
+      live.connected=false;
+      if(!live.assigned){setStatus("Connection dropped — reconnecting…");setTimeout(function(){if(live.mode==="player"&&!live.assigned){live.forceRejoin=true;playerJoinFrom("join2");}},3000);}
+    }
     updateLiveUI();
   });
   updateLiveUI();
@@ -1337,6 +1413,8 @@ function playerSendAnswer(val){
 function disconnectLive(silent){
   var wasPlayer=live.mode==="player";
   if(live.mode==="host"){try{if(window.localStorage)localStorage.removeItem(OPEN_ROOM_KEY);}catch(e){}} /* v19: the room is closed — stop pointing same-browser Host tabs at it */
+  if(live.hostHbTimer){clearInterval(live.hostHbTimer);live.hostHbTimer=null;}
+  if(live.mode==="host"){try{if(window.localStorage)localStorage.removeItem(HOST_HB_KEY);}catch(e){}} /* v32: room closed — the single-host guard releases this browser */
   if(live.viewerFallbackTimer){clearTimeout(live.viewerFallbackTimer);live.viewerFallbackTimer=null;}
   if(live.mode==="host"&&live.channel&&live.connected){try{live.channel.send({type:"broadcast",event:"room-closed",payload:{}});}catch(e){}}
   if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}
@@ -1363,6 +1441,23 @@ function countReady(){return live.ready.filter(function(x){return !!x}).length}
 /* v30: once a player has set a name, every screen shows THAT name — the
    “Player 1 / Player 2” slot labels only appear before a name exists. */
 function dispName(i){var n=state.players[i].name;return n&&n!=="Player "+(i+1)?n:"Player "+(i+1);}
+/* v32: one short line on every full-screen stage — Live, or Waiting —
+   so a connection problem is visible on the screen itself instead of
+   only inside Admin (v31 removed the old diagnostics block, and with it
+   the only place that said a screen was stuck offline). */
+function connPillText(){
+  /* Connection state ONLY — never game state — so the line always answers
+     one question: is this screen connected to the room? */
+  if(live.mode==="host")return live.connected?["● Live — connected (hosting)","on"]:["◌ Connecting…","wait"];
+  if(live.mode==="viewer")return live.connected?["● Live — connected","on"]:["◌ Connecting…","wait"];
+  if(live.mode==="player")return live.assigned?["● Live — connected as "+dispName(live.mySlot),"on"]:(live.connected?["◌ Connected — waiting for the host to let you in…","wait"]:["◌ Connecting…","wait"]);
+  if(currentView==="host"&&discovery.active)return ["◌ Not connected — looking for the room…","wait"];
+  return ["○ Not connected",""];
+}
+function renderConnPills(){
+  var t=connPillText();
+  ["hostConnPill","p1ConnPill","p2ConnPill"].forEach(function(id){var el=$(id);if(el){el.textContent=t[0];el.className="conn-pill-fixed "+t[1];}});
+}
 function updateLiveUI(){
   var isHost=live.mode==="host", isPlayer=live.mode==="player";
   $("joinOfflineBox").hidden=isPlayer;
@@ -1374,6 +1469,7 @@ function updateLiveUI(){
   renderAdminRoomPanel();
   renderJoinDocks();
   renderDiag();
+  renderConnPills();
 }
 
 /* ================= HOST STAGE ================= */
@@ -1822,7 +1918,7 @@ function renderLiveMonitor(){
         +'<div class="pstats"><div class="pstat"><b>'+p.score+'</b><small>Score</small></div><div class="pstat"><b>'+p.correct+'</b><small>Correct</small></div><div class="pstat"><b>'+p.streak+'</b><small>Streak</small></div><div class="pstat"><b>'+fmtSecs(at)+'</b><small>Answer time</small></div></div>'
         +'<div class="panswer '+ansCls+'">'+ansBox+(conn.detail?'<div style="margin-top:6px;color:var(--muted);font-size:12.5px">'+esc(conn.detail)+'</div>':"")+'</div>'
         +histHtml
-        +'<div class="plinkrow"><button class="btn small" onclick="openScreen(\'p'+(i+1)+'\')">Open '+esc(dispName(i))+' here</button></div>'
+        +'<div class="plinkrow"><a class="btn small" href="'+esc(screenPath('p'+(i+1)))+'" style="text-decoration:none">Open '+esc(dispName(i))+'</a></div>'
         +'</div>';
     })(i);
   }
@@ -2030,27 +2126,40 @@ function designChangedSoft(){if(softTimer)clearTimeout(softTimer);softTimer=setT
 $("resetLayoutBtn").addEventListener("click",function(){design[designTab].els=clone(designTab==="host"?HOST_ELS:PLAYER_ELS);selectedEl=null;designChanged();toast(designTabLabel()+" layout reset");});
 $("resetAllDesignBtn").addEventListener("click",function(){design=clone(DEFAULT_DESIGN);selectedEl=null;designChanged();toast("All screen designs reset");});
 
-/* ================= NAV / ROUTING — ONE LINK (v24) =================
-   There is exactly ONE address for this game. The separate /Player1,
-   /Player2 and /Admin paths are gone: the path is never read and never
-   written, so no route can point at a different (older) file ever again.
-   Host, Player 1, Player 2, Join and Admin are views of this single page,
-   selected only by the #screen ending of the one link:
-     #host · #player1 · #player2 · #join · #admin
-   Old endings still land on the right screen (#/admin, #Admin/admin,
-   #p1, …), and a room code may ride along as #player1?room=1234 or the
-   legacy ?room=1234. Switching screens updates only the #ending. */
+/* ================= NAV / ROUTING — PATH-ONLY LINKS (v34) =================
+   v34: ONE way only — separate path links, no hash routing at all.
+   Every screen has its OWN link:
+     /host · /player1 · /player2 · /join · /admin
+   Underneath it is still this one single app: the host's rewrites send
+   every one of those paths to this file, and routeFromURL() reads the
+   screen from the PATH only. A link can be copied from Admin → Live and
+   opened on the device that screen belongs to — one clear connection
+   path per screen, nothing jumbled or mixed. Old hash links are NOT
+   read: if a hash is present on load it is stripped and ignored, so
+   /Admin#host can never open the wrong screen again. A room code may
+   ride along as ?room=1234 on player links only. */
 var VIEWS=["host","p1","p2","join","admin"];
-var HASH_FOR_VIEW={host:"host",p1:"player1",p2:"player2",join:"join",admin:"admin"};
 var currentView="host"; /* the screen actually on display — set by switchView, read by the Host auto-join gate */
+function refreshNavLinks(){
+  /* Topbar tabs are real <a> links to separate paths. Player hrefs carry
+     today's room code so the join form arrives filled in. */
+  try{
+    var code=getDailyRoomCode();
+    var set=function(id,href){var el=$(id);if(el)el.setAttribute("href",href);};
+    set("nav-host","/host");
+    set("nav-p1","/player1?room="+code);
+    set("nav-p2","/player2?room="+code);
+    set("nav-join","/join");
+    set("nav-admin","/admin");
+  }catch(e){}
+}
 function switchView(v){
   /* v28 — STRICT 2-PLAYER LOCK: once an iPad has joined a live game in
-     strict mode, this device is locked to its OWN player screen on the
-     shared link. It cannot wander to the Host, Admin or the other player's
-     screen (the “same link distractions” the host asked to remove) until
-     Admin resets its slot or the room closes, which disconnects it and
-     lifts the lock. The Join view stays reachable — it only shows the
-     “you're in” note for a joined player. */
+     strict mode, this device is locked to its OWN player screen.
+     It cannot wander to the Host, Admin or the other player's
+     screen until Admin resets its slot or the room closes, which
+     disconnects it and lifts the lock. The Join view stays reachable —
+     it only shows the “you're in” note for a joined player. */
   if(state.strict2p&&live.mode==="player"&&live.assigned&&(live.mySlot===0||live.mySlot===1)){
     var myView=live.mySlot===1?"p2":"p1";
     if(v!==myView&&v!=="join"){
@@ -2064,58 +2173,75 @@ function switchView(v){
   var tb=$("topbar"); if(tb)tb.hidden=(v==="host"||v==="p1"||v==="p2");
   ["hostStage","p1Stage","p2Stage"].forEach(function(id){var s=$(id);if(s)s.classList.toggle("full",v==="host"||v==="p1"||v==="p2");});
   var ft=document.querySelector("footer"); if(ft)ft.hidden=(v==="host"||v==="p1"||v==="p2");
-  document.querySelectorAll("#viewTabs button").forEach(function(b){b.classList.toggle("active",b.getAttribute("data-view")===v);});
-  /* The one link keeps ONE path — only its #screen ending follows the view,
-     so the address a device was opened with never turns into a different
-     route. replaceState: no reload, no history spam. */
-  try{var target="#"+HASH_FOR_VIEW[v];if(location.hash!==target)history.replaceState(null,"",target);}catch(e){}
+  document.querySelectorAll("#viewTabs [data-view]").forEach(function(b){b.classList.toggle("active",b.getAttribute("data-view")===v);});
+  /* v34 PATH-ONLY: switchView NEVER writes a hash and never rewrites the
+     path. The URL in the address bar is the link the user opened — that
+     link IS this screen. Internal view changes (e.g. after a player
+     joins) only swap the visible section. */
   window.scrollTo({top:0});
   if(v==="admin"){renderAdmin();renderDesigner();}
   render();
   prepareRememberedPlayer(); /* player screens: today's code prefilled, name left fresh for this session */
   renderAdminRoomPanel();
+  refreshNavLinks();
 }
 function openScreen(v){
-  /* The single way anything opens a screen: same page, same link.
-     Player screens opened from Admin carry today's code with them, so the
-     join form arrives already filled in — no link, no typing. */
+  /* Internal helper kept for programmatic in-tab switches that do NOT
+     rely on the URL (e.g. legacy calls). It never uses a hash — it only
+     swaps the visible screen. Real navigation between devices always
+     uses the separate path links (<a href="/player1?room=…"> etc). */
   if(v==="p1"||v==="p2"){
     var code=getDailyRoomCode();
     if(code){earlyRoomCode=code;playerSessionPrepped=false;}
   }
   switchView(v);
 }
-function routeFromURL(){
-  /* The screen comes from the #ending ONLY — the path is ignored on
-     purpose, so every old address (/, /Admin, /Player1, #Admin/admin…)
-     opens this same page and lands on the screen its ending names. */
-  var v=null;
+var PATH_FOR_VIEW={host:"host",p1:"player1",p2:"player2",join:"join",admin:"admin"};
+function pathScreen(){
+  /* v34: the screen named by this page's PATH — the last path segment —
+     or null when the path names no screen (the bare root address).
+     This is the ONLY place the screen is read from the URL. */
   try{
-    var seg=function(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");};
-    var hashRaw=(location.hash||"").replace(/^#\/?/,"");
-    var hashSeg=seg(hashRaw.split(/[?/]/)[0].split("/")[0]);
+    var seg=String(location.pathname||"").toLowerCase().split("/").filter(function(x){return x;}).pop()||"";
+    seg=seg.replace(/[^a-z0-9]/g,"");
+    if(seg==="player1"||seg==="p1")return "p1";
+    if(seg==="player2"||seg==="p2")return "p2";
+    if(seg==="admin")return "admin";
+    if(seg==="join"||seg==="ipadjoin")return "join";
+    if(seg==="host"||seg==="stage"||seg==="main")return "host";
+    if(seg==="indexhtml"||seg==="index")return null;
+  }catch(e){}
+  return null;
+}
+function screenPath(v){
+  /* A screen's own path — put it after the site's address on the
+     device that screen belongs to (e.g. the site address + /player1).
+     Player paths carry today's room code, so an iPad opening one finds
+     its join form already filled in. */
+  return "/"+PATH_FOR_VIEW[v]+((v==="p1"||v==="p2")?("?room="+getDailyRoomCode()):"");
+}
+function routeFromURL(){
+  /* v34 PATH-ONLY: screen comes from the PATH only. No hash is read,
+     no ?screen= / ?view= is read. The room code is read from the
+     ?room= / ?code= query only (player links). Bare root defaults
+     to Host at init. */
+  var v=pathScreen();
+  try{
     var q=new URLSearchParams(location.search);
-    var cand=[hashSeg,seg(q.get("screen")||q.get("view")||"")];
-    for(var i=0;i<cand.length&&!v;i++){
-      var c=cand[i];
-      if(c==="player1"||c==="p1")v="p1";
-      else if(c==="player2"||c==="p2")v="p2";
-      else if(c==="admin")v="admin";
-      else if(c==="join"||c==="ipadjoin")v="join";
-      else if(c==="host"||c==="stage"||c==="main")v="host";
-    }
     var r=q.get("room")||q.get("code");
-    if(!r&&hashRaw.indexOf("?")>-1){var hq=new URLSearchParams(hashRaw.split("?")[1]);r=hq.get("room")||hq.get("code");}
-    if(r){var nc=normalizeCode(r);if(nc.length>=3&&!earlyRoomCode)earlyRoomCode=nc;var jc=$("joinCode2");if(jc&&!jc.value)jc.value=nc;if(!v)v="join";} /* never overwrite a code the user has already typed */
+    if(r){var nc=normalizeCode(r);if(nc.length>=3&&!earlyRoomCode)earlyRoomCode=nc;var jc=$("joinCode2");if(jc&&!jc.value)jc.value=nc;}
   }catch(e){}
   return v;
 }
-window.addEventListener("hashchange",function(){var v=routeFromURL();if(v&&v!==currentView)switchView(v);maybeHostViewer();});
-document.querySelectorAll("#viewTabs button").forEach(function(b){b.addEventListener("click",function(){openScreen(b.getAttribute("data-view"));});});
 
 /* ================= ADMIN WIRING ================= */
-$("name1").addEventListener("change",function(e){state.players[0].name=e.target.value.trim()||"Player 1";render();});
-$("name2").addEventListener("change",function(e){state.players[1].name=e.target.value.trim()||"Player 2";render();});
+/* v32: names typed in Admin only reach the other screens when THIS tab is
+   the room host (render() broadcasts only from the host). Before, editing
+   a name in any other tab changed it locally and silently — the Host TV
+   never saw it. Now a non-host tab says so out loud. */
+function adminNameGuard(){if(live.mode==="host")return;toast("⚠ This tab isn't the room host — the name changed on this tab only. Set names on the iPads, or in the Admin tab that created the room.");}
+$("name1").addEventListener("change",function(e){state.players[0].name=e.target.value.trim()||"Player 1";render();adminNameGuard();});
+$("name2").addEventListener("change",function(e){state.players[1].name=e.target.value.trim()||"Player 2";render();adminNameGuard();});
 document.querySelectorAll("#orderSeg button").forEach(function(b){b.addEventListener("click",function(){state.orderMode=b.getAttribute("data-order");render();toast(state.orderMode==="random"?"🔀 Random order — questions shuffle at Start":"➡ Sequence order — questions play in list order");});});
 $("timerRange").addEventListener("input",function(e){state.timerDur=+e.target.value;if(state.phase!=="playing")state.timeLeft=state.timerDur;$("timerVal").textContent=state.timerDur===0?"off (no timer)":state.timerDur+"s";render();});
 $("timerRange").addEventListener("change",function(){render();toast("Timer set to "+(state.timerDur===0?"off":state.timerDur+"s"));});
@@ -2748,6 +2874,10 @@ $("saveAllBtn").addEventListener("click",function(){ensureDesign();liveDesign=cl
 $("saveScreenBtn").addEventListener("click",function(){ensureDesign();liveDesign[designTab]=clone(design[designTab]);render();renderDesigner();publishDesignLive(designTabLabel()+" only",designTab);});
 
 /* ================= INIT ================= */
+/* v34 PATH-ONLY: strip any legacy hash on load and ignore it — old links
+   like /Admin#host must never route again. Keep path + query only. */
+try{if(location.hash){history.replaceState(null,"",location.pathname+location.search);}}catch(e){}
+refreshNavLinks();
 restorePublishedDesign(); /* last Go Live design, restored before first paint so a reload keeps it */
 restoreQuestionBank(); /* instant paint from this browser's cache — Supabase load below overrides it with the shared bank */
 render(); updateLiveUI();
@@ -2780,7 +2910,7 @@ document.addEventListener("visibilitychange",function(){
 });
 /* Diagnostics stay fresh on their own — channel/gate/sync lines re-render
    every 3s so a live test can watch them change (or catch them stuck). */
-setInterval(function(){try{renderDiag();renderAdminRoomPanel();}catch(e){}},3000); /* the room panel re-renders too, so at midnight it rolls over to the new day's code on its own */
+setInterval(function(){try{renderDiag();renderAdminRoomPanel();renderConnPills();}catch(e){}},3000); /* the room panel re-renders too, so at midnight it rolls over to the new day's code on its own */
 /* A freshly opened screen asks any other open tab that has a published design
    (the room host, or a tab where Save was pressed) to send it over. */
 if(designChannel){try{designChannel.postMessage({type:"design-request"});}catch(e){}}
