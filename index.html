@@ -557,12 +557,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         <h3>Statement bank <span id="qCount" style="color:var(--amber)"></span></h3>
         <p>10 picked at random per round. Tap 💾 Save Questions to save.</p>
         <div id="qBankStatus" style="font-size:13px;line-height:1.55;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:0 0 14px;background:var(--card2)">☁️ Checking…</div>
-        <div id="qBankSetup" hidden style="border:1.5px dashed var(--amber);border-radius:12px;padding:13px 14px;margin:0 0 14px">
-          <b style="font-size:14px">One-time setup — run this SQL once</b>
-          <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:6px 0 10px">Supabase project <b style="color:var(--text)">tzyuxwujgxvgidkwfydp</b> → SQL Editor → paste → Run. Creates the <b style="color:var(--text)">quiz_questions</b> table.</p>
-          <pre id="qBankSql" style="white-space:pre-wrap;word-break:break-word;font-size:11.5px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px;overflow-x:auto;margin:0 0 10px"></pre>
-          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="copyBankSqlBtn" type="button">Copy SQL</button><button class="btn small primary" id="retryBankBtn" type="button">I've run it — check again</button></div>
-        </div>
+        
         <div id="qList"></div>
         <div class="divider"></div>
         <div class="field"><label for="newQ">Add a new statement</label><input id="newQ" placeholder="e.g. The Moon is made of cheese."></div>
@@ -597,20 +592,15 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       </div>
       </div>
       <div class="admin-sec" data-sec="live" hidden>
-      <!-- GAME SERVER — Supabase tables (v40): the live game state lives in
-           the quiz_rooms table; every screen reads it, so a screen that
+      <!-- GAME SERVER — Firebase tables (v40): the live game state lives in
+           the rooms table; every screen reads it, so a screen that
            joins late or drops for a moment just reads the current state
            again instead of waiting for a message that may never come. -->
       <div class="panel">
-        <h3>☁️ Game server — Supabase</h3>
-        <p>One row in the <b style="color:var(--text)">quiz_rooms</b> table is the whole game: room code, players, Ready states, question, scores, winner and the screen designs. Every screen reads that row once when it opens, then just listens — changes arrive live over the socket. Player taps (join, name, Ready, answer) are written straight into the same row by the player, and the Host adopts them from it. When nobody is doing anything, no screen calls the server at all.</p>
+        <h3>☁️ Game server — Firebase</h3>
+        <p>One entry at <b style="color:var(--text)">rooms/&lt;code&gt;</b> in the Firebase Realtime Database is the whole game: room code, players, Ready states, question, scores, winner and the screen designs. Every screen follows that entry with one listener — changes arrive live. Player taps (join, name, Ready, answer) are written straight into the same entry by the player, and the Host adopts them from it. When nobody is doing anything, no screen calls the server at all.</p>
         <div id="roomsStatus" style="font-size:13px;line-height:1.55;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:0 0 14px;background:var(--card2)">☁️ Checking…</div>
-        <div id="roomsSetup" hidden style="border:1.5px dashed var(--amber);border-radius:12px;padding:13px 14px;margin:0 0 14px">
-          <b style="font-size:14px">One-time setup — run this SQL once</b>
-          <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:6px 0 10px">Supabase project <b style="color:var(--text)">tzyuxwujgxvgidkwfydp</b> → SQL Editor → paste → Run. Creates the <b style="color:var(--text)">quiz_rooms</b> table and turns on live updates for it. Until it has run, no screen can connect — the app says so plainly instead of pretending.</p>
-          <pre id="roomsSql" style="white-space:pre-wrap;word-break:break-word;font-size:11.5px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px;overflow-x:auto;margin:0 0 10px"></pre>
-          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="copyRoomsSqlBtn" type="button">Copy SQL</button><button class="btn small primary" id="retryRoomsBtn" type="button">I've run it — check again</button></div>
-        </div>
+        
       </div>
       </div>
       <div class="admin-sec" data-sec="live" hidden>
@@ -703,16 +693,11 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       </div>
       </div>
       <div class="admin-sec" data-sec="sessions" hidden>
-      <!-- GAME SESSIONS — saved in Supabase -->
+      <!-- GAME SESSIONS — saved in Firebase -->
       <div class="panel">
-        <h3>☁️ Saved sessions — Supabase</h3>
+        <h3>☁️ Saved sessions — Firebase</h3>
         <div id="sessStatus" style="font-size:13px;line-height:1.55;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:0 0 14px;background:var(--card2)">☁️ Checking…</div>
-        <div id="sessSetup" hidden style="border:1.5px dashed var(--amber);border-radius:12px;padding:13px 14px;margin:0 0 14px">
-          <b style="font-size:14px">One-time setup — run this SQL once</b>
-          <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:6px 0 10px">Supabase project <b style="color:var(--text)">tzyuxwujgxvgidkwfydp</b> → SQL Editor → paste → Run.</p>
-          <pre id="sessSql" style="white-space:pre-wrap;word-break:break-word;font-size:11.5px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px;overflow-x:auto;margin:0 0 10px"></pre>
-          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" id="copySessSqlBtn" type="button">Copy SQL</button><button class="btn small primary" id="retrySessBtn" type="button">I've run it — check again</button></div>
-        </div>
+        
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><button class="btn small" id="refreshSessBtn" type="button">↻ Refresh saved sessions</button></div>
         <div id="sessList"></div>
       </div>
@@ -722,7 +707,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>About</h3>
         <p><b style="color:var(--text)">Myth or Fact</b> — 2 players · 10 random statements per round · fastest correct tap scores.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v49</b> · 28 Nov 2026 — one room row in Supabase is the whole game: connection, names, scores, questions, answers and the winner all travel in that one row. Screens read it once when they open, then follow it live. Nothing runs in the background. Connecting is allowed minutes, not seconds: no screen calls the server “not answering” until a call has gone unanswered for a full 3 minutes, and a room save that timed out is checked against the row itself before it is ever called failed.</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v50</b> · 28 Nov 2026 — Firebase Realtime Database is the game server: one entry at rooms/&lt;code&gt; holds the whole game (connection, names, scores, questions, answers, winner, designs), the statement bank lives at /questions and finished games are recorded at /sessions. Each screen keeps exactly one listener on its room, writes only when someone acts, and makes no calls while idle.</p>
       </div>
       </div>
     </div>
@@ -740,10 +725,10 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
 <div class="toast" id="toast"></div>
 <div class="live-error" id="liveError" hidden></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-var SUPABASE_URL="https://tzyuxwujgxvgidkwfydp.supabase.co";
-var SUPABASE_ANON_KEY="sb_publishable_3W79v2laK-S0N33cFI6qIw_Og_YBmeT";
+var FIREBASE_CONFIG={apiKey:"AIzaSyDdcinLZmooysV3X5szBQnMan1UE8PEv98",authDomain:"quiz-game-64857.firebaseapp.com",databaseURL:"https://quiz-game-64857-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"quiz-game-64857",storageBucket:"quiz-game-64857.firebasestorage.app",messagingSenderId:"420755053613",appId:"1:420755053613:web:66555f697cf45298fd2ca4"};
 /* The Myth or Fact bank — 40 statements (answer:true = FACT, answer:false = MYTH).
    Every round picks ROUND_SIZE (10) of these at random. */
 var DEFAULT_QS=[
@@ -852,8 +837,8 @@ var timerId=null;
 function getTotal(){return state.active.length||state.questions.length}
 function getQ(){return state.active[state.idx]||state.questions[state.idx]||null}
 
-/* ================= LIVE (v40: Supabase tables — see the game-server section below) ================= */
-var supa=null;
+/* ================= LIVE (v40: Firebase tables — see the game-server section below) ================= */
+var fbDb=null;
 var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:persistedClientId("main"),joinError:"",roomWriteFails:0,roomWriteErrorShown:false,occupied:[null,null],ready:[false,false],readyPending:false,readyWant:null,startPending:false,assigned:false,lastSeen:[0,0],hostHbTimer:null,startPendingTimer:null,lastStateAt:0,hasValidState:false,emptyRoom:false,joinPending:false,joinStartedAt:0,joinFromSlot:null,joinWaitTimer:null,lastWriteOkAt:0,lastWriteFailedAt:0,lastReadOkAt:0,lastReadFailed:false,claimDone:false,claimStamp:0,readyStamp:null,answerStamp:null,lastRowHostSeq:null};
 /* ================= PER-TAB HOST IDENTITY (v42) =================
    The single-host guard needs to tell TABS apart, but v41 made
@@ -879,95 +864,59 @@ var lastHostState=null, liveMyAnswer=null, liveMyIdx=-1, roomWriteQueued=false;
    so publishing one screen can never roll another screen back. */
 var designScreenTs={host:0,player1:0,player2:0};
 function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeString();}catch(e){return "—";}}
-/* ================= v43: NO SERVER CALL MAY HANG FOREVER =================
-   Diagnosis (28 Nov): Admin stuck on “Checking the game server…” — its
-   first Supabase REST request hung without ever settling, and NOTHING in
-   the app had a timeout, so the boot probe, the host-start gate and every
-   screen downstream waited forever on that one stuck request. The iPads
-   proved the server itself was up (their Realtime socket connected).
-   v43 gives EVERY Supabase REST call an AbortController timeout
-   (via the client's global fetch below), wraps the critical room reads
-   in a matching promise timeout, retries the boot probe every 5 s with a
-   plain persistent error, stops gating host start on a single read, and
-   surfaces REST errors instead of swallowing them.
-   v49: that timeout is now 3 MINUTES (REST_TIMEOUT_MS below). The user
-   reports that connecting the Host and player screens normally takes a
-   few minutes, and a simple room read took 10.6 s in live evidence — so
-   any seconds-scale timeout aborts calls that are still on their way
-   and reports a failure while the connection is actually in progress.
-   A call is now given a full 3 minutes before it counts as unanswered;
-   while it is waiting, the screens say “still connecting…”, and
-   “server not answering” is declared only after those 3 minutes of
-   silence. The same 3 minutes applies to the Realtime socket timeout
-   (see getSupa) and to the Start-pending gate (armStartPendingTimeout).
-   The Host-login and join waits have no separate deadline of their own
-   in this build — they ride on this same per-call timeout, so they too
-   allow minutes now. */
-var REST_TIMEOUT_MS=180000; /* v49: 3 minutes — connecting screens normally takes minutes, so a single slow call (~10s, or even ~2min) must never be reported as a failure */
-function isTimeoutError(e){ if(!e)return false; if(e.isTimeout)return true; var m=String((e&&e.message)||e||""), n=String((e&&e.name)||""); return n==="AbortError"||n==="TimeoutError"||/abort|timeout|timed out/i.test(m); }
-function timedFetch(input,init){
-  init=init||{};
-  var ctrl=null; try{ctrl=new AbortController();}catch(e){}
-  if(!ctrl)return fetch(input,init);
-  var timer=setTimeout(function(){try{ctrl.abort();}catch(e){}},REST_TIMEOUT_MS);
-  var opts={}; for(var k in init)opts[k]=init[k];
-  opts.signal=ctrl.signal;
-  return fetch(input,opts).then(function(r){clearTimeout(timer);return r;},function(err){clearTimeout(timer);throw err;});
+
+function getDb(){
+  if(fbDb)return fbDb;
+  try{
+    if(!window.firebase||!firebase.initializeApp||!firebase.database)return null;
+    if(!firebase.apps||!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+    fbDb=firebase.database();
+    return fbDb;
+  }catch(e){fbDb=null;return null;}
 }
-/* ================= v44: THE GAME PATH TALKS REST DIRECTLY =================
-   ROOT CAUSE of the “server did not answer” freeze (found 28 Nov): this
-   app never signs anyone in, but the Supabase library was created with
-   its DEFAULT auth settings — and that auth layer guards every table
-   call with a cross-tab browser lock (navigator.locks) meant for
-   session handling. With Admin, Host and player screens open as tabs
-   in the SAME browser (the normal setup), table reads/writes queue
-   behind that lock and can hang forever — no error, no answer — while
-   the Realtime socket, which never touches the lock, connects fine.
-   That is exactly the reported split: screens showed “Connected” and
-   joins reached the host over the socket, yet every table call timed
-   out, so the room never landed in quiz_rooms, the Host found no room,
-   and no seat was ever confirmed from the table.
-   v44 removes the lock from the game path completely:
-   • the library client is created with auth sessions OFF and a
-     pass-through lock (the question-bank and session saves, which
-     still use the library, inherit this and can no longer hang either);
-   • room reads/writes and event rows go through plain fetch calls to
-     the REST API with the publishable key — no session, no lock,
-     nothing between the screen and the table but the timed fetch;
-   • a network-level failure (timeout / dropped request — the server
-     never answered) is retried once automatically; a real server
-     answer, even an error, is surfaced at once, never retried blindly.
-   Realtime subscriptions are unchanged — they were never the problem. */
-function noopAuthLock(name,acquireTimeout,fn){return fn();}
-function getSupa(){ if(supa){return supa;} if(!window.supabase||!window.supabase.createClient){return null;} try{supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,lock:noopAuthLock},global:{fetch:timedFetch},realtime:{timeout:REST_TIMEOUT_MS}});}catch(e){supa=null;} return supa; } /* v49: realtime timeout raised from the library's 10s default to the same 3 minutes — a slow socket subscribe must not be declared lost in seconds either */
-function restHeaders(extra){
-  var h={"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json"};
-  if(extra)for(var k in extra)h[k]=extra[k];
-  return h;
+function fbRef(path){var db=getDb();return db?db.ref(path):null;}
+function roomRef(code){return fbRef("rooms/"+code);}
+function fbClean(o){return JSON.parse(JSON.stringify(o));}
+/* Firebase stores arrays as objects when they contain nulls and drops
+   null entries entirely, so every array the game shares is rebuilt to
+   its fixed length on the way in — a screen never renders undefined. */
+function fbArr(v,len,defVal){
+  var out=[],i;
+  if(Array.isArray(v)){for(i=0;i<len;i++)out.push(v[i]===undefined||v[i]===null?defVal:v[i]);return out;}
+  if(v&&typeof v==="object"){for(i=0;i<len;i++)out.push(v[i]===undefined||v[i]===null?defVal:v[i]);return out;}
+  for(i=0;i<len;i++)out.push(defVal);
+  return out;
 }
-function restError(status,bodyText){
-  var code="",msg="Server answered with HTTP "+status;
-  try{var j=JSON.parse(bodyText||"");if(j){code=String(j.code||"");msg=String(j.message||j.msg||msg);}}catch(e){}
-  var err=new Error(msg); err.code=code; err.status=status; err.isHttpError=true; return err;
+function normalizeRoomState(pl){
+  if(!pl||typeof pl!=="object")return pl;
+  pl.occupied=fbArr(pl.occupied,2,null);
+  pl.ready=fbArr(pl.ready,2,false);
+  if(pl.answersLocked!==undefined)pl.answersLocked=fbArr(pl.answersLocked,2,false);
+  if(pl.playerAnswers!==undefined)pl.playerAnswers=fbArr(pl.playerAnswers,2,null);
+  pl.answerTimes=fbArr(pl.answerTimes,2,null);
+  pl.answerSeq=fbArr(pl.answerSeq,2,null);
+  pl.lastGain=fbArr(pl.lastGain,2,0);
+  pl.pAns=fbArr(pl.pAns,2,null);
+  if(pl.players!==undefined&&!Array.isArray(pl.players)&&pl.players&&typeof pl.players==="object"){
+    var arr=[];for(var i=0;i<2;i++)arr.push(pl.players[i]||{name:"Player "+(i+1),score:0,correct:0,streak:0});
+    pl.players=arr;
+  }
+  if(pl.questionText===undefined)pl.questionText=null;
+  if(pl.correctAnswer===undefined)pl.correctAnswer=null;
+  return pl;
 }
-function restRequest(method,path,body,prefer){
-  var init={method:method,headers:restHeaders(prefer?{"Prefer":prefer}:null)};
-  if(body!==undefined&&body!==null)init.body=JSON.stringify(body);
-  return timedFetch(SUPABASE_URL+"/rest/v1/"+path,init).then(function(r){
-    return r.text().then(function(txt){
-      if(!r.ok)throw restError(r.status,txt);
-      if(!txt)return null;
-      try{return JSON.parse(txt);}catch(e){return null;}
-    });
-  });
-}
-function restWithRetry(method,path,body,prefer){
-  /* v46 QUIET: no automatic retry at all. One call, one answer — a failed
-     call is surfaced once and the next scheduled read (or the user's next
-     tap) is the retry. The old retry-on-every-failure doubled the load on
-     a database that was already timing out (see the v46 note below). */
-  return restRequest(method,path,body,prefer);
-}
+/* QUIET discipline: exactly one value listener per screen, on its room
+   path. detachRoomListener removes it — reconnecting or leaving always
+   detaches first, so listeners never stack up. */
+function detachRoomListener(){
+  if(live.fbRefObj&&live.fbHandler){try{live.fbRefObj.off("value",live.fbHandler);}catch(e){}}
+  else if(live.fbRefObj){try{live.fbRefObj.off("value");}catch(e){}}
+  live.fbRefObj=null; live.fbHandler=null; live.channel=null;
+} /* v49: realtime timeout raised from the library's 10s default to the same 3 minutes — a slow socket subscribe must not be declared lost in seconds either */
+
+
+
+
 function normalizeCode(s){
   var t=String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
   while(t.indexOf("QUIZ")===0)t=t.slice(4);
@@ -1206,85 +1155,50 @@ function prepareRememberedPlayer(){
     joinDraft["n"+slot]=""; /* name always fresh — never carried into a new session */
   }
 }
-/* ================= SUPABASE AS THE GAME SERVER (v40 shape, v47 rules) =================
-   ONE ROW IS THE WHOLE GAME. public.quiz_rooms holds one row per room;
-   its state JSON carries everything shared: code, names, seats, Ready
-   flags, scores, the current question and answers, the winner, and the
-   screen designs. The host (Admin tab) writes the authoritative game
-   state into it; the Host TV and both iPads read it once when they
-   open and then follow it live via Postgres Changes.
-   v47 removed the second table (quiz_room_events) and every background
-   loop: players write their own seat fields (join claim, name, Ready,
-   answer) directly into the row with playerPatchState, and the host
-   adopts them from the row it follows (hostRowChanged). No heartbeats,
-   no pings, no polls, no backlog scans, no automatic retries — when
-   nobody acts, the server receives zero calls.
-   The publishable key cannot create tables, so the one-time SQL in
-   Admin → Live → Game server creates quiz_rooms. Until it has run,
-   every connect path fails honestly: roomsSource becomes "setup", the
-   setup panel appears, and the persistent error line says the server
-   is not set up — no screen ever claims to be connected. */
-var ROOMS_TABLE="quiz_rooms";
-var ROOMS_SQL="create table if not exists public.quiz_rooms (\n  code text primary key,\n  state jsonb not null default '{}'::jsonb,\n  time_left integer not null default 0,\n  updated_at timestamptz not null default now()\n);\nalter table public.quiz_rooms enable row level security;\ndrop policy if exists \"Quiz rooms read\" on public.quiz_rooms;\ndrop policy if exists \"Quiz rooms insert\" on public.quiz_rooms;\ndrop policy if exists \"Quiz rooms update\" on public.quiz_rooms;\ndrop policy if exists \"Quiz rooms delete\" on public.quiz_rooms;\ncreate policy \"Quiz rooms read\" on public.quiz_rooms for select using (true);\ncreate policy \"Quiz rooms insert\" on public.quiz_rooms for insert with check (true);\ncreate policy \"Quiz rooms update\" on public.quiz_rooms for update using (true) with check (true);\ncreate policy \"Quiz rooms delete\" on public.quiz_rooms for delete using (true);\ndo $$ begin alter publication supabase_realtime add table public.quiz_rooms; exception when duplicate_object then null; end $$;";
+/* ================= FIREBASE AS THE GAME SERVER (v50) =================
+   ONE ENTRY IS THE WHOLE GAME. rooms/<code> in the Realtime Database
+   holds the same state object the old room row held: code, names,
+   seats, Ready flags, scores, the current question and answers, the
+   winner, and the screen designs. The host (Admin tab) writes the
+   authoritative game state into it; the Host TV and both iPads follow
+   it with ONE value listener each. Players write their own seat fields
+   (join claim, name, Ready, answer) into the same entry with a
+   transaction, and the host adopts them from the entry it follows.
+   No polling, no retries, no heartbeats to the server — when nobody
+   acts, Firebase receives zero calls. If the socket drops, Firebase
+   reconnects by itself and the listener resumes; screens say
+   “waiting for Firebase” and never declare failure while it tries. */
 var roomsSource="checking"; /* checking | ok | setup | error */
 function renderRoomsStatus(){
   var msg;
-  if(roomsSource==="ok")msg="☁️ <b style='color:#16A34A'>Supabase is the game server</b> — the live game state is stored in the quiz_rooms table and every screen reads it from there.";
-  else if(roomsSource==="setup")msg="⚠️ <b>Not set up yet</b> — the game-server tables don't exist in the quiz Supabase project, so no screen can connect. Run the SQL below once.";
-  else if(roomsSource==="error")msg="⚠️ <b>The game server did not answer</b> — a server call timed out or failed. Nothing is connected until it answers, and this screen makes no more calls on its own. Tap Create Today's Room to try again.";
-  else msg="☁️ Checking the game server…";
+  if(roomsSource==="ok")msg="☁️ <b style='color:#16A34A'>Firebase is the game server</b> — the live game state is stored at rooms/&lt;code&gt; in the Realtime Database and every screen follows it from there.";
+  else if(roomsSource==="error")msg="⚠️ <b>Waiting for Firebase</b> — a call has not answered yet. Nothing is declared failed while Firebase is still trying; this screen makes no more calls on its own. Tap Create Today's Room to try again.";
+  else msg="☁️ Checking Firebase…";
   var box=$("roomsStatus"); if(box)box.innerHTML=msg;
-  /* v42: the same state is mirrored into the always-visible room panel at
-     the top of Admin — before, it only existed inside the Live section,
-     so an Admin sitting on any other section saw no server state at all
-     and a failed connect looked like nothing happening. */
   var top=$("roomsStatusTop"); if(top)top.innerHTML="Game server — "+msg;
-  var setup=$("roomsSetup"); if(setup)setup.hidden=roomsSource!=="setup";
-  var pre=$("roomsSql"); if(pre)pre.textContent=ROOMS_SQL;
 }
 function noteRoomsError(err){
-  /* A failed rooms/events call sorts itself into the one fact the user
-     needs: tables missing (→ show the SQL) or a transient failure.
-     v43: errors are SURFACED, never swallowed — a timeout or any failed
-     call moves the server state out of “checking” into a plain “error”
-     that stays on screen (renderRoomsStatus) and into diagnostics,
-     until a call actually succeeds (markRoomsOk). */
-  if(err&&isBankTableMissing(err)){if(roomsSource!=="setup"){roomsSource="setup";renderRoomsStatus();}return "setup";}
-  if(roomsSource!=="error"&&roomsSource!=="setup"){roomsSource="error";renderRoomsStatus();}
-  else if(roomsSource==="error")renderRoomsStatus();
+  if(roomsSource!=="error"){roomsSource="error";renderRoomsStatus();}
+  else renderRoomsStatus();
   return "error";
 }
 function markRoomsOk(){if(roomsSource!=="ok"){roomsSource="ok";renderRoomsStatus();}}
-function roomsSetupErrorText(){
-  return "✕ The Supabase game server is not set up yet — the quiz_rooms table doesn't exist, so no screen can connect. In Admin → Live → Game server, run the one-time SQL, then try again. Nothing is connected until that is done.";
-}
-function tableChannel(s,topic){
-  /* Build a Postgres-Changes subscription on a clean slate:
-     supabase-js hands back the EXISTING
-     channel when a topic is requested twice, handlers and all — so a
-     leftover channel from an earlier role in this tab could be returned
-     with a subscribe callback that never fires again. Remove every
-     channel on this topic first, then create ours. */
-  try{
-    var existing=s.getChannels?s.getChannels():[];
-    existing.slice().forEach(function(c){if(c&&(c.topic===topic||c.topic==="realtime:"+topic)){try{s.removeChannel(c);}catch(e){}}});
-  }catch(e){}
-  return s.channel(topic);
-}
+
+
 function fetchRoomRow(code){
-  /* v45 SIMPLE SYNC — THE way a screen learns the game: read the one
-     room row from the server. That row holds everything the game
-     shares (code, names, scores, question + answers, winner, designs).
-     Resolves the row, or null when there is no such room. One clock
-     only: the timed fetch aborts a single attempt at 3 minutes (v49) and there is
-     NO automatic retry (v46 QUIET — restWithRetry is now a single call);
-     the old second wrapper race is gone. A failure is surfaced via
-     noteRoomsError and flagged on live.lastReadFailed, never swallowed,
-     so screens can tell “no room yet” (a successful read with no row)
-     apart from “server not answering” (roomsSource === "error"). */
-  return restWithRetry("GET",ROOMS_TABLE+"?select=code,state,time_left,updated_at&code=eq."+encodeURIComponent(code)).then(function(rows){
+  /* One read of rooms/<code> — used only when someone acts (a join tap,
+     a takeover, the one boot check). Resolves a row-shaped object
+     ({code, state, time_left}) or null when there is no such room.
+     A failure is flagged on live.lastReadFailed, never swallowed, so
+     screens can tell “no room yet” apart from “Firebase not answering”. */
+  var r=roomRef(code);
+  if(!r){live.lastReadFailed=true;noteRoomsError(new Error("Firebase unavailable"));return Promise.resolve(null);}
+  return r.once("value").then(function(snap){
     markRoomsOk(); live.lastReadOkAt=Date.now(); live.lastReadFailed=false;
-    return (rows&&rows.length)?rows[0]:null;
+    var val=snap.val();
+    if(val===null||val===undefined)return null;
+    val=normalizeRoomState(val);
+    return {code:code,state:val,time_left:(typeof val.timeLeft==="number"?val.timeLeft:0)};
   }).catch(function(err){live.lastReadFailed=true;noteRoomsError(err);return null;});
 }
 /* ================= BOOT PROBE (v43 origin, v47: single read) =================
@@ -1293,14 +1207,14 @@ function fetchRoomRow(code){
    the error stays on screen and NOTHING retries in the background —
    the next call happens only when the user acts. */
 function probeGameServer(){
-  /* ONE read when the page opens — that is all. If it fails, the
-     error stays on screen and nothing retries in the background;
-     the next call happens only when the user acts (Create Today's
-     Room, Join, a tap). Zero calls while nobody does anything. */
-  if(roomsSource==="ok"||roomsSource==="setup")return;
+  /* ONE read when the page opens — that is all — so Admin → Live shows
+     Firebase's real state before anyone connects. If it fails, the
+     error stays on screen and nothing retries in the background; the
+     next call happens only when the user acts. */
+  if(roomsSource==="ok")return;
   fetchRoomRow(getDailyRoomCode()).then(function(){
-    if(roomsSource==="ok"||roomsSource==="setup"){clearLiveError();renderRoomsStatus();}
-    else setLiveError("✕ The game server is not answering — no screen can connect yet. Nothing retries on its own; tap Create Today's Room (Admin) to try again. This message clears the moment a call succeeds.");
+    if(roomsSource==="ok"){clearLiveError();renderRoomsStatus();}
+    else setLiveError("✕ Firebase is not answering yet — no screen can connect yet. Nothing retries on its own; tap Create Today's Room (Admin) to try again. This message clears the moment a call succeeds.");
   });
 }
 function persistedClientId(scope){
@@ -1336,17 +1250,23 @@ function persistedClientId(scope){
    its own row and adopts those seat fields (hostRowChanged). One call
    per tap, and nothing at all while nobody taps. */
 function playerPatchState(mutator){
+  /* A player tap (join claim, name, Ready, answer) is ONE transaction
+     on rooms/<code>: Firebase applies the change against the current
+     entry, so a host write in flight can never be clobbered by a stale
+     copy. One call per tap, and nothing at all while nobody taps. */
   if(!live.code)return Promise.resolve(false);
-  return fetchRoomRow(live.code).then(function(row){
-    if(!row||live.lastReadFailed)return false;
-    var st=row.state||{};
-    st.baseSeq=(typeof st.hostSeq==="number")?st.hostSeq:0; /* the host write this patch is based on — the host uses it to spot stale-based patches */
+  var r=roomRef(live.code); if(!r)return Promise.resolve(false);
+  return r.transaction(function(cur){
+    if(cur===null||cur===undefined)return undefined; /* no room — abort */
+    var st=normalizeRoomState(JSON.parse(JSON.stringify(cur)));
+    st.baseSeq=(typeof st.hostSeq==="number")?st.hostSeq:0; /* the host write this patch is based on */
     st.lastWriter=live.clientId;
-    if(mutator(st)===false)return false;
-    return restRequest("PATCH",ROOMS_TABLE+"?code=eq."+encodeURIComponent(live.code),{state:st,updated_at:new Date().toISOString()}).then(function(){
-      markRoomsOk(); return true;
-    }).catch(function(err){noteRoomsError(err);return false;});
-  });
+    if(mutator(st)===false)return undefined; /* abort — e.g. seat just taken */
+    return fbClean(st);
+  }).then(function(res){
+    if(res&&res.committed){markRoomsOk();return true;}
+    return false;
+  }).catch(function(err){noteRoomsError(err);return false;});
 }
 function failJoin(msg){
   /* A join that did not land ends honestly: back to the form, with the
@@ -1376,64 +1296,33 @@ function buildStatePayload(){
     baseSeq:hostWriteSeq+1, lastWriter:tabId,
     hostTab:tabId, hostSeq:++hostWriteSeq}; /* which host tab wrote this row, and its write count — the host ignores its own echoes (lastWriter) and spots stale-based player patches via baseSeq */
 }
-function verifyRoomSaveLanded(payload,code){
-  /* v49: after a timed-out save, the server may have committed the write
-     even though the response never arrived (live evidence: the 5720 row
-     was updated and in the lobby seconds after the app reported failure).
-     Re-read the row once and check whether THIS save is what is stored.
-     The proof is the save's hostSeq: player patches keep the row's
-     hostSeq but replace lastWriter with their own id, so lastWriter must
-     NOT be required — a player joining or answering between the save and
-     the read-back does not undo the save. hostSeq at or beyond this
-     save's means this save (or a newer one from this tab) is stored.
-     Resolves true only when the read-back proves the save landed. */
-  return new Promise(function(resolve){setTimeout(resolve,700);}).then(function(){
-    return fetchRoomRow(code).then(function(row){
-      if(live.lastReadFailed||!row||!row.state)return false;
-      var st=row.state;
-      if(typeof st.hostSeq==="number"&&typeof payload.hostSeq==="number"&&st.hostSeq>=payload.hostSeq)return true;
-      if(st.lastWriter===tabId&&st.ts&&payload.ts&&st.ts>=payload.ts)return true;
-      return false;
-    }).catch(function(){return false;});
-  });
-}
+
 function writeRoomState(){
-  /* v40: “room-row write” now means WRITE THE ROOM ROW. Every screen reads
-     the state back out of the table (immediately on join, then live via
-     Postgres Changes), so delivery no longer depends on a message
-     arriving at the right second. Resolves true only when the write
-     actually landed — callers that make a claim to the user (Start)
-     check this instead of assuming delivery (the v35 rule, kept). */
-  if(live.mode!=="host"||!live.code) return Promise.resolve(false);
+  /* Writing the room = setting rooms/<code> to the current game state.
+     Every screen follows that entry with its listener, so delivery no
+     longer depends on a message arriving at the right second. Resolves
+     true only when Firebase confirms the write — callers that make a
+     claim to the user (Start) check this instead of assuming delivery.
+     One attempt, never retried automatically; if Firebase is still
+     reconnecting the promise simply stays pending and the screens keep
+     saying “connecting”, honestly. */
+  if(live.mode!=="host"||!live.code)return Promise.resolve(false);
   var payload=buildStatePayload();
   var saveCode=live.code;
-  /* v44: direct REST upsert (see the v44 note at getSupa). v47: ONE
-     attempt, never retried automatically — a failed save is stamped
-     (lastWriteFailedAt) and said plainly on screen; the next save
-     happens when someone acts.
-     v49: a TIMEOUT is no longer declared a failure on its own. The
-     write is verified by reading the room row back (verifyRoomSaveLanded):
-     if the row shows this save, it counts as success; failure is
-     reported only when the read-back proves it did not land. */
-  function markSaveFailed(err){
-    noteRoomsError(err);live.lastWriteFailedAt=Date.now();live.roomWriteFails=(live.roomWriteFails||0)+1;if(!live.roomWriteErrorShown){live.roomWriteErrorShown=true;setLiveError("✕ The game server did not answer the room save — the other screens cannot see the current game. Nothing retries on its own; the next tap tries again.");}return false;
-  }
-  return restWithRetry("POST",ROOMS_TABLE+"?on_conflict=code",[{code:saveCode,state:payload,time_left:state.timeLeft,updated_at:new Date().toISOString()}],"resolution=merge-duplicates").then(function(){
-    markRoomsOk(); live.lastWriteOkAt=Date.now(); live.lastWriteFailedAt=0; live.roomWriteFails=0; live.roomWriteErrorShown=false;
+  var r=roomRef(saveCode);
+  if(!r){live.lastWriteFailedAt=Date.now();return Promise.resolve(false);}
+  return r.set(fbClean(payload)).then(function(){
+    markRoomsOk(); live.lastWriteOkAt=Date.now(); live.lastWriteFailedAt=0; live.roomWriteFails=0; live.roomWriteErrorShown=false; clearLiveError();
     return true;
   }).catch(function(err){
-    if(isTimeoutError(err)){
-      return verifyRoomSaveLanded(payload,saveCode).then(function(landed){
-        if(landed){markRoomsOk();live.lastWriteOkAt=Date.now();live.lastWriteFailedAt=0;live.roomWriteFails=0;live.roomWriteErrorShown=false;clearLiveError();return true;}
-        return markSaveFailed(err);
-      });
-    }
-    return markSaveFailed(err);
+    noteRoomsError(err); live.lastWriteFailedAt=Date.now(); live.roomWriteFails=(live.roomWriteFails||0)+1;
+    if(!live.roomWriteErrorShown){live.roomWriteErrorShown=true;setLiveError("✕ Firebase has not confirmed the last room save — the other screens cannot see the current game yet. Nothing retries on its own; the next tap writes again, and this message clears when a save lands.");}
+    return false;
   });
 }
 function queueRoomWrite(){ if(roomWriteQueued) return; roomWriteQueued=true; setTimeout(function(){roomWriteQueued=false;writeRoomState();},60); }
 /* ================= v47: THE HOST FOLLOWS ITS OWN ROOM ROW =================
-   The host subscribes to changes on its room's row in quiz_rooms.
+   The host subscribes to changes on its room's row in rooms.
    Player taps land IN that row (see playerPatchState), so this one
    subscription is the host's only input — no events table, no backlog
    scans, no pings, no heartbeat writes. Adopting is field-by-field and
@@ -1493,29 +1382,36 @@ function hostRowChanged(row){
   if(changed){render();queueRoomWrite();updateLiveUI();}
 }
 function hostSubscribeRow(){
-  var s=getSupa(); if(!s||!live.code)return;
-  var ch=tableChannel(s,"db-roomhost-"+live.code+"-"+tabId); live.channel=ch;
-  ch.on("postgres_changes",{event:"*",schema:"public",table:ROOMS_TABLE,filter:"code=eq."+live.code},function(pl){
-    if(!pl)return;
-    if(pl.eventType==="DELETE")return;
-    if(pl.new)hostRowChanged(pl.new);
-  });
-  ch.subscribe(function(status){
-    if(live.channel!==ch)return;
-    
-    if(status==="SUBSCRIBED"){
-      live.connected=true; clearLiveError(); queueRoomWrite();
+  /* The host's ONE listener, on its own room entry. Player taps land in
+     that entry (playerPatchState), so this listener is the host's only
+     input. The first value it delivers is the connection proof: only
+     then may a pending Start go ahead. */
+  var db=getDb(); if(!db||!live.code)return;
+  detachRoomListener();
+  var code=live.code;
+  var r=roomRef(code); if(!r)return;
+  live.fbRefObj=r;
+  var first=true;
+  var handler=function(snap){
+    if(live.fbRefObj!==r)return;
+    if(first){
+      first=false; live.connected=true; clearLiveError();
+      queueRoomWrite();
       if(live.startPending){live.startPending=false;startGame();}
     }
-    else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){
-      live.connected=false;
-      if(live.mode==="host"){
-        if(live.startPending){live.startPending=false;disarmStartPendingTimeout();setLiveError("✕ Game NOT started — this tab lost its connection to the game server before the game could start. Wait until the connection line shows Live, then press Start again.");}
-        else setLiveError("✕ This tab lost its connection to the game server — the Host screen and the iPads are NOT receiving updates. The socket reconnects by itself; if this stays, reload this tab.");
-      }
-    }
+    var val=snap.val();
+    if(val===null||val===undefined)return;
+    hostRowChanged({code:code,state:normalizeRoomState(val),time_left:(typeof val.timeLeft==="number"?val.timeLeft:0)});
+    updateLiveUI();
+  };
+  var errHandler=function(err){
+    if(live.fbRefObj!==r)return;
+    live.connected=false;
+    if(live.mode==="host")setLiveError("✕ This tab is waiting for Firebase — the room listener dropped and Firebase is reconnecting by itself. Nothing is declared failed; updates resume on their own when it answers.");
     updateLiveUI(); render();
-  });
+  };
+  live.fbHandler=handler;
+  r.on("value",handler,errHandler);
 }
 function hostReconnect(){
   if(live.mode!=="host")return;
@@ -1539,27 +1435,23 @@ function applyAdoptedSeats(){
   return true;
 }
 function hostCreateRoom(){
-  var s=getSupa();
-  if(!s){setLiveError("✕ Room NOT created — the live connection (Supabase library) did not load in this tab. Check this device's internet connection, then reload this page and tap Create Today's Room again.");toast("Live unavailable in this browser — demo mode still works");return;}
-  if(live.mode==="host"&&live.code===getDailyRoomCode()){ /* v47: already hosting — the button is now "Retry room save": one fresh write attempt, by hand */
-    writeRoomState().then(function(ok){toast(ok?("Room save landed — QUIZ-"+live.code+" is live on the server"):("✕ The server still did not answer — the room save did not land"));renderAdminRoomPanel();});
+  var db=getDb();
+  if(!db){setLiveError("✕ Room NOT created — the Firebase library did not load in this tab. Check this device's internet connection, then reload this page and tap Create Today's Room again.");toast("Live unavailable in this browser — demo mode still works");return;}
+  if(live.mode==="host"&&live.code===getDailyRoomCode()){ /* already hosting — the button is now "Retry room save": one fresh write attempt, by hand */
+    writeRoomState().then(function(ok){toast(ok?("Room save landed — QUIZ-"+live.code+" is live on Firebase"):("◌ Firebase has not confirmed that save yet — this tab stays host and keeps showing “connecting” until it answers"));renderAdminRoomPanel();});
     return;
   }
   if(live.mode!=="offline"){toast("Already in a live room");return;}
-  /* v32 SINGLE-HOST GUARD, v42 identity + refusal: a second Admin tab in
-     this browser must not silently split the room. The live host leaves
-     a heartbeat in this browser's storage (see below), stamped with its
-     PER-TAB id (tabId — v41's shared per-browser clientId could not tell
-     tabs apart, and a leftover pre-v41 tab's random id blocked every
-     fresh tab). A refusal is now PERSISTENT — the red banner plus the
+  /* SINGLE-HOST GUARD (per-tab, localStorage only — it never touches
+     Firebase): a second Admin tab in this browser must not silently
+     split the room. A refusal is PERSISTENT — the red banner plus the
      “Take over this room” box in the room panel — never a toast that
-     vanishes and leaves Create looking like it did nothing. The only
-     bypass is that Take over button (hostForceOnce). */
+     vanishes. The only bypass is that Take over button (hostForceOnce). */
   var force=hostForceOnce; hostForceOnce=false;
   if(!force){
     try{
       var hb0=window.localStorage?JSON.parse(localStorage.getItem(HOST_HB_KEY)||"null"):null;
-      var hbId=hb0?(hb0.tabId||hb0.clientId):null; /* heartbeats from older builds carry only clientId — still another tab's mark */
+      var hbId=hb0?(hb0.tabId||hb0.clientId):null;
       if(hb0&&hb0.code===getDailyRoomCode()&&hbId&&hbId!==tabId&&(Date.now()-hb0.ts)<12000){
         hostBlocked={code:getDailyRoomCode(),at:Date.now()};
         setLiveError("✕ Room NOT created in this tab — another Admin tab in this browser is already hosting today's room, so this tab is not connected to anything. Close the other Admin tab and tap Create Today's Room again, or tap “Take over this room” in the room panel at the top of Admin.");
@@ -1569,40 +1461,23 @@ function hostCreateRoom(){
     }catch(e){}
   }
   hostBlocked=null;
-  live.code=getDailyRoomCode(); live.mode="host"; live.connected=false; live.occupied=[null,null]; live.ready=[false,false]; live.lastSeen=[0,0]; /* v21: today's code — the same room all day, reopening never changes it */
-  try{if(window.localStorage)localStorage.setItem(OPEN_ROOM_KEY,live.code);}catch(e){} /* v19: same-browser Host tabs can find this room in this browser's storage too */
-  /* v47: creating the room = writing its row into quiz_rooms, then
-     following that row (hostSubscribeRow). If the write fails because
-     the table doesn't exist yet, the room is NOT created and the app
-     says so — with the one-time SQL one tap away in Admin → Live.
-     Seats from an existing room row are adopted only on the Take over
-     path (adoptSeats, set by hostTakeOver's single read) before the
-     first write; a plain Create writes a fresh room at once. */
-  var beginHost=function(adopted){
+  live.code=getDailyRoomCode(); live.mode="host"; live.connected=false; live.occupied=[null,null]; live.ready=[false,false]; live.lastSeen=[0,0]; /* today's code — the same room all day, reopening never changes it */
+  try{if(window.localStorage)localStorage.setItem(OPEN_ROOM_KEY,live.code);}catch(e){}
+  if(adoptSeats)applyAdoptedSeats(); /* takeover: seats go back in BEFORE the first write, so nobody is kicked */
+  /* Creating the room on Firebase: subscribe FIRST (the one listener on
+     rooms/<code>), then write the entry. The listener is what delivers
+     the room to every screen and proves the connection; the write's own
+     confirmation stamps hostWriteFresh. No gate, no read first, no
+     retries. */
+  hostSubscribeRow();
+  writeRoomState().then(function(wrote){
     if(live.mode!=="host")return;
-    writeRoomState().then(function(wrote){
-      if(live.mode!=="host")return;
-      if(!wrote&&roomsSource==="setup"){
-        live.mode="offline"; live.code=null; live.connected=false;
-        if(live.startPending){live.startPending=false;disarmStartPendingTimeout();setLiveError("✕ Game NOT started — "+roomsSetupErrorText());}
-        else setLiveError(roomsSetupErrorText());
-        toast("✕ Room NOT created — the game-server table is not set up yet");
-        updateLiveUI(); render();
-        return;
-      }
-      if(wrote)toast("Today's room QUIZ-"+live.code+" is open — saved on the server, this one code works all day!");
-      hostSubscribeRow();
-    });
-  };
-  if(adoptSeats){applyAdoptedSeats();beginHost(true);}
-  else beginHost(false); /* v45 SIMPLE: creating the room IS the one write — no read first, no gate, no fallback timer, so the room is written the moment Create is tapped instead of after a read that could take 8–18 s. If the write fails, beginHost says so plainly (setup message when the table is missing). Seat adoption happens only through Take over, which does its own single read. */
+    if(wrote)toast("Today's room QUIZ-"+live.code+" is open — saved on Firebase, this one code works all day!");
+  });
   updateLiveUI(); render();
   stopHostDiscovery();
-  /* v47: NO heartbeat, NO backlog scan on the server. The only
-     repeating write left is the single-host guard's heartbeat, and
-     that lives in this browser's localStorage — it never touches the
-     server. The room row is written when something actually changes
-     (queueRoomWrite) and followed live via hostSubscribeRow. */
+  /* The single-host guard heartbeat below lives ONLY in this browser's
+     localStorage — it never touches Firebase. */
   if(live.hostHbTimer)clearInterval(live.hostHbTimer);
   var writeHb=function(){try{if(window.localStorage)localStorage.setItem(HOST_HB_KEY,JSON.stringify({code:live.code,clientId:live.clientId,tabId:tabId,ts:Date.now()}));}catch(e){}};
   writeHb(); live.hostHbTimer=setInterval(writeHb,4000);
@@ -1614,7 +1489,7 @@ function hostCreateRoom(){
    other tab should then be closed — two hosts writing one room row
    would keep overwriting each other. */
 function hostTakeOver(){
-  var s=getSupa(); if(!s){toast("Live unavailable in this browser");return;}
+  var s=getDb(); if(!s){toast("Live unavailable in this browser");return;}
   if(live.mode!=="offline"){toast("Already in a live room");return;}
   var code=getDailyRoomCode();
   fetchRoomRow(code).then(function(row){
@@ -1632,7 +1507,7 @@ function dismissHostGuard(){hostBlocked=null;clearLiveError();renderAdminRoomPan
    v40: there is no announce to miss any more. Today's room code is
    derived from the date, so a Host screen opened on its own — even from
    the bare root address, with no room in its link — simply READS the
-   quiz_rooms table for today's code (plus the same-browser stored code,
+   rooms table for today's code (plus the same-browser stored code,
    the v19 path) every few seconds until the room's row exists, then
    follows it as a display viewer. The code is never printed on the Host
    screen. */
@@ -1662,7 +1537,7 @@ function storedRoomCode(){
 function stopHostDiscovery(){discovery.active=false;}
 function startHostDiscovery(){
   if(discovery.active||live.mode!=="offline")return;
-  var s=getSupa(); if(!s)return;
+  var s=getDb(); if(!s)return;
   discovery.active=true;
   
   /* v47: discovery is just the viewer path pointed at today's code.
@@ -1713,7 +1588,7 @@ function playerJoinFrom(prefix){
   function setStatus(m,c){var el=$("joinStatus2");if(el){el.textContent=m;el.className="statusline "+(c||"wait")}}
   if(code.length<3){setStatus("Enter the room code from Admin first.");return;}
   if(!name){setStatus("Enter your name so the host knows who you are.");$("joinName2").focus();return;}
-  var s=getSupa(); if(!s){setStatus("⚠ Live connection unavailable in this browser.");return;}
+  var s=getDb(); if(!s){setStatus("⚠ Live connection unavailable in this browser.");return;}
   /* v38 NO FAKE JOINS, kept: the shortcut to a player screen applies
      only to a CONFIRMED seat; a tap during a pending join just says it
      is still connecting. */
@@ -1739,7 +1614,6 @@ function playerJoinFrom(prefix){
   });
   fetchRoomRow(code).then(function(row){
     if(live.mode!=="player"||live.code!==code||!live.joinPending)return;
-    if(roomsSource==="setup"){failJoin(roomsSetupErrorText());return;}
     if(live.lastReadFailed){failJoin("The game server did not answer — you are NOT in the game. Check this device's internet connection, then tap Join again.");return;}
     if(!row){failJoin("No room with that code yet — Admin hasn't created today's room, so you are NOT in. Tap Join again once Admin has created it.");return;}
     onRoomRow(row); /* paints the game + adopts the row's state */
@@ -1786,29 +1660,44 @@ function playerJoinFrom(prefix){
 }
 /* ================= FOLLOWING THE ROOM ROW (v40 shape, v47 rules) =================
    One subscription serves both followers (the Host TV viewer and the
-   player iPads): Postgres Changes on this room's quiz_rooms row. Every
+   player iPads): Firebase listener on this room's rooms row. Every
    row that arrives goes through onRoomRow — the same door a fresh read
    uses — so "read it now" and "it changed live" can never disagree.
    On (re)subscribe, the row is read ONCE to catch up; after that the
    socket is the only source. No polls, no retries, no pings. */
 function subscribeRoomRow(code,onStatus){
-  var s=getSupa(); if(!s)return null;
-  var ch=tableChannel(s,"db-room-"+code+"-"+live.clientId); live.channel=ch;
-  ch.on("postgres_changes",{event:"*",schema:"public",table:ROOMS_TABLE,filter:"code=eq."+code},function(pl){
-    if(!pl)return;
-    if(pl.eventType==="DELETE"){onRoomRow(null);return;}
-    if(pl.new)onRoomRow(pl.new);
-  });
-  ch.subscribe(function(status){
-    if(live.channel!==ch)return;
-    if(status==="SUBSCRIBED"&&(live.mode==="viewer"||live.mode==="player")){
-      /* Catch-up read: one read per (re)subscribe, so a change missed
-         while the socket was down is picked up exactly once. */
-      fetchRoomRow(code).then(function(row){if(row&&(live.mode==="viewer"||live.mode==="player")&&live.code===code)onRoomRow(row);});
+  /* The follower's ONE listener, on rooms/<code>. Firebase delivers the
+     current entry once the moment it attaches, then every change — so
+     “read it now” and “it changed live” are the same door (onRoomRow)
+     and can never disagree. No catch-up reads, no polls, no retries. */
+  var db=getDb(); if(!db)return null;
+  detachRoomListener();
+  var r=roomRef(code); if(!r)return null;
+  live.fbRefObj=r;
+  var first=true, hadRoom=false;
+  var handler=function(snap){
+    if(live.fbRefObj!==r)return;
+    var val=snap.val();
+    if(first){first=false;if(onStatus)onStatus("SUBSCRIBED");}
+    if(val===null||val===undefined){
+      if(hadRoom){onRoomRow(null);return;} /* the entry was deleted — the host closed the room */
+      if(live.mode==="viewer"){ /* no room yet is not an error: stay subscribed; it appears by itself when Admin creates it */
+        live.emptyRoom=true;
+        try{
+          var st=$("hostLoginStatus");
+          if(hostLoginPending&&st){st.textContent="No room found for that code yet — you are NOT connected. This screen is listening on Firebase: the moment Admin creates that room, it connects by itself. Or tap Cancel to stop.";st.className="host-login-status wait";}
+        }catch(e){}
+        render(); updateLiveUI();
+      }
+      return;
     }
-    if(onStatus)onStatus(status);
-  });
-  return ch;
+    hadRoom=true;
+    onRoomRow({code:code,state:normalizeRoomState(val),time_left:(typeof val.timeLeft==="number"?val.timeLeft:0)});
+  };
+  var errHandler=function(err){if(live.fbRefObj!==r)return;if(onStatus)onStatus("CHANNEL_ERROR");};
+  live.fbHandler=handler;
+  r.on("value",handler,errHandler);
+  return r;
 }
 function onRoomRow(row){
   /* The one door for room state — used by the initial read, the
@@ -1929,42 +1818,26 @@ function playerReconcile(pl){
   }
 }
 /* The game has exactly ONE receive door — onRoomRow: the initial read,
-   the subscribe catch-up read and every live Postgres Changes event
+   the subscribe catch-up read and every live Firebase listener event
    all pass through it, so they can never disagree. */
 function hostViewerJoin(code,viaStored){
   /* A Host screen opened on its own device: follow the room as a
-     display-only viewer. It SUBSCRIBES to the room row first, then
-     reads it once. If the room doesn't exist yet, nothing polls — the
-     subscription delivers the row the moment Admin creates it. The
-     code is never shown on this screen. */
-  var s=getSupa(); if(!s)return;
+     display-only viewer. It attaches its ONE listener to rooms/<code>;
+     if the room doesn't exist yet, nothing polls — the listener
+     delivers the entry the moment Admin creates it. The code is never
+     shown on this screen. */
+  var db=getDb(); if(!db)return;
   if(live.mode!=="offline")return;
-  discovery.active=false; /* the viewer subscription IS the discovery now */
+  discovery.active=false; /* the listener IS the discovery now */
   live.mode="viewer"; live.code=code; live.connected=false; live.mySlot=null; live.assigned=false; lastHostState=null; liveMyAnswer=null; liveMyIdx=-1; live.lastStateAt=0; live.hasValidState=false; live.emptyRoom=false; live.lastRowHostSeq=null;
   subscribeRoomRow(code,function(status){
-    
     if(status==="SUBSCRIBED"){
-      live.connected=true; clearLiveError();
+      live.connected=true; /* socket is up — “Live” itself still waits for a valid game state (hostIsAlive) */
     } else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT"||status==="CLOSED"){
       live.connected=false;
-      setLiveError("✕ This screen lost its connection to the game server. The socket reconnects by itself and re-reads the room when it is back — if this stays, reload this screen.");
+      setLiveError("✕ This screen is waiting for Firebase — the listener dropped and Firebase reconnects by itself. The game appears on its own when it answers; reload this screen only if this stays for a long time.");
     }
     updateLiveUI(); render();
-  });
-  fetchRoomRow(code).then(function(row){
-    if(live.mode!=="viewer"||live.code!==code)return;
-    if(row)onRoomRow(row);
-    else{
-      if(roomsSource==="setup")setLiveError(roomsSetupErrorText());
-      else if(roomsSource==="error")setLiveError("✕ The game server is not answering — this screen cannot read the room yet. It stays subscribed, so the game appears by itself if the server answers; check this device's internet connection if this stays.");
-      /* No room yet is not an error: this screen is subscribed, and the
-         row appears here by itself the moment Admin creates it. If the
-         login pop-up is waiting, say exactly that. */
-      try{
-        var st=$("hostLoginStatus");
-        if(hostLoginPending&&st){st.textContent="No room found for that code yet — you are NOT connected. This screen is listening: the moment Admin creates that room, it connects by itself. Or tap Cancel to stop.";st.className="host-login-status wait";}
-      }catch(e){}
-    }
   });
   updateLiveUI();
 }
@@ -2053,7 +1926,7 @@ function hostLoginSubmit(){
   var st=$("hostLoginStatus");
   function setSt(msg,cls){if(st){st.textContent=msg;st.className="host-login-status "+(cls||"wait");}}
   if(code.length<3){setSt("Enter the room code from Admin first — the 4-digit code after QUIZ- on the Admin screen.","err");if(inp)inp.focus();return;}
-  if(!getSupa()){setSt("✕ Live connection is not available in this browser — check this device's internet connection and reload this screen.","err");setLiveError("✕ Host could not connect — the live connection did not load on this screen. Check its internet connection, reload, then try the pop-up again.");return;}
+  if(!getDb()){setSt("✕ Live connection is not available in this browser — check this device's internet connection and reload this screen.","err");setLiveError("✕ Host could not connect — the live connection did not load on this screen. Check its internet connection, reload, then try the pop-up again.");return;}
   if(live.mode==="host"){setSt("This tab is already hosting the room — the Host display is live here.","ok");return;}
   hostLoginDismissed=false;
   /* Tear down any current viewer/discovery attempt cleanly, WITHOUT the
@@ -2064,7 +1937,7 @@ function hostLoginSubmit(){
     
     
     
-    if(live.channel){var oldCh=live.channel;live.channel=null;try{var s0=getSupa();if(s0)s0.removeChannel(oldCh);}catch(e){}}
+    detachRoomListener();
     live.mode="offline";live.code=null;live.connected=false;lastHostState=null;live.lastStateAt=0;
   }
   hostLoginPending=true;
@@ -2217,7 +2090,7 @@ function disconnectLive(silent){
      subscription sees the DELETE and leaves by itself — there is no
      “room-closed” message left to lose. The room's leftover event rows
      go with it. */
-  if(live.mode==="host"&&live.code){var dcCode=live.code;try{restRequest("DELETE",ROOMS_TABLE+"?code=eq."+encodeURIComponent(dcCode)).then(function(){},function(){});}catch(e){}}
+  if(live.mode==="host"&&live.code){var dcCode=live.code;try{var dcRef=roomRef(dcCode);if(dcRef)dcRef.remove();}catch(e){}}
   
   if(live.joinWaitTimer){clearTimeout(live.joinWaitTimer);live.joinWaitTimer=null;}
   live.joinPending=false; live.joinStartedAt=0; live.joinFromSlot=null; /* v38: leaving the room ends any unconfirmed join — no pending state survives it */
@@ -2229,7 +2102,7 @@ function disconnectLive(silent){
   stopHostDiscovery();
   
   live.lastSeen=[0,0]; 
-  if(live.channel){var ch=live.channel;live.channel=null;try{var s=getSupa();if(s)s.removeChannel(ch);}catch(e){}}
+  detachRoomListener();
   live.mode="offline";live.code=null;live.connected=false;live.mySlot=null;live.wantSlot=null;live.assigned=false;live.occupied=[null,null];live.ready=[false,false];live.startPending=false;lastHostState=null;liveMyAnswer=null;hostBlocked=null;live.lastWriteOkAt=0;live.lastWriteFailedAt=0;live.lastReadOkAt=0;live.claimDone=false;live.claimStamp=0;live.readyStamp=null;live.answerStamp=null;live.lastRowHostSeq=null;
   live.hasValidState=false; live.emptyRoom=false;
   if(wasPlayer){state.questions=clone(DEFAULT_QS);state.active=[];state.phase="lobby";state.idx=0;state.answers=[null,null];state.lastGain=[0,0];state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];}
@@ -2714,7 +2587,7 @@ function startGame(){
   if(live.mode==="player"){toast("Only the host can start the game");return;}
   /* v35 NO FAKE STARTS — the user's rule: never show a status that is not
      true. v34 and earlier had a hole: when this Admin tab had no live
-     connection at all — worst case, the Supabase library never loaded in
+     connection at all — worst case, the Firebase library never loaded in
      this tab — Start fell through every gate and ran the game LOCALLY,
      toasting “Game started” while the Host TV and both iPads received
      nothing, because state only ever leaves this tab through a connected
@@ -2722,7 +2595,7 @@ function startGame(){
      of today's room; when it does start, the success message is shown only
      after the room's own send confirms the start state actually went out. */
   if(live.mode==="viewer"){toast("This tab is only following the game — press Start on the Admin tab that created the room");return;}
-  if(!getSupa()){
+  if(!getDb()){
     setLiveError("✕ Game NOT started — the live connection did not load in this tab, so a game started here would reach nobody. Check this device's internet connection, reload the page, create today's room, then press Start.");
     toast("✕ Game NOT started — live connection unavailable in this tab");
     return;
@@ -2748,7 +2621,7 @@ function startGame(){
   state.players.forEach(function(p){p.score=0;p.streak=0;p.correct=0});
   state.sessionId++; /* a new game = a new session (names were entered fresh in the lobby for it) */
   state.idx=0;state.answers=[null,null];state.pAns=[null,null];state.answerTimes=[null,null];state.answerSeq=[null,null];state.seqCounter=0;state.answerLog=[];state.lastGain=[0,0];state.phase="playing";state.timeLeft=state.timerDur;state.paused=false;state.questionStartedAt=Date.now();
-  beginSessionRecord(); /* v28: open the Supabase session record for this game */
+  beginSessionRecord(); /* v28: open the Firebase session record for this game */
   render(); startTimer();
   writeRoomState().then(function(delivered){
     if(delivered){clearLiveError();toast("Game started — "+state.active.length+" statements picked at random 🔀 Statement 1 is live!");}
@@ -2760,14 +2633,11 @@ function startGame(){
   });
 }
 function armStartPendingTimeout(){
+  /* No failure deadline: while Firebase is still connecting, the honest
+     state is “still connecting”. The pending Start completes by itself
+     when the host listener delivers its first value (hostSubscribeRow),
+     however long that takes. */
   disarmStartPendingTimeout();
-  live.startPendingTimer=setTimeout(function(){
-    live.startPendingTimer=null;
-    if(!live.startPending)return;
-    live.startPending=false;
-    setLiveError("✕ Game NOT started — the room still had not connected after 3 minutes of waiting. Check this device's internet connection, wait until the connection line shows Live, then press Start again.");
-    toast("✕ Game NOT started — the room did not connect");
-  },180000); /* v49: was 12s — connecting is allowed a full 3 minutes before Start is declared failed; until then the screens honestly show “still connecting…” */
 }
 function disarmStartPendingTimeout(){if(live.startPendingTimer){clearTimeout(live.startPendingTimer);live.startPendingTimer=null;}}
 function answer(i,val){
@@ -3118,7 +2988,7 @@ document.querySelectorAll("#adminMenu button").forEach(function(b){b.addEventLis
   document.querySelectorAll("#adminMenu button").forEach(function(x){x.classList.toggle("on",x===b);});
   document.querySelectorAll(".admin-sec").forEach(function(s){s.hidden=s.getAttribute("data-sec")!==sec;});
   if(sec==="screens")renderDesigner();
-  if(sec==="sessions"){renderCurrentSession();renderSessionsList();loadSessionsFromSupabase();}
+  if(sec==="sessions"){renderCurrentSession();renderSessionsList();loadSessionsFromFirebase();}
   window.scrollTo({top:0});
 });});
 $("bgMode").addEventListener("change",function(e){design[designTab].bgMode=e.target.value;designChanged();});
@@ -3292,44 +3162,13 @@ $("resetPlayersBtn").addEventListener("click",function(){
   state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];state.answers=[null,null];state.answerTimes=[null,null];state.answerLog=[];render();toast("Both players reset — iPad slots freed");
 });
 $("resetGameBtn").addEventListener("click",function(){state.players.forEach(function(p){p.score=0;p.correct=0;p.streak=0;});state.active=[];resetGame();toast("Whole game reset");});
-$("restoreBtn").addEventListener("click",function(){state.questions=clone(DEFAULT_QS);state.idx=0;qDirty=true;render();saveQuestions();toast("40-statement Myth or Fact bank restored — saving it to Supabase");});
+$("restoreBtn").addEventListener("click",function(){state.questions=clone(DEFAULT_QS);state.idx=0;qDirty=true;render();saveQuestions();toast("40-statement Myth or Fact bank restored — saving it to Firebase");});
 $("newTrue").addEventListener("click",function(){state.newAnswer=true;$("newTrue").className="on-true";$("newFalse").className="";});
 $("newFalse").addEventListener("click",function(){state.newAnswer=false;$("newFalse").className="on-false";$("newTrue").className="";});
 $("addQBtn").addEventListener("click",function(){var v=$("newQ").value.trim();if(!v){toast("Type a statement first");return;}state.questions.push({text:v,answer:state.newAnswer});$("newQ").value="";qDirty=true;render();toast("Statement added — "+state.questions.length+" in the bank · tap 💾 Save Questions to keep it");});
 $("saveQBtn").addEventListener("click",function(){saveQuestions();});
-var copySqlBtn=$("copyBankSqlBtn");
-if(copySqlBtn)copySqlBtn.addEventListener("click",function(){
-  function done(){toast("SQL copied — paste it into Supabase → SQL Editor and Run");}
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(QBANK_SQL).then(done).catch(function(){toast("Copy failed — the SQL is shown in the box above");});}
-  else toast("The SQL is shown in the box above — select and copy it");
-});
-var copySessSqlBtn=$("copySessSqlBtn");
-if(copySessSqlBtn)copySessSqlBtn.addEventListener("click",function(){
-  function done(){toast("SQL copied — paste it into Supabase → SQL Editor and Run");}
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(SESS_SQL).then(done).catch(function(){toast("Copy failed — the SQL is shown in the box above");});}
-  else toast("The SQL is shown in the box above — select and copy it");
-});
-var retrySessBtn=$("retrySessBtn");
-if(retrySessBtn)retrySessBtn.addEventListener("click",function(){loadSessionsFromSupabase().then(function(ok){if(ok){toast("☁️ Sessions table found — new games will be stored in Supabase");if(curSess)saveSessionRecord(state.phase==="finished"?"finished":"playing");}else if(sessSource==="setup")toast("Table still not found — check the SQL ran in the quiz project (tzyuxwujgxvgidkwfydp)");});});
 var refreshSessBtn=$("refreshSessBtn");
-if(refreshSessBtn)refreshSessBtn.addEventListener("click",function(){loadSessionsFromSupabase();});
-var retryBankBtn=$("retryBankBtn");
-if(retryBankBtn)retryBankBtn.addEventListener("click",function(){loadBankFromSupabase().then(function(ok){if(ok&&qBankSource==="supabase"){toast("☁️ Supabase bank table found — tap 💾 Save Questions to push this bank up");saveQuestions();}else if(qBankSource==="setup")toast("Table still not found — check the SQL ran in the same Supabase project");});});
-var copyRoomsSqlBtn=$("copyRoomsSqlBtn");
-if(copyRoomsSqlBtn)copyRoomsSqlBtn.addEventListener("click",function(){
-  function done(){toast("SQL copied — paste it into Supabase → SQL Editor and Run");}
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(ROOMS_SQL).then(done).catch(function(){toast("Copy failed — the SQL is shown in the box above");});}
-  else toast("The SQL is shown in the box above — select and copy it");
-});
-var retryRoomsBtn=$("retryRoomsBtn");
-if(retryRoomsBtn)retryRoomsBtn.addEventListener("click",function(){
-  fetchRoomRow(getDailyRoomCode()).then(function(){
-    renderRoomsStatus();
-    if(roomsSource==="ok")toast("☁️ Game-server tables found — Supabase is the server now. Tap Create Today's Room to go live.");
-    else if(roomsSource==="setup")toast("Tables still not found — check the SQL ran in the quiz project (tzyuxwujgxvgidkwfydp)");
-    else toast("Still can't reach the game server — check the connection and try again");
-  });
-});
+if(refreshSessBtn)refreshSessBtn.addEventListener("click",function(){loadSessionsFromFirebase();});
 
 /* ================= V5 WIRING: control, timer/button options, branding, save ================= */
 $("ctlNewSession").addEventListener("click",function(){newSession();});
@@ -3361,7 +3200,7 @@ document.querySelectorAll("#globalScalePresets [data-gs]").forEach(function(b){b
 /* Save = publish live ONLY. No JSON download, no file export, no import.
    Pressing Save copies the draft design into liveDesign (what the Host/Player
    screens render from) and publishes it through the ONE system this app has:
-   the design rides inside the room row in quiz_rooms (buildStatePayload
+   the design rides inside the room row in rooms (buildStatePayload
    carries design + screenTs), so every screen — Host TV, both iPads, other
    Admin tabs — receives it by reading/following that row, exactly like the
    game state. Screens opened later get it from the same row. This browser's
@@ -3370,215 +3209,134 @@ document.querySelectorAll("#globalScalePresets [data-gs]").forEach(function(b){b
    v43 REMOVED: the old same-browser design channel is gone — there is no
    second system left to disagree with the server. */
 function markSaved(what){var el=$("saveStatus");if(el)el.textContent="✓ Live now — "+what+" · "+new Date().toLocaleTimeString();toast("🚀 Live now — "+what+" is showing on the Host & Player screens.");}
-/* ================= QUESTION BANK STORE (Supabase) =================
-   v26: the bank moved into Supabase — one shared bank for every device,
-   replacing the v25 browser-only store.
-   v27: whole quiz backend (this bank + live Realtime Room-row write sync) moved
-   to the dedicated quiz project tzyuxwujgxvgidkwfydp via the single
-   SUPABASE_URL / SUPABASE_ANON_KEY config above — no other backend refs.
-   v29: CLEAR TABLE — the bank no longer packs every statement into one
-   JSON row. Table: public.quiz_questions, ONE ROW PER QUESTION:
-     id (identity), sort_order (1,2,3…), statement (the question text),
-     answer (boolean — true = FACT, false = MYTH), created_at, updated_at.
-   In the Supabase Table Editor each question and its answer sits on its
-   own readable row. Each question object in state.questions carries its
-   row's id once loaded/saved, so Save updates rows in place, inserts new
-   statements as new rows and deletes rows whose statements were removed.
-   This browser's localStorage is kept ONLY as an offline cache / fallback:
-   it paints instantly at load and covers the period before the one-time
-   SQL setup has been run in the Supabase project. Once the table exists,
-   Save Questions writes to Supabase, every screen loads the bank from
-   Supabase at startup, and a save on one device prompts the others to
-   reload it (room-row write ping + Postgres Changes when enabled). */
-var QBANK_KEY="tfq-question-bank-v1";
-var QBANK_TABLE="quiz_questions";
-var QBANK_SQL="create table if not exists public.quiz_questions (\n  id bigint generated by default as identity primary key,\n  sort_order integer not null,\n  statement text not null,\n  answer boolean not null,\n  created_at timestamptz not null default now(),\n  updated_at timestamptz not null default now()\n);\nalter table public.quiz_questions enable row level security;\ndrop policy if exists \"Quiz questions read\" on public.quiz_questions;\ndrop policy if exists \"Quiz questions insert\" on public.quiz_questions;\ndrop policy if exists \"Quiz questions update\" on public.quiz_questions;\ndrop policy if exists \"Quiz questions delete\" on public.quiz_questions;\ncreate policy \"Quiz questions read\" on public.quiz_questions for select using (true);\ncreate policy \"Quiz questions insert\" on public.quiz_questions for insert with check (true);\ncreate policy \"Quiz questions update\" on public.quiz_questions for update using (true) with check (true);\ncreate policy \"Quiz questions delete\" on public.quiz_questions for delete using (true);\ndelete from public.quiz_questions;\ninsert into public.quiz_questions (sort_order, statement, answer) values\n(1, 'The Great Wall of China is visible from space with the naked eye.', false),\n(2, 'Octopuses have three hearts.', true),\n(3, 'Humans and dinosaurs lived at the same time.', false),\n(4, 'Honey never spoils — archaeologists have tasted 3,000-year-old honey and found it fine.', true),\n(5, 'The capital of Australia is Sydney.', false),\n(6, 'Bananas are berries, but strawberries are not.', true),\n(7, 'Lightning never strikes the same place twice.', false),\n(8, 'A group of flamingos is called a flamboyance.', true),\n(9, 'Goldfish have a memory of only three seconds.', false),\n(10, 'Humans use only 10 percent of their brains.', false),\n(11, 'A day on Venus is longer than a year on Venus.', true),\n(12, 'Sharks never get cancer.', false),\n(13, 'The unicorn is the national animal of Scotland.', true),\n(14, 'Bulls charge because the colour red makes them angry.', false),\n(15, 'There are more possible games of chess than atoms in the observable universe.', true),\n(16, 'Napoleon Bonaparte was extremely short for his time.', false),\n(17, 'Wombats produce cube-shaped droppings.', true),\n(18, 'Cracking your knuckles gives you arthritis.', false),\n(19, 'Sea otters hold hands while they sleep so they don''t drift apart.', true),\n(20, 'Albert Einstein failed mathematics at school.', false),\n(21, 'Oxford University is older than the Aztec Empire.', true),\n(22, 'Vikings wore horned helmets into battle.', false),\n(23, 'Sound travels faster in water than it does in air.', true),\n(24, 'The Great Pyramid of Giza was built about 750 years ago.', false),\n(25, 'A single bolt of lightning is hotter than the surface of the Sun.', true),\n(26, 'Humans and chimpanzees share only about 60 percent of their DNA.', false),\n(27, 'A mantis shrimp can punch with the force of a speeding bullet.', true),\n(28, 'The Sahara is the largest desert in the world.', false),\n(29, 'Hot water can freeze faster than cold water.', true),\n(30, 'Shaving hair makes it grow back thicker.', false),\n(31, 'An adult human body has 206 bones.', true),\n(32, 'You swallow an average of eight spiders a year in your sleep.', false),\n(33, 'Peanuts are one of the ingredients used to make dynamite.', true),\n(34, 'The Eiffel Tower grows taller in the summer heat.', true),\n(35, 'Hair and fingernails keep growing after a person dies.', false),\n(36, 'Cleopatra lived closer in time to the iPhone than to the building of the Great Pyramid.', true),\n(37, 'Thomas Edison invented the light bulb completely on his own.', false),\n(38, 'Iceland has no native mosquitoes.', true),\n(39, 'A penny dropped from a skyscraper can kill a pedestrian below.', false),\n(40, 'Footprints left by astronauts on the Moon could stay there for millions of years.', true);";
+/* ================= QUESTION BANK STORE (Firebase) =================
+   The shared bank lives at /questions in the Realtime Database — an
+   array of {text, answer} in bank order (answer:true = FACT). It is
+   read ONCE when the page opens; if /questions is empty it is seeded
+   once from DEFAULT_QS (the 40-statement bank, 20 FACT / 20 MYTH).
+   Save Questions writes the whole bank back in one set(). This
+   browser's localStorage is only an offline cache for instant paint.
+   No listener is kept on /questions — the room listener is each
+   screen's one listener. */
+var BANK_KEY="tfq-question-bank-v1";
 var qDirty=false, qSavedAt=null;
-var qBankSource="checking"; /* checking | supabase | local | defaults | setup */
-var qBankRemoteAt=null, qBankBusy=false, qBankChannel=null;
-var qBankRowIds=[]; /* ids of the rows currently in quiz_questions, as last loaded/saved — Save deletes any of these that are no longer in the bank */
+var qBankSource="checking"; /* checking | firebase | local | defaults | setup */
+var qBankRemoteAt=null, qBankBusy=false;
 function cleanBank(qs){
   if(!Array.isArray(qs))return null;
-  var out=qs.filter(function(q){return q&&typeof q.text==="string"&&q.text.trim();}).map(function(q){var o={text:q.text,answer:!!q.answer};if(typeof q.id==="number")o.id=q.id;return o;});
+  var out=qs.filter(function(q){return q&&typeof q.text==="string"&&q.text.trim();}).map(function(q){return{text:q.text,answer:!!q.answer};});
   return out.length?out:null;
 }
 function persistQuestionBank(){
   /* Local cache write (instant, offline-safe). Returns true on success.
-     The shared store is Supabase — see saveBankToSupabase(). */
+     The shared store is Firebase — see saveBankToFirebase(). */
   try{
     if(!window.localStorage)return false;
-    localStorage.setItem(QBANK_KEY,JSON.stringify({questions:state.questions,ts:Date.now()}));
+    localStorage.setItem(BANK_KEY,JSON.stringify({questions:state.questions,ts:Date.now()}));
     return true;
   }catch(e){return false;}
 }
 function restoreQuestionBank(){
-  /* Instant first paint from this browser's cache; the Supabase load that
-     runs right after (loadBankFromSupabase) overrides it when it arrives. */
+  /* Instant first paint from this browser's cache; the Firebase load that
+     runs right after (loadBankFromFirebase) overrides it when it arrives. */
   try{
     if(!window.localStorage)return;
-    var raw=localStorage.getItem(QBANK_KEY); if(!raw)return;
+    var raw=localStorage.getItem(BANK_KEY); if(!raw)return;
     var saved=JSON.parse(raw);
     var qs=cleanBank(saved&&saved.questions);
     if(qs){state.questions=qs;qSavedAt=typeof saved.ts==="number"?saved.ts:null;qDirty=false;if(qBankSource==="checking")qBankSource="local";}
   }catch(e){}
 }
-function isBankTableMissing(err){
-  if(!err)return false;
-  var c=String(err.code||""), m=String(err.message||"");
-  return c==="PGRST205"||c==="42P01"||/could not find the table|does not exist|relation .* does not exist/i.test(m);
-}
+
 function renderBankStatus(){
   var box=$("qBankStatus"); if(!box)return;
   var when=qBankRemoteAt?(" · last saved "+new Date(qBankRemoteAt).toLocaleString()):(qSavedAt?(" · browser copy saved "+new Date(qSavedAt).toLocaleTimeString()):"");
   if(qBankBusy)box.innerHTML="☁️ <b>Saving…</b>";
-  else if(qBankSource==="supabase")box.innerHTML="☁️ <b style='color:#16A34A'>Saved in Supabase</b> — quiz_questions · "+state.questions.length+" rows"+esc(when);
-  else if(qBankSource==="setup")box.innerHTML="⚠️ Table not set up — run the SQL below.";
-  else if(qBankSource==="local")box.innerHTML="☁️ Browser copy — checking Supabase…";
-  else box.innerHTML="☁️ Checking Supabase…";
-  var setup=$("qBankSetup"); if(setup)setup.hidden=qBankSource!=="setup";
-  var pre=$("qBankSql"); if(pre)pre.textContent=QBANK_SQL;
+  else if(qBankSource==="firebase")box.innerHTML="☁️ <b style='color:#16A34A'>Saved in Firebase</b> — /questions · "+state.questions.length+" statements"+esc(when);
+  else if(qBankSource==="local")box.innerHTML="☁️ Browser copy — Firebase has not answered yet; the bank on this screen still works."+esc(when);
+  else box.innerHTML="☁️ Checking Firebase…";
 }
 function applyRemoteBank(qs,remoteAt){
   var clean=cleanBank(qs); if(!clean)return false;
   if(qDirty)return false; /* never clobber edits the Admin hasn't saved yet */
   state.questions=clean;
   if(state.idx>=state.questions.length)state.idx=Math.max(0,state.questions.length-1);
-  qBankSource="supabase"; qBankRemoteAt=remoteAt||Date.now(); qSavedAt=qBankRemoteAt; qDirty=false;
+  qBankSource="firebase"; qBankRemoteAt=remoteAt||Date.now(); qSavedAt=qBankRemoteAt; qDirty=false;
   persistQuestionBank(); /* refresh the local cache from the shared bank */
   return true;
 }
-function loadBankFromSupabase(){
-  var s=getSupa();
-  if(!s){qBankSource="local";renderBankStatus();updateQSaveUI();return Promise.resolve(false);}
-  qBankBusy=true; renderBankStatus();
-  return s.from(QBANK_TABLE).select("id,sort_order,statement,answer,updated_at").order("sort_order",{ascending:true}).order("id",{ascending:true}).then(function(res){
-    qBankBusy=false;
-    if(res.error){
-      if(isBankTableMissing(res.error))qBankSource="setup";
-      renderBankStatus(); updateQSaveUI();
-      return false;
-    }
-    var rows=res.data||[];
-    qBankRowIds=rows.map(function(r){return r.id;});
-    if(rows.length){
-      var qs=rows.map(function(r){return{id:r.id,text:r.statement,answer:!!r.answer};});
-      var at=null;
-      rows.forEach(function(r){if(r.updated_at){var t=Date.parse(r.updated_at);if(!isNaN(t)&&(at===null||t>at))at=t;}});
-      if(applyRemoteBank(qs,at)){render();toast("☁️ Question bank loaded from Supabase — "+state.questions.length+" questions, one row each in quiz_questions");}
-      else {qBankSource="supabase";qBankRemoteAt=at;}
-      renderBankStatus(); updateQSaveUI();
-      return true;
-    }
-    /* Table exists but holds no questions yet — the bank already
-       showing (defaults or this browser's copy) is the bank until the
-       first Save writes it into quiz_questions. */
-    qBankSource="supabase"; renderBankStatus(); updateQSaveUI();
-    return true;
-  }).catch(function(){qBankBusy=false;renderBankStatus();updateQSaveUI();return false;});
+function bankValToQuestions(val){
+  /* /questions comes back as an array, or as an object with numeric
+     keys when Firebase stored it that way — normalise to bank order. */
+  if(!val)return null;
+  var arr=[];
+  if(Array.isArray(val))arr=val.slice();
+  else if(typeof val==="object"){Object.keys(val).sort(function(a,b){return (+a)-(+b);}).forEach(function(k){arr.push(val[k]);});}
+  var qs=arr.filter(function(q){return q&&typeof q.text==="string";}).map(function(q){return{text:q.text,answer:!!q.answer};});
+  return qs.length?qs:null;
 }
-function saveBankToSupabase(){
-  var s=getSupa();
-  if(!s)return Promise.resolve(false);
+function loadBankFromFirebase(){
+  var db=getDb();
+  if(!db){qBankSource="local";renderBankStatus();updateQSaveUI();return Promise.resolve(false);}
   qBankBusy=true; renderBankStatus();
-  var nowIso=new Date().toISOString();
-  var withId=[], withoutId=[];
-  state.questions.forEach(function(q,i){
-    var row={sort_order:i+1,statement:q.text,answer:!!q.answer,updated_at:nowIso};
-    if(typeof q.id==="number"){row.id=q.id;withId.push(row);}else withoutId.push(row);
-  });
-  var savedRows=[];
-  var p=Promise.resolve();
-  if(withId.length)p=p.then(function(){
-    return s.from(QBANK_TABLE).upsert(withId,{onConflict:"id"}).select("id,sort_order").then(function(res){
-      if(res.error)throw res.error;
-      savedRows=savedRows.concat(res.data||[]);
-    });
-  });
-  if(withoutId.length)p=p.then(function(){
-    return s.from(QBANK_TABLE).insert(withoutId).select("id,sort_order").then(function(res){
-      if(res.error)throw res.error;
-      savedRows=savedRows.concat(res.data||[]);
-    });
-  });
-  return p.then(function(){
-    /* Give every question its row id back (matched by sort_order), so the
-       next Save updates the same rows instead of duplicating them. */
-    var byOrder={};
-    savedRows.forEach(function(r){byOrder[r.sort_order]=r.id;});
-    state.questions.forEach(function(q,i){if(typeof byOrder[i+1]==="number")q.id=byOrder[i+1];});
-    var currentIds=state.questions.map(function(q){return q.id;}).filter(function(x){return typeof x==="number";});
-    var stale=qBankRowIds.filter(function(id){return currentIds.indexOf(id)===-1;});
-    qBankRowIds=currentIds.slice();
-    persistQuestionBank(); /* cache now carries the row ids too */
-    function finish(){
-      qBankBusy=false;
-      qBankSource="supabase"; qBankRemoteAt=Date.parse(nowIso);
-      renderBankStatus();
+  return db.ref("questions").once("value").then(function(snap){
+    qBankBusy=false;
+    var qs=bankValToQuestions(snap.val());
+    if(qs){
+      if(applyRemoteBank(qs,Date.now())){render();toast("☁️ Question bank loaded from Firebase — "+state.questions.length+" statements");}
+      else {qBankSource="firebase";qBankRemoteAt=Date.now();}
+      renderBankStatus(); updateQSaveUI();
       return true;
     }
-    if(stale.length){
-      /* Statements deleted in Admin lose their rows too, so the table
-         always matches the bank exactly — one row per question. */
-      return s.from(QBANK_TABLE).delete().in("id",stale).then(function(res){
-        if(res.error){qBankBusy=false;if(isBankTableMissing(res.error))qBankSource="setup";renderBankStatus();return false;}
-        return finish();
-      });
-    }
-    return finish();
-  }).catch(function(err){
+    /* /questions is empty — seed it once from the bank already showing
+       (DEFAULT_QS on a fresh install). One write, only in this case. */
+    qBankSource="firebase"; renderBankStatus(); updateQSaveUI();
+    var seed=state.questions.map(function(q){return{text:q.text,answer:!!q.answer};});
+    return db.ref("questions").set(seed).then(function(){qBankRemoteAt=Date.now();renderBankStatus();updateQSaveUI();return true;}).catch(function(){return true;});
+  }).catch(function(){qBankBusy=false;qBankSource="local";renderBankStatus();updateQSaveUI();return false;});
+}
+function saveBankToFirebase(){
+  var db=getDb();
+  if(!db)return Promise.resolve(false);
+  qBankBusy=true; renderBankStatus();
+  var arr=state.questions.map(function(q){return{text:q.text,answer:!!q.answer};});
+  return db.ref("questions").set(arr).then(function(){
     qBankBusy=false;
-    if(err&&isBankTableMissing(err))qBankSource="setup";
+    qBankSource="firebase"; qBankRemoteAt=Date.now();
+    persistQuestionBank();
+    renderBankStatus();
+    return true;
+  }).catch(function(){
+    qBankBusy=false;
     renderBankStatus();
     return false;
   });
 }
-function subscribeBankChanges(){
-  var s=getSupa(); if(!s||qBankChannel)return;
-  try{
-    var ch=tableChannel(s,"db-bank-"+live.clientId); qBankChannel=ch;
-    ch.on("postgres_changes",{event:"*",schema:"public",table:QBANK_TABLE},function(pl){
-      /* Rows are one-per-question now, so a change means “reload the
-         whole bank in order” rather than reading one packed row. */
-      loadBankFromSupabase();
-    });
-    ch.subscribe(function(){});
-  }catch(e){qBankChannel=null;}
-  /* v46 QUIET: the old 25 s re-read poll is GONE. The bank is read once
-     when the page opens and once per change over the subscription above;
-     Admin's Save / retry buttons re-read on demand. No background poll. */
-}
+
 function updateQSaveUI(){
   renderBankStatus();
   var st=$("qSaveStatus"); if(!st)return;
   if(qDirty)st.textContent="● Unsaved changes";
-  else if(qBankSource==="supabase")st.textContent="✓ Saved in Supabase ("+state.questions.length+" rows)"+(qBankRemoteAt?(" · "+new Date(qBankRemoteAt).toLocaleString()):"");
-  else if(qBankSource==="setup")st.textContent="⚠ Run the SQL above, then Save.";
+  else if(qBankSource==="firebase")st.textContent="✓ Saved in Firebase ("+state.questions.length+" statements)"+(qBankRemoteAt?(" · "+new Date(qBankRemoteAt).toLocaleString()):"");
   else if(qSavedAt)st.textContent="✓ Saved in this browser · "+new Date(qSavedAt).toLocaleTimeString();
   else st.textContent="";
 }
 function saveQuestions(){
   persistQuestionBank(); /* cache first, so nothing is lost even offline */
-  saveBankToSupabase().then(function(ok){
-    if(ok){qDirty=false;qSavedAt=Date.now();toast("☁️ Questions saved to Supabase — "+state.questions.length+" questions, one row each in the quiz_questions table");}
-    else if(qBankSource==="setup"){toast("Saved in this browser only — run the one-time SQL in the Statements panel to create the clear quiz_questions table");}
-    else toast("Couldn't reach Supabase — saved in this browser; tap Save again when you're back online");
+  saveBankToFirebase().then(function(ok){
+    if(ok){qDirty=false;qSavedAt=Date.now();toast("☁️ Questions saved to Firebase — "+state.questions.length+" statements in /questions");}
+    else toast("Couldn't reach Firebase — saved in this browser; tap Save again when you're back online");
     updateQSaveUI();
   });
 }
-/* ================= GAME SESSION RECORDS (Supabase) =================
-   v28: every game is recorded as a session in the same quiz Supabase
-   project — table public.quiz_game_sessions, one row per game, upserted
-   by the host tab on Start, on every Reveal and at the end of the game,
-   so players, final scores and every answer survive even a mid-game tab
-   close. answers is the game's answerLog as JSON: one entry per player
-   per statement {player, qNum, text, answer, correctAnswer, isCorrect,
-   time, gain}. Player/viewer tabs never write — only the tab running
-   the game does, so a game is never recorded twice. If the table does
-   not exist yet, Admin → Sessions shows the one-time SQL (same pattern
-   as the question bank) and the current game still displays locally. */
-var SESS_TABLE="quiz_game_sessions";
-var SESS_SQL="create table if not exists public.quiz_game_sessions (\n  id text primary key,\n  room_code text,\n  session_date text,\n  started_at timestamptz,\n  finished_at timestamptz,\n  status text not null default 'playing',\n  player1_name text,\n  player2_name text,\n  player1_score integer not null default 0,\n  player2_score integer not null default 0,\n  player1_correct integer not null default 0,\n  player2_correct integer not null default 0,\n  winner text,\n  total_questions integer not null default 0,\n  answers jsonb not null default '[]'::jsonb,\n  questions jsonb not null default '[]'::jsonb,\n  updated_at timestamptz not null default now()\n);\nalter table public.quiz_game_sessions enable row level security;\ndrop policy if exists \"Quiz sessions read\" on public.quiz_game_sessions;\ndrop policy if exists \"Quiz sessions insert\" on public.quiz_game_sessions;\ndrop policy if exists \"Quiz sessions update\" on public.quiz_game_sessions;\ndrop policy if exists \"Quiz sessions delete\" on public.quiz_game_sessions;\ncreate policy \"Quiz sessions read\" on public.quiz_game_sessions for select using (true);\ncreate policy \"Quiz sessions insert\" on public.quiz_game_sessions for insert with check (true);\ncreate policy \"Quiz sessions update\" on public.quiz_game_sessions for update using (true) with check (true);\ncreate policy \"Quiz sessions delete\" on public.quiz_game_sessions for delete using (true);";
-var sessSource="checking"; /* checking | supabase | setup | local | error */
+/* ================= GAME SESSION RECORDS (Firebase) =================
+   Every game is recorded at /sessions/<id> in the same Realtime
+   Database — the same fields as before (room, date, players, scores,
+   correct counts, winner, every answer) — written by the host tab on
+   Start, on every Reveal and at the end of the game, so a game
+   survives even a mid-game tab close. Player/viewer tabs never write
+   session records, so a game is never recorded twice. */
+var sessSource="checking"; /* checking | firebase | setup | local | error */
 var sessList=[], sessOpenId=null, sessBusy=false;
 var curSess=null; /* {id, startedAt} — the game running on THIS tab */
 var sessSaveTimer=null;
@@ -3601,15 +3359,12 @@ function beginSessionRecord(){
 function saveSessionRecord(status){
   var row=buildSessionRow(status); if(!row)return;
   renderCurrentSession();
-  var s=getSupa(); if(!s){sessSource="local";renderSessionsStatus();return;}
-  s.from(SESS_TABLE).upsert(row,{onConflict:"id"}).then(function(res){
-    if(res.error){sessSource=isBankTableMissing(res.error)?"setup":"error";}
-    else{
-      sessSource="supabase";
-      var found=false;
-      for(var i=0;i<sessList.length;i++){if(sessList[i].id===row.id){sessList[i]=row;found=true;break;}}
-      if(!found)sessList.unshift(row);
-    }
+  var db=getDb(); if(!db){sessSource="local";renderSessionsStatus();return;}
+  db.ref("sessions/"+row.id).set(row).then(function(){
+    sessSource="firebase";
+    var found=false;
+    for(var i=0;i<sessList.length;i++){if(sessList[i].id===row.id){sessList[i]=row;found=true;break;}}
+    if(!found)sessList.unshift(row);
     renderSessionsStatus(); renderSessionsList();
   }).catch(function(){sessSource="error";renderSessionsStatus();});
 }
@@ -3644,7 +3399,7 @@ function renderCurrentSession(){
   var row=buildSessionRow(state.phase==="finished"?"finished":"playing");
   var names=[state.players[0].name,state.players[1].name];
   box.innerHTML='<div class="sess-head"><b>'+esc(names[0])+' vs '+esc(names[1])+'</b><span class="sess-badge '+(state.phase==="finished"?"fin":"play")+'">'+(state.phase==="finished"?"Finished":"● Recording")+'</span></div>'
-    +'<div class="sess-meta">Started '+fmtDateTime(row?row.started_at:null)+' · Room QUIZ-'+esc(row?row.room_code:"")+(sessSource==="setup"?" · ⚠️ this device only":"")+'</div>'
+    +'<div class="sess-meta">Started '+fmtDateTime(row?row.started_at:null)+' · Room QUIZ-'+esc(row?row.room_code:"")+(sessSource==="local"?" · this device only":"")+'</div>'
     +'<div class="sess-scores"><div class="sess-score"><small>'+esc(names[0])+' — Player 1</small><b>'+state.players[0].score+' pts</b><span style="font-size:12.5px;color:var(--muted)"> · '+state.players[0].correct+' correct</span></div><div class="sess-score"><small>'+esc(names[1])+' — Player 2</small><b>'+state.players[1].score+' pts</b><span style="font-size:12.5px;color:var(--muted)"> · '+state.players[1].correct+' correct</span></div></div>'
     +(sessWinnerName()?'<p style="font-size:13.5px;margin:10px 0 0">🏆 Winner: <b>'+esc(sessWinnerName())+'</b></p>':"")
     +sessionAnswersHTML(state.answerLog,names)
@@ -3653,13 +3408,10 @@ function renderCurrentSession(){
 function renderSessionsStatus(){
   var box=$("sessStatus"); if(!box)return;
   if(sessBusy)box.innerHTML="☁️ <b>Loading…</b>";
-  else if(sessSource==="supabase")box.innerHTML="☁️ <b style='color:#16A34A'>Supabase</b> — "+sessList.length+" session"+(sessList.length===1?"":"s");
-  else if(sessSource==="setup")box.innerHTML="⚠️ Table not set up — run the SQL below.";
-  else if(sessSource==="error")box.innerHTML="⚠️ Couldn't reach Supabase — tap Refresh.";
-  else if(sessSource==="local")box.innerHTML="☁️ This device — checking Supabase…";
+  else if(sessSource==="firebase")box.innerHTML="☁️ <b style='color:#16A34A'>Firebase</b> — "+sessList.length+" session"+(sessList.length===1?"":"s");
+  else if(sessSource==="error")box.innerHTML="⚠️ Couldn't reach Firebase — tap Refresh.";
+  else if(sessSource==="local")box.innerHTML="☁️ This device — checking Firebase…";
   else box.innerHTML="☁️ Checking…";
-  var setup=$("sessSetup"); if(setup)setup.hidden=sessSource!=="setup";
-  var pre=$("sessSql"); if(pre&&!pre.textContent)pre.textContent=SESS_SQL;
 }
 function renderSessionsList(){
   var box=$("sessList"); if(!box)return;
@@ -3680,19 +3432,21 @@ function renderSessionsList(){
   box.querySelectorAll("[data-sess-csv]").forEach(function(b){b.addEventListener("click",function(){downloadSessionCSV(b.getAttribute("data-sess-csv"));});});
   box.querySelectorAll("[data-sess-del]").forEach(function(b){b.addEventListener("click",function(){deleteSession(b.getAttribute("data-sess-del"));});});
 }
-function loadSessionsFromSupabase(){
-  var s=getSupa(); if(!s){sessSource="local";renderSessionsList();return Promise.resolve(false);}
+function loadSessionsFromFirebase(){
+  var db=getDb(); if(!db){sessSource="local";renderSessionsList();return Promise.resolve(false);}
   sessBusy=true; renderSessionsList();
-  return s.from(SESS_TABLE).select("*").order("updated_at",{ascending:false}).limit(30).then(function(res){
+  return db.ref("sessions").once("value").then(function(snap){
     sessBusy=false;
-    if(res.error){sessSource=isBankTableMissing(res.error)?"setup":"error";renderSessionsList();return false;}
-    sessList=res.data||[]; sessSource="supabase"; renderSessionsList(); return true;
+    var val=snap.val();
+    var list=[];
+    if(val&&typeof val==="object"){Object.keys(val).forEach(function(k){if(val[k]&&typeof val[k]==="object")list.push(val[k]);});}
+    list.sort(function(a,b){return String(b.updated_at||"").localeCompare(String(a.updated_at||""));});
+    sessList=list.slice(0,30); sessSource="firebase"; renderSessionsList(); return true;
   }).catch(function(){sessBusy=false;sessSource="error";renderSessionsList();return false;});
 }
 function deleteSession(id){
-  var s=getSupa(); if(!s)return;
-  s.from(SESS_TABLE).delete().eq("id",id).then(function(res){
-    if(res.error){toast("Couldn't delete that session — "+(res.error.message||"error"));return;}
+  var db=getDb(); if(!db)return;
+  db.ref("sessions/"+id).remove().then(function(){
     sessList=sessList.filter(function(r){return r.id!==id;});
     if(sessOpenId===id)sessOpenId=null;
     renderSessionsList(); toast("Session deleted");
@@ -3818,12 +3572,11 @@ $("saveScreenBtn").addEventListener("click",function(){ensureDesign();liveDesign
 try{if(location.hash){history.replaceState(null,"",location.pathname+location.search);}}catch(e){}
 refreshNavLinks();
 restorePublishedDesign(); /* last Go Live design, restored before first paint so a reload keeps it */
-restoreQuestionBank(); /* instant paint from this browser's cache — Supabase load below overrides it with the shared bank */
+restoreQuestionBank(); /* instant paint from this browser's cache — Firebase load below overrides it with the shared bank */
 render(); updateLiveUI();
-loadBankFromSupabase(); /* v29: the shared bank lives in Supabase as the clear quiz_questions table (one row per question) — load it over the cache as soon as it answers */
-subscribeBankChanges(); /* …and follow later saves made on other devices */
-renderCurrentSession(); renderSessionsStatus(); loadSessionsFromSupabase(); /* v28: saved game sessions, loaded from the same Supabase project */
-renderRoomsStatus(); probeGameServer(); /* v47: ONE read of the game-server table up front — so Admin → Live shows its real state (and the one-time SQL if it doesn't exist yet) before anyone tries to connect. If it fails, nothing retries in the background. */
+loadBankFromFirebase(); /* v50: the shared bank lives in Firebase at /questions — read once over the cache as soon as it answers; seeded from DEFAULT_QS if empty */
+renderCurrentSession(); renderSessionsStatus(); loadSessionsFromFirebase(); /* v28: saved game sessions, loaded from the same Firebase project */
+renderRoomsStatus(); probeGameServer(); /* v50: ONE read of rooms/<today's code> up front — so Admin → Live shows Firebase's real state before anyone tries to connect. If it fails, nothing retries in the background. */
 var initialView=routeFromURL();
 switchView(initialView||"host");
 maybeHostViewer();
