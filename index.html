@@ -553,6 +553,10 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>🎮 Game control — full authority</h3>
         <p><b style="color:var(--text)" id="phaseLabel">Phase: Lobby</b></p>
+        <div class="field"><label>Game mode — <span id="gameModeLabel">Automatic</span></label>
+          <div class="seg" id="gameModeSeg"><button data-gamemode="auto">▶▶ Automatic — plays itself</button><button data-gamemode="manual">✋ Manual — you drive</button></div>
+          <p style="font-size:12.5px;color:var(--muted);margin:7px 0 0;line-height:1.55" id="gameModeHint">Automatic: the timer reveals each answer, then the game moves to the next question by itself and shows the winner by itself at the end. Pause, Stop, Start and Restart work anytime.</p>
+        </div>
         <div class="field"><label>Strict 2-Player mode — <span id="strictStateLabel">ON</span></label>
           <div class="seg" id="strictSeg"><button data-strict="on">🔒 Strict — exactly 2 players</button><button data-strict="off">Open</button></div>
           <p style="font-size:12.5px;color:var(--muted);margin:7px 0 0" id="strictHint">Exactly 2 players. Each iPad stays on its own player screen.</p>
@@ -561,8 +565,9 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
           <button class="btn dark" id="ctlNewSession">✦ New Session — New Players</button>
           <button class="btn primary" id="ctlStart">▶ Start Game</button>
           <button class="btn restart" id="ctlRestart">↻ Restart Game</button>
-          <button class="btn" id="ctlPause">⏸ Pause Timer</button>
-          <button class="btn end" id="ctlEnd">⏹ End Game — Show Winner</button>
+          <button class="btn" id="ctlPause">⏸ Pause Game</button>
+          <button class="btn end" id="ctlEnd">⏹ Stop — Show Winner</button>
+          <button class="btn" id="ctlStop">■ Stop — Back to Lobby</button>
           <button class="btn dark" id="resetGameBtn">↺ Reset to Lobby</button>
           <button class="btn danger" id="ctlHardReset">Reset Everything (scores + players)</button>
         </div>
@@ -586,7 +591,8 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
         </div>
         <div class="field"><label>Seconds per question — <span id="timerVal">10s</span></label><input type="range" id="timerRange" min="0" max="90" step="5" value="10"></div>
         <div class="field"><label>When time runs out</label>
-          <div class="seg" id="timeoutSeg"><button data-timeout="reveal">Auto-reveal answer</button><button data-timeout="wait">Wait for Admin</button></div>
+          <p style="font-size:13px;line-height:1.55;margin:0;color:var(--muted)">⏱ <b style="color:var(--text)">The timer reveals the answer</b> — in both Automatic and Manual mode. In Automatic the game then moves on by itself; in Manual you tap Next Question.</p>
+          <div class="seg" id="timeoutSeg" hidden><button data-timeout="reveal" class="on">Auto-reveal answer</button></div>
         </div>
         <div class="field"><label>Points per correct answer — <span id="pointsVal">10 points</span></label>
           <input type="number" id="pointsInput" min="0" max="10000" step="5" value="10" inputmode="numeric" aria-label="Points per correct answer">
@@ -644,7 +650,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>About</h3>
         <p><b style="color:var(--text)">Myth or Fact</b> — 2 players · 10 random statements per round · fastest correct tap scores.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v35</b> · 28 Nov 2026</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v36</b> · 28 Nov 2026 — Automatic / Manual game control</p>
       </div>
       </div>
     </div>
@@ -765,7 +771,7 @@ var state={
   phase:"lobby", idx:0, answers:[null,null], lastGain:[0,0],
   answerTimes:[null,null], answerSeq:[null,null], seqCounter:0, questionStartedAt:0, answerLog:[],
   timerDur:10, timeLeft:10, points:10, orderMode:"random", roundSize:10, newAnswer:true,
-  timerStyle:"ring", timeoutMode:"reveal", paused:false, sessionId:0, strict2p:true,
+  timerStyle:"ring", timeoutMode:"reveal", paused:false, sessionId:0, strict2p:true, gameMode:"auto",
   buttonStyle:"classic", buttonScale:100, trueColor:"#22C55E", falseColor:"#EF4444", trueLabel:"FACT", falseLabel:"MYTH"
 };
 function elapsedNow(){ if(state.questionStartedAt) return Math.max(0,(Date.now()-state.questionStartedAt)/1000); if(state.timerDur>0) return Math.max(0,state.timerDur-state.timeLeft); return 0; }
@@ -798,7 +804,7 @@ function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeSt
 function designFingerprint(k){var d=liveDesign[k];if(!d)return k+": —";var bg=d.bgMode==="image"?"image":d.bgMode==="color"?("solid "+(d.bgColor||"")):("grad "+(d.bg1||"")+" → "+(d.bg2||""));return bg+(d.headline?(" · headline “"+d.headline+"”"):" · no headline");}
 function diagLines(admin){
   var L=[];
-  L.push(["Build","v35"]);
+  L.push(["Build","v36"]);
   L.push(["Live library (Supabase)",diag.supa]);
   L.push(["This screen's role",live.mode==="host"?"Host (room owner)":live.mode==="player"?("Player "+(live.mySlot!==null?live.mySlot+1:"?")):live.mode==="viewer"?"Host display (viewer)":"Offline / demo"]);
   L.push(["Room channel",diag.channel]);
@@ -817,7 +823,7 @@ function diagLines(admin){
   return L;
 }
 function diagHTML(admin){
-  return '<b class="diag-t">🔎 Diagnostics — Build v35</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
+  return '<b class="diag-t">🔎 Diagnostics — Build v36</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
 }
 function renderDiag(){
   var ad=$("adminDiag"); if(ad)ad.innerHTML=diagHTML(true);
@@ -1034,7 +1040,7 @@ function broadcastState(){
     playerAnswers:state.phase==="reveal"?state.answers.slice():[null,null],
     answerTimes:state.answerTimes.slice(), answerSeq:state.answerSeq.slice(), roundSize:state.roundSize,
     lastGain:state.lastGain.slice(),timeLeft:state.timeLeft,timerDur:state.timerDur,points:state.points,
-    orderMode:state.orderMode, timerStyle:state.timerStyle, timeoutMode:state.timeoutMode, paused:state.paused, strict2p:state.strict2p,
+    orderMode:state.orderMode, timerStyle:state.timerStyle, timeoutMode:state.timeoutMode, paused:state.paused, strict2p:state.strict2p, gameMode:state.gameMode,
     buttonStyle:state.buttonStyle, buttonScale:state.buttonScale, trueColor:state.trueColor, falseColor:state.falseColor, trueLabel:state.trueLabel, falseLabel:state.falseLabel,
     design:clone(liveDesign), screenTs:clone(designScreenTs), ts:Date.now()};
   /* v35: return the send's own verdict — supabase resolves "ok" only when
@@ -1445,6 +1451,7 @@ function applyRemoteState(pl){
   }
   if(pl.timerStyle)state.timerStyle=pl.timerStyle;
   if(pl.timeoutMode)state.timeoutMode=pl.timeoutMode;
+  if(pl.gameMode==="auto"||pl.gameMode==="manual")state.gameMode=pl.gameMode;
   if(pl.paused!==undefined)state.paused=!!pl.paused;
   if(pl.strict2p!==undefined)state.strict2p=!!pl.strict2p;
   if(pl.buttonStyle)state.buttonStyle=pl.buttonStyle;
@@ -1586,6 +1593,7 @@ function hostStageHTML(){
   var d=liveDesign.host, total=getTotal(), q=getQ();
   var roundTotal=state.active.length||Math.min(state.roundSize||10,total);
   var badgeTxt=state.phase==="lobby"?"● Lobby":state.phase==="playing"?"● Live — question open":state.phase==="reveal"?"Answer revealed":"Final result";
+  badgeTxt+=" · "+(state.gameMode==="manual"?"✋ Manual":"▶▶ Auto");
   var h='<div class="stage-bg" style="'+stageBgStyle(d)+'"></div><div class="stage-shade" style="opacity:'+(d.overlay/100)+'"></div>';
   h+=brandingHTML(d);
   h+='<div class="stage-el" style="'+elStyle(d.els.badge)+'"><span class="stage-badge '+(state.phase==="playing"?"live":"")+'">'+badgeTxt+" · Statement "+(state.phase==="lobby"?0:Math.min(state.idx+1,roundTotal))+" / "+roundTotal+" · 🔀 Random pick"+'</span></div>';
@@ -1616,7 +1624,8 @@ function hostStageHTML(){
     var title=a.score===b.score?"It's a tie!":((a.score>b.score?a.name:b.name)+" wins!");
     centre='<div class="winner-box"><div class="trophy">'+(a.score===b.score?"🤝":"🏆")+'</div><h2>'+esc(title)+'</h2><p>'+esc(a.name)+': <b>'+a.score+' pts</b> ('+a.correct+' correct) &nbsp;·&nbsp; '+esc(b.name)+': <b>'+b.score+' pts</b> ('+b.correct+' correct)<br>Out of '+roundTotal+' statements.</p></div>';
   } else if(q){
-    var banner=state.phase==="reveal"?'<div><span class="answer-banner '+(q.answer?"true":"false")+'">It\'s a '+(q.answer?"✓ FACT":"✕ MYTH")+'</span></div>':"";
+    var autoNote=(state.phase==="reveal"&&state.gameMode==="auto"&&!state.paused)?'<div style="margin-top:10px;font-size:13.5px;font-weight:700;opacity:.9">'+(state.idx<roundTotal-1?"Next statement coming up…":"Winner coming up…")+'</div>':(state.phase==="reveal"&&state.paused?'<div style="margin-top:10px;font-size:13.5px;font-weight:700;opacity:.9">⏸ Paused</div>':"");
+    var banner=state.phase==="reveal"?'<div><span class="answer-banner '+(q.answer?"true":"false")+'">It\'s a '+(q.answer?"✓ FACT":"✕ MYTH")+'</span></div>'+autoNote:"";
     centre='<div><div class="q-kicker">Statement '+(state.idx+1)+' of '+roundTotal+' — Myth or Fact?</div><div class="q-text">'+esc(q.text)+'</div>'+banner+'</div>';
   }
   h+='<div class="stage-el" style="'+elStyle(d.els.question)+'"><div style="transform:scale('+(d.els.question.s/100)+')">'+centre+'</div></div>';
@@ -1816,6 +1825,44 @@ function render(){
   if(live.mode==="host")queueBroadcast();
 }
 function stopTimer(){if(timerId){clearInterval(timerId);timerId=null;}}
+/* ================= AUTO / MANUAL GAME MODE (v36) =================
+   Automatic: the game plays itself — the timer reveals each answer,
+   the revealed answer stays up for a few seconds, then the game moves
+   to the next question by itself, and after the last question it shows
+   the winner by itself. Pause, Stop, Start and Restart still work at
+   any moment and override the automatic flow.
+   Manual: nothing advances by itself. The timer still reveals the
+   answer when it runs out (the user's choice — “Timer reveals it”),
+   and when both players have answered, but Admin taps Next Question
+   to move on and Stop — Show Winner to finish.
+   The reveal dwell is long enough to read the answer and the scores. */
+var AUTO_REVEAL_DWELL_MS=4000;
+var autoAdvanceTimer=null;
+function clearAutoAdvance(){if(autoAdvanceTimer){clearTimeout(autoAdvanceTimer);autoAdvanceTimer=null;}}
+function scheduleAutoAdvance(){
+  clearAutoAdvance();
+  if(state.gameMode!=="auto")return;
+  if(state.phase!=="reveal"||state.paused)return;
+  if(live.mode==="player")return;
+  autoAdvanceTimer=setTimeout(function(){
+    autoAdvanceTimer=null;
+    if(state.gameMode!=="auto"||state.phase!=="reveal"||state.paused)return;
+    if(live.mode==="player")return;
+    if(state.idx<getTotal()-1)nextQuestion();
+    else finishGame();
+  },AUTO_REVEAL_DWELL_MS);
+}
+function setGameMode(mode,announce){
+  state.gameMode=mode==="manual"?"manual":"auto";
+  clearAutoAdvance();
+  /* Switching to Automatic while an answer is on screen starts the
+     automatic flow from there; switching to Manual cancels any pending
+     automatic advance so the game waits for Admin. */
+  if(state.gameMode==="auto"&&state.phase==="reveal"&&!state.paused)scheduleAutoAdvance();
+  try{persistPublishedDesign();}catch(e){}
+  render();
+  if(announce)toast(state.gameMode==="auto"?"▶▶ Automatic — the game plays itself, question by question":"✋ Manual — you advance each question yourself; the timer still reveals the answer");
+}
 function startTimer(){
   stopTimer();
   if(state.timerDur===0||state.phase!=="playing")return;
@@ -1823,7 +1870,7 @@ function startTimer(){
   timerId=setInterval(function(){
     if(state.paused)return;
     state.timeLeft--;
-    if(state.timeLeft<=0){state.timeLeft=0;if(state.timeoutMode==="reveal"){revealAnswer();}else{stopTimer();render();toast("Time up — Admin can reveal when ready");}return;}
+    if(state.timeLeft<=0){state.timeLeft=0;revealAnswer();return;} /* v36: the timer reveals the answer in BOTH modes — Automatic and Manual (“Timer reveals it”) */
     var hs=$("hostStage");hs.innerHTML=hostStageHTML();applyAccent(hs,liveDesign.host);
     var s1=$("p1Stage");s1.innerHTML=playerStageHTML(0);applyAccent(s1,liveDesign.player1);
     var s2=$("p2Stage");s2.innerHTML=playerStageHTML(1);applyAccent(s2,liveDesign.player2);
@@ -1864,6 +1911,7 @@ function startGame(){
   }
   if(!state.questions.length){toast("Add at least one statement in Admin first");switchView("admin");return;}
   disarmStartPendingTimeout();
+  clearAutoAdvance();
   /* v20 game rule: each round is ROUND_SIZE statements picked at random from the whole bank. */
   state.active=shuffle(clone(state.questions)).slice(0,Math.min(state.roundSize||10,state.questions.length));
   state.players.forEach(function(p){p.score=0;p.streak=0;p.correct=0});
@@ -1931,13 +1979,25 @@ function revealAnswer(){
   if(state.answerLog.length>40)state.answerLog=state.answerLog.slice(-40);
   state.phase="reveal"; render();
   queueSaveSession("playing"); /* v28: persist this statement's answers + scores to the session record */
+  scheduleAutoAdvance(); /* v36: Automatic only — moves on by itself after the dwell; in Manual this does nothing and Admin taps Next */
 }
-function nextQuestion(){if(live.mode==="player")return;state.idx++;state.answers=[null,null];state.answerTimes=[null,null];state.answerSeq=[null,null];state.lastGain=[0,0];state.phase="playing";state.timeLeft=state.timerDur;state.questionStartedAt=Date.now();render();startTimer();}
-function finishGame(){if(live.mode==="player")return;state.phase="finished";stopTimer();render();saveSessionRecord("finished");}
-function endGame(){if(live.mode==="player"){toast("Only Admin / host can end the game");return;}stopTimer();state.paused=false;state.phase="finished";render();saveSessionRecord("finished");toast("Game ended by Admin — winner is on the Host screen 🏆");}
-function restartGame(){if(live.mode==="player"){toast("Only Admin / host can restart");return;}state.paused=false;startGame();} /* v30: startGame reports the outcome — no unconditional “restarted” toast */
-function togglePause(){if(live.mode==="player")return;if(state.phase!=="playing"){toast("Pause only works while a question is live");return;}state.paused=!state.paused;render();toast(state.paused?"⏸ Timer paused by Admin":"▶ Timer resumed");}
-function resetGame(){if(live.mode==="player")return;stopTimer();state.sessionId++;live.ready=[false,false];state.players[0].name="Player 1";state.players[1].name="Player 2";state.phase="lobby";state.idx=0;state.answers=[null,null];state.answerTimes=[null,null];state.lastGain=[0,0];state.timeLeft=state.timerDur;render();toast("Back to lobby for a new session — names cleared, so the name bar is showing on both iPads again. Scores kept; Start Game resets scores.");}
+function nextQuestion(){if(live.mode==="player")return;clearAutoAdvance();state.idx++;state.answers=[null,null];state.answerTimes=[null,null];state.answerSeq=[null,null];state.lastGain=[0,0];state.phase="playing";state.timeLeft=state.timerDur;state.paused=false;state.questionStartedAt=Date.now();render();startTimer();}
+function finishGame(){if(live.mode==="player")return;clearAutoAdvance();state.phase="finished";stopTimer();render();saveSessionRecord("finished");}
+function endGame(){if(live.mode==="player"){toast("Only Admin / host can end the game");return;}clearAutoAdvance();stopTimer();state.paused=false;state.phase="finished";render();saveSessionRecord("finished");toast("Game stopped by Admin — winner is on the Host screen 🏆");}
+function stopToLobby(){if(live.mode==="player"){toast("Only Admin / host can stop the game");return;}clearAutoAdvance();stopTimer();state.paused=false;state.phase="lobby";state.answers=[null,null];state.answerTimes=[null,null];state.lastGain=[0,0];state.timeLeft=state.timerDur;render();toast("■ Game stopped — back to lobby. Scores kept; press Start to play again.");}
+function restartGame(){if(live.mode==="player"){toast("Only Admin / host can restart");return;}clearAutoAdvance();state.paused=false;startGame();} /* v30: startGame reports the outcome — no unconditional “restarted” toast */
+function togglePause(){
+  if(live.mode==="player")return;
+  if(state.phase!=="playing"&&state.phase!=="reveal"){toast("Pause works while a game is playing");return;}
+  state.paused=!state.paused;
+  if(state.paused){clearAutoAdvance();toast("⏸ Game paused by Admin — timer and automatic play are held");}
+  else{
+    toast("▶ Game resumed");
+    if(state.phase==="reveal")scheduleAutoAdvance();
+  }
+  render();
+}
+function resetGame(){if(live.mode==="player")return;clearAutoAdvance();stopTimer();state.sessionId++;live.ready=[false,false];state.players[0].name="Player 1";state.players[1].name="Player 2";state.phase="lobby";state.idx=0;state.answers=[null,null];state.answerTimes=[null,null];state.lastGain=[0,0];state.timeLeft=state.timerDur;state.paused=false;render();toast("Back to lobby for a new session — names cleared, so the name bar is showing on both iPads again. Scores kept; Start Game resets scores.");}
 function newSession(){
   /* Activation flow: between groups of guests, Admin taps New Session.
      Scores, answers and NAMES all clear and every iPad shows its name bar
@@ -1945,7 +2005,7 @@ function newSession(){
      nobody ever re-enters the room code during the day. */
   if(live.mode==="player"){toast("Only Admin / host can start a new session");return;}
   if(curSess&&state.answerLog.length){saveSessionRecord(state.phase==="finished"?"finished":"ended");} curSess=null; /* v28: close out the previous game's record before wiping it */
-  stopTimer(); state.paused=false; state.sessionId++; live.ready=[false,false]; /* v30: new session — Ready clears with the names */
+  clearAutoAdvance(); stopTimer(); state.paused=false; state.sessionId++; live.ready=[false,false]; /* v30: new session — Ready clears with the names */
   state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];
   state.answers=[null,null]; state.answerTimes=[null,null]; state.answerSeq=[null,null]; state.lastGain=[0,0]; state.answerLog=[]; state.active=[]; state.phase="lobby"; state.idx=0; state.timeLeft=state.timerDur;
   render(); toast("New session — names & scores cleared, name bars are showing on both iPads for the next players. Room code unchanged: QUIZ-"+(live.code||getDailyRoomCode()));
@@ -1980,7 +2040,7 @@ function renderLiveMonitor(){
   var total=getTotal(), q=getQ();
   var pct=state.timerDur===0?100:Math.max(0,Math.min(100,state.timeLeft/state.timerDur*100));
   var timerTxt=state.timerDur===0?"No timer":(state.timeLeft+"s left");
-  var phaseTxt=state.phase.charAt(0).toUpperCase()+state.phase.slice(1)+(state.paused?" · Paused":"");
+  var phaseTxt=state.phase.charAt(0).toUpperCase()+state.phase.slice(1)+(state.paused?" · Paused":"")+" · "+(state.gameMode==="manual"?"Manual":"Automatic");
   var roomTxt=live.mode==="host"?("Live room QUIZ-"+live.code+" · "+countJoined()+" of 2 joined · "+countReady()+" of 2 ready"):(live.mode==="player"?("Joined as "+dispName(live.mySlot)):(live.mode==="viewer"?"Following live game":"No live room — demo mode"));
   var h="";
   h+='<div class="live-top">';
@@ -2056,8 +2116,13 @@ function renderAdmin(){
   document.querySelectorAll("[data-points-preset]").forEach(function(b){b.classList.toggle("on",+b.getAttribute("data-points-preset")===state.points);});
   document.querySelectorAll("[data-adj]").forEach(function(b){var parts=b.getAttribute("data-adj").split(",");var pi=+parts[0];var dir=(+parts[1])<0?-1:1;var step=state.points===0?10:state.points;b.setAttribute("data-adj",pi+","+(dir*step));b.setAttribute("aria-label","Player "+(pi+1)+(dir<0?" minus ":" plus ")+step+" points");b.title=(dir<0?"−":"+")+step+" points";});
   var sshEl=$("scoreStepHint"); if(sshEl)sshEl.textContent="− / + step: "+(state.points===0?10:state.points)+" pts";
-  var plEl=$("phaseLabel"); if(plEl)plEl.textContent="Phase: "+state.phase.charAt(0).toUpperCase()+state.phase.slice(1)+(state.paused?" · ⏸ Paused":"")+" · Q "+(state.phase==="lobby"?0:Math.min(state.idx+1,getTotal()))+" / "+getTotal();
-  var cpEl=$("ctlPause"); if(cpEl)cpEl.textContent=state.paused?"▶ Resume Timer":"⏸ Pause Timer";
+  var plEl=$("phaseLabel"); if(plEl)plEl.textContent="Phase: "+state.phase.charAt(0).toUpperCase()+state.phase.slice(1)+(state.paused?" · ⏸ Paused":"")+" · "+(state.gameMode==="manual"?"✋ Manual":"▶▶ Automatic")+" · Q "+(state.phase==="lobby"?0:Math.min(state.idx+1,getTotal()))+" / "+getTotal();
+  var cpEl=$("ctlPause"); if(cpEl)cpEl.textContent=state.paused?"▶ Resume Game":"⏸ Pause Game";
+  document.querySelectorAll("#gameModeSeg button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-gamemode")===state.gameMode);});
+  var gmlEl=$("gameModeLabel"); if(gmlEl)gmlEl.textContent=state.gameMode==="manual"?"Manual":"Automatic";
+  var gmhEl=$("gameModeHint"); if(gmhEl)gmhEl.textContent=state.gameMode==="manual"
+    ?"Manual: fully manual, question by question. The timer reveals the answer when it runs out (and when both players have answered) — then you tap Next Question yourself, and Stop — Show Winner yourself at the end."
+    :"Automatic: the timer reveals each answer, then the game moves to the next question by itself and shows the winner by itself at the end. Pause, Stop, Start and Restart work anytime.";
   document.querySelectorAll("#timerStyleSeg button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-tstyle")===state.timerStyle);});
   document.querySelectorAll("#timeoutSeg button").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-timeout")===state.timeoutMode);});
   document.querySelectorAll("#strictSeg button").forEach(function(b){b.classList.toggle("on",(b.getAttribute("data-strict")==="on")===!!state.strict2p);});
@@ -2426,10 +2491,12 @@ $("ctlNewSession").addEventListener("click",function(){newSession();});
 $("ctlStart").addEventListener("click",function(){startGame();}); /* v30: no unconditional “Game started” toast here — startGame() itself reports what actually happened (started, connecting, or blocked) */
 $("ctlRestart").addEventListener("click",function(){restartGame();});
 $("ctlEnd").addEventListener("click",function(){endGame();});
+var ctlStopEl=$("ctlStop"); if(ctlStopEl)ctlStopEl.addEventListener("click",function(){stopToLobby();});
 $("ctlPause").addEventListener("click",function(){togglePause();});
+document.querySelectorAll("#gameModeSeg button").forEach(function(b){b.addEventListener("click",function(){setGameMode(b.getAttribute("data-gamemode"),true);});});
 $("ctlReveal").addEventListener("click",function(){if(state.phase==="playing")revealAnswer();else toast("Reveal works while a question is live");});
-$("ctlNext").addEventListener("click",function(){if(state.phase==="reveal"){if(state.idx<getTotal()-1)nextQuestion();else finishGame();}else if(state.phase==="finished"){toast("Game finished — Start or Restart to play again");}else toast("Next works after Reveal");});
-$("ctlHardReset").addEventListener("click",function(){if(curSess&&state.answerLog.length){saveSessionRecord(state.phase==="finished"?"finished":"ended");}curSess=null;stopTimer();state.paused=false;state.sessionId++;live.ready=[false,false];state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];state.answers=[null,null];state.answerTimes=[null,null];state.answerLog=[];state.active=[];state.phase="lobby";state.idx=0;render();toast("Everything reset — scores, players and game back to lobby");});
+$("ctlNext").addEventListener("click",function(){clearAutoAdvance();if(state.phase==="reveal"){if(state.idx<getTotal()-1)nextQuestion();else finishGame();}else if(state.phase==="finished"){toast("Game finished — Start or Restart to play again");}else toast("Next works after Reveal");});
+$("ctlHardReset").addEventListener("click",function(){if(curSess&&state.answerLog.length){saveSessionRecord(state.phase==="finished"?"finished":"ended");}curSess=null;clearAutoAdvance();stopTimer();state.paused=false;state.sessionId++;live.ready=[false,false];state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];state.answers=[null,null];state.answerTimes=[null,null];state.answerLog=[];state.active=[];state.phase="lobby";state.idx=0;render();toast("Everything reset — scores, players and game back to lobby");});
 document.querySelectorAll("#timerStyleSeg button").forEach(function(b){b.addEventListener("click",function(){state.timerStyle=b.getAttribute("data-tstyle");render();renderDesigner();toast("Timer style: "+b.textContent.trim()+" — preview is on the designer canvas");});});
 document.querySelectorAll("#timeoutSeg button").forEach(function(b){b.addEventListener("click",function(){state.timeoutMode=b.getAttribute("data-timeout");render();toast(state.timeoutMode==="reveal"?"Time-up will auto-reveal the answer":"Time-up will wait for Admin to reveal");});});
 document.querySelectorAll("#strictSeg button").forEach(function(b){b.addEventListener("click",function(){state.strict2p=b.getAttribute("data-strict")==="on";render();toast(state.strict2p?"🔒 Strict 2-Player ON — exactly 2 players, each iPad locked to its own player screen":"Strict mode OFF — screens can be switched freely on this link");});});
@@ -2896,7 +2963,7 @@ var lastDesignStoreStr="";
 function persistPublishedDesign(){
   try{
     if(!window.localStorage)return;
-    var str=JSON.stringify({design:liveDesign,screenTs:designScreenTs,style:{timerStyle:state.timerStyle,timeoutMode:state.timeoutMode,buttonStyle:state.buttonStyle,buttonScale:state.buttonScale,trueColor:state.trueColor,falseColor:state.falseColor,trueLabel:state.trueLabel,falseLabel:state.falseLabel,strict2p:state.strict2p},ts:Date.now()});
+    var str=JSON.stringify({design:liveDesign,screenTs:designScreenTs,style:{timerStyle:state.timerStyle,timeoutMode:state.timeoutMode,buttonStyle:state.buttonStyle,buttonScale:state.buttonScale,trueColor:state.trueColor,falseColor:state.falseColor,trueLabel:state.trueLabel,falseLabel:state.falseLabel,strict2p:state.strict2p,gameMode:state.gameMode},ts:Date.now()});
     if(str===lastDesignStoreStr)return;
     lastDesignStoreStr=str;
     localStorage.setItem(DESIGN_STORE_KEY,str);
@@ -2906,7 +2973,7 @@ function applyStoredDesign(saved,keyUsed){
   liveDesign=clone(saved.design); design=clone(saved.design); ensureDesign();
   if(saved.screenTs){["host","player1","player2"].forEach(function(k){if(typeof saved.screenTs[k]==="number")designScreenTs[k]=saved.screenTs[k];});}
   else if(saved.ts){designScreenTs={host:saved.ts,player1:saved.ts,player2:saved.ts};}
-  if(saved.style){["timerStyle","timeoutMode","buttonStyle","buttonScale","trueColor","falseColor","trueLabel","falseLabel","strict2p"].forEach(function(k){if(saved.style[k]!==undefined)state[k]=saved.style[k];});}
+  if(saved.style){["timerStyle","timeoutMode","buttonStyle","buttonScale","trueColor","falseColor","trueLabel","falseLabel","strict2p","gameMode"].forEach(function(k){if(saved.style[k]!==undefined)state[k]=saved.style[k];});}
   if(state.trueLabel==="TRUE")state.trueLabel="FACT"; if(state.falseLabel==="FALSE")state.falseLabel="MYTH"; /* v20: designs saved by older builds carried TRUE/FALSE labels */
   designPublished=true; hasRemoteDesign=true;
   diag.restore="YES — read from storage ("+keyUsed+") · saved "+diagTime(saved.ts||Date.now())+" · Host: "+designFingerprint("host");
@@ -2952,7 +3019,7 @@ function refreshDesignFromStore(){
     });
     if(changed){
       lastDesignStoreStr=raw;
-      if(saved.style){["timerStyle","timeoutMode","buttonStyle","buttonScale","trueColor","falseColor","trueLabel","falseLabel","strict2p"].forEach(function(k){if(saved.style[k]!==undefined)state[k]=saved.style[k];});}
+      if(saved.style){["timerStyle","timeoutMode","buttonStyle","buttonScale","trueColor","falseColor","trueLabel","falseLabel","strict2p","gameMode"].forEach(function(k){if(saved.style[k]!==undefined)state[k]=saved.style[k];});}
       if(state.trueLabel==="TRUE")state.trueLabel="FACT"; if(state.falseLabel==="FALSE")state.falseLabel="MYTH"; /* v20 label migration, as in applyStoredDesign */
       designPublished=true; hasRemoteDesign=true;
       if(!designIsDirty())design=clone(liveDesign);
