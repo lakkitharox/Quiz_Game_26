@@ -707,7 +707,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>About</h3>
         <p><b style="color:var(--text)">Myth or Fact</b> — 2 players · 10 random statements per round · fastest correct tap scores.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v40</b> · 28 Nov 2026 — Supabase is now the game server: the live game state lives in the quiz_rooms table and every screen reads it (player taps arrive as quiz_room_events rows), so a screen that joins late or drops for a moment picks the game up again from the table instead of waiting for a lost message. Needs the one-time SQL in Admin → Live → Game server.</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v41</b> · 28 Nov 2026 — Seat fix: a player device now keeps the same identity across reloads (before, every reload made it a stranger, so the host's seat confirmation never matched and BOTH iPads could sit on “Joining…” forever while Admin showed them joined); the host re-checks the taps table every 5 seconds for joins it missed, and reads the room row back after writing it to prove the save actually landed — if it didn't, Admin says so plainly instead of claiming Live. An iPad that can't be seated gets the plain reason on its own screen, and Admin → Live shows each slot's last-seen time with a Free slot button. (v40: Supabase became the game server: the live game state lives in the quiz_rooms table and every screen reads it (player taps arrive as quiz_room_events rows), so a screen that joins late or drops for a moment picks the game up again from the table instead of waiting for a lost message. Needs the one-time SQL in Admin → Live → Game server.</p>
       </div>
       </div>
     </div>
@@ -839,7 +839,7 @@ function getQ(){return state.active[state.idx]||state.questions[state.idx]||null
 
 /* ================= LIVE (v40: Supabase tables — see the game-server section below) ================= */
 var supa=null;
-var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:"c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36),occupied:[null,null],ready:[false,false],readyPending:false,readyWant:null,readyRetry:null,startPending:false,joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,joinedAt:0,heartbeatTimer:null,viewerFallbackTimer:null,viewerPollTimer:null,joinedViaStored:false,forceRejoin:false,hostHbTimer:null,hostReconnectTimer:null,startPendingTimer:null,lastStateAt:0,joinPending:false,joinStartedAt:0,joinFromSlot:null,joinWaitTimer:null,processedEv:{},lastRejectAt:{}};
+var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:persistedClientId("main"),joinError:"",roomWriteFails:0,roomWriteErrorShown:false,hostBacklogTimer:null,seatWaitSince:0,occupied:[null,null],ready:[false,false],readyPending:false,readyWant:null,readyRetry:null,startPending:false,joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,joinedAt:0,heartbeatTimer:null,viewerFallbackTimer:null,viewerPollTimer:null,joinedViaStored:false,forceRejoin:false,hostHbTimer:null,hostReconnectTimer:null,startPendingTimer:null,lastStateAt:0,joinPending:false,joinStartedAt:0,joinFromSlot:null,joinWaitTimer:null,processedEv:{},lastRejectAt:{}};
 var pendingWantSlot=null; /* set by a /PlayerN screen's own join form so the host pins that exact slot */
 var joinDraft={"c0":"","n0":"","c1":"","n1":""}; /* v19: text typed into a player screen's join form, kept across stage re-renders (see render()) */
 var lastHostState=null, liveMyAnswer=null, liveMyIdx=-1, broadcastQueued=false;
@@ -861,7 +861,7 @@ function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeSt
 function designFingerprint(k){var d=liveDesign[k];if(!d)return k+": —";var bg=d.bgMode==="image"?"image":d.bgMode==="color"?("solid "+(d.bgColor||"")):("grad "+(d.bg1||"")+" → "+(d.bg2||""));return bg+(d.headline?(" · headline “"+d.headline+"”"):" · no headline");}
 function diagLines(admin){
   var L=[];
-  L.push(["Build","v40"]);
+  L.push(["Build","v41"]);
   L.push(["Live library (Supabase)",diag.supa]);
   L.push(["This screen's role",live.mode==="host"?"Host (room owner)":live.mode==="player"?("Player "+(live.mySlot!==null?live.mySlot+1:"?")):live.mode==="viewer"?"Host display (viewer)":"Offline / demo"]);
   L.push(["Room channel",diag.channel]);
@@ -880,7 +880,7 @@ function diagLines(admin){
   return L;
 }
 function diagHTML(admin){
-  return '<b class="diag-t">🔎 Diagnostics — Build v40</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
+  return '<b class="diag-t">🔎 Diagnostics — Build v41</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
 }
 function renderDiag(){
   var ad=$("adminDiag"); if(ad)ad.innerHTML=diagHTML(true);
@@ -1155,6 +1155,46 @@ function fetchRoomRow(code){
     return res.data||null;
   }).catch(function(){return null;});
 }
+function persistedClientId(scope){
+  /* v41: a device keeps ONE identity across reloads. Before, clientId was
+     rolled fresh on every page load, so a reloaded iPad became a stranger:
+     the seat the host recorded for it (under the old id) never matched the
+     new id in the room row, its seat check failed forever, and it sat on
+     “Joining…” while Admin — counting its own local list — showed it as
+     joined. BOTH iPads reloading meant both were locked out the same way.
+     The id now lives in this device's storage, scoped per player slot so
+     two player tabs on one test device still get distinct ids. */
+  var KEY="tfq-cid-"+scope;
+  try{
+    if(window.localStorage){
+      var v=localStorage.getItem(KEY);
+      if(v&&v.length>=6)return v;
+      var nid="c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36);
+      localStorage.setItem(KEY,nid);
+      return nid;
+    }
+  }catch(e){}
+  return "c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36);
+}
+var lastRoomVerifyAt=0;
+function verifyRoomRow(){
+  /* v41: never trust that a room write landed — read the row back and
+     compare the seats. Admin's “joined” count is host-local state; this
+     read-back proves the row every other screen reads actually holds it.
+     A mismatch re-writes the row; repeated failure is said plainly and
+     persistently, never hidden behind a local “Live” claim. */
+  if(live.mode!=="host"||!live.code)return;
+  fetchRoomRow(live.code).then(function(row){
+    if(live.mode!=="host")return;
+    var ok=row&&row.state&&JSON.stringify(row.state.occupied||[])===JSON.stringify(live.occupied);
+    if(ok){live.roomWriteFails=0;if(live.roomWriteErrorShown){live.roomWriteErrorShown=false;clearLiveError();}}
+    else{
+      live.roomWriteFails=(live.roomWriteFails||0)+1;
+      queueBroadcast();
+      if(live.roomWriteFails>=2&&!live.roomWriteErrorShown){live.roomWriteErrorShown=true;setLiveError("✕ The game server is NOT saving the room — Admin may show players as joined, but the room table does not hold them, so the iPads and the Host screen cannot see their seats. Check this device's internet connection; the app keeps retrying the save by itself.");}
+    }
+  }).catch(function(){});
+}
 function sendRoomEvent(type,payload,toId){
   /* A player → host tap, stored as a row the host cannot miss. Resolves
      true only when the row actually landed in the table. */
@@ -1191,8 +1231,10 @@ function broadcastState(){
   var s=getSupa(); if(!s)return Promise.resolve(false);
   var payload=buildStatePayload();
   return s.from(ROOMS_TABLE).upsert({code:live.code,state:payload,time_left:state.timeLeft,updated_at:new Date().toISOString()},{onConflict:"code"}).then(function(res){
-    if(res.error){noteRoomsError(res.error);return false;}
-    markRoomsOk(); return true;
+    if(res.error){noteRoomsError(res.error);live.roomWriteFails=(live.roomWriteFails||0)+1;if(live.roomWriteFails>=2&&!live.roomWriteErrorShown){live.roomWriteErrorShown=true;setLiveError("✕ The game server refused the room save — the other screens cannot see the current game. Check this device's internet connection; the app keeps retrying.");}return false;}
+    markRoomsOk();
+    var nowV=Date.now(); if(nowV-lastRoomVerifyAt>4000){lastRoomVerifyAt=nowV;verifyRoomRow();} /* v41: prove the write landed by reading the row back and comparing the seats */
+    return true;
   }).catch(function(){return false;});
 }
 function queueBroadcast(){ if(broadcastQueued) return; broadcastQueued=true; setTimeout(function(){broadcastQueued=false;broadcastState();},60); }
@@ -1324,6 +1366,18 @@ function hostCreateRoom(){
      still converges on the live game within seconds. */
   if(live.heartbeatTimer)clearInterval(live.heartbeatTimer);
   live.heartbeatTimer=setInterval(function(){if(live.mode==="host"&&live.connected)broadcastState();},10000);
+  /* v41: backlog re-scan every 5s for the host's whole session. Before,
+     unprocessed event rows were fetched ONCE, at subscribe time — a join
+     row that landed while the subscription was briefly down (or after
+     that one fetch) was never picked up until a reconnect, so the iPad
+     knocked forever and was never seated. Now missed joins, answers,
+     names and Ready taps are collected within seconds, every time. */
+  if(live.hostBacklogTimer)clearInterval(live.hostBacklogTimer);
+  live.hostBacklogTimer=setInterval(function(){
+    if(live.mode!=="host"||!live.code)return;
+    var sB=getSupa(); if(!sB)return;
+    try{sB.from(EVENTS_TABLE).select("*").eq("code",live.code).is("to_id",null).order("id",{ascending:true}).limit(200).then(function(res){if(res&&!res.error){(res.data||[]).forEach(function(ev){processRoomEvent(ev);});}},function(){});}catch(e){}
+  },5000);
   /* v32: host heartbeat for the single-host guard above — refreshed every
      4s while this tab hosts, removed when the room closes. */
   if(live.hostHbTimer)clearInterval(live.hostHbTimer);
@@ -1469,7 +1523,7 @@ function armJoinWaitNotice(){
 function cancelJoin(){
   if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}
   if(live.joinWaitTimer){clearTimeout(live.joinWaitTimer);live.joinWaitTimer=null;}
-  live.joinPending=false; live.joinStartedAt=0;
+  live.joinPending=false; live.joinStartedAt=0; live.joinError="";
   disconnectLive(true); /* back to offline — the join form returns, and nothing anywhere claims “joined” */
   clearLiveError();
   var el=$("joinStatus2"); if(el){el.textContent="Join stopped — you are NOT in the game. Tap Join again when the room is ready.";el.className="statusline wait";}
@@ -1496,7 +1550,7 @@ function playerJoinFrom(prefix){
   var keepJoinStart=live.joinPending?live.joinStartedAt:0; /* an internal rejoin keeps the original tap time, so the not-joined notice is measured from the user's tap, not from the last rebuild */
   if(live.mode!=="offline") disconnectLive(true);
   live.joinPending=true; live.joinStartedAt=keepJoinStart||Date.now();
-  live.mode="player"; live.code=code; live.myName=name.slice(0,18); live.connected=false; live.assigned=false; live.mySlot=null; live.wantSlot=pendingWantSlot; pendingWantSlot=null; live.joinFromSlot=live.wantSlot; lastHostState=null; liveMyAnswer=null; liveMyIdx=-1; live.readyPending=false; live.readyWant=null; if(live.readyRetry){clearInterval(live.readyRetry);live.readyRetry=null;} /* v37: a (re)join starts with no unconfirmed Ready tap */
+  live.mode="player"; live.code=code; live.myName=name.slice(0,18); live.connected=false; live.assigned=false; live.mySlot=null; live.wantSlot=pendingWantSlot; pendingWantSlot=null; live.joinFromSlot=live.wantSlot; live.clientId=persistedClientId((live.wantSlot===0||live.wantSlot===1)?("slot"+live.wantSlot):"join"); live.joinError=""; live.seatWaitSince=Date.now(); /* v41: this device's STABLE identity for this slot — the same id after any reload, so the host's seat for it can actually match */ lastHostState=null; liveMyAnswer=null; liveMyIdx=-1; live.readyPending=false; live.readyWant=null; if(live.readyRetry){clearInterval(live.readyRetry);live.readyRetry=null;} /* v37: a (re)join starts with no unconfirmed Ready tap */
   savePlayerDaySession(code,live.wantSlot); /* v21: remember the CODE (and slot) for the whole day — the name is per-session and is never stored */
   setStatus("Connecting to the room…");
   armJoinWaitNotice(); syncJoinBusyUI();
@@ -1585,6 +1639,7 @@ function onJoinRejected(reason){
   var el=$("joinStatus2"); if(el){el.textContent="✕ "+(reason||"Could not join.");el.className="statusline wait";}
   disconnectLive(true); syncJoinBusyUI();
   var el2=$("joinStatus2"); if(el2){el2.textContent="✕ "+(reason||"Could not join.");el2.className="statusline wait";} /* disconnectLive re-renders — say it again on the fresh form */
+  live.joinError=reason||"Could not join."; renderJoinDocks(); /* v41: the refusal also stays on the PLAYER screen's dock, persistently — before it only existed on the /join form, so a Player-screen iPad went back to a blank form with no reason */
 }
 function onRoomRow(row){
   /* The one door for room state in v40 — used by the initial fetch, the
@@ -1618,7 +1673,7 @@ function playerSeatCheck(pl){
   if(!pl||!pl.occupied)return;
   var idx=pl.occupied.indexOf(live.clientId);
   if(live.joinPending&&!live.assigned&&idx!==-1){
-    live.mySlot=idx; live.assigned=true; live.joinPending=false;
+    live.mySlot=idx; live.assigned=true; live.joinPending=false; live.joinError=""; live.seatWaitSince=0;
     if(live.joinWaitTimer){clearTimeout(live.joinWaitTimer);live.joinWaitTimer=null;}
     if(live.joinRetry){clearInterval(live.joinRetry);live.joinRetry=null;}
     clearLiveError(); syncJoinBusyUI();
@@ -1632,6 +1687,18 @@ function playerSeatCheck(pl){
     var myView=live.mySlot===1?"p2":"p1";
     toast("Admin reset your player slot — use the join form on this screen to rejoin");
     disconnectLive(true); switchView(myView);
+  } else if(live.joinPending&&!live.assigned&&idx===-1){
+    /* v41: a seat check that never matches must SAY why, persistently —
+       not spin on “Joining…” forever. Two readable cases: both seats are
+       held by other devices (e.g. stale copies of these same iPads from
+       before their identity was stable), or the host simply has not
+       seated this iPad after a long wait. The dock shows joinError until
+       the seat actually confirms or the player cancels. */
+    var occCount=(pl.occupied[0]?1:0)+(pl.occupied[1]?1:0);
+    var reason="";
+    if(occCount>=2)reason="Both player seats are taken by other devices — this iPad is NOT in the game. If one of those seats is a stale copy of this iPad, ask Admin to tap Free slot for it in Admin → Live, then join again.";
+    else if(live.seatWaitSince&&(Date.now()-live.seatWaitSince>25000))reason="The room is open but the host has not seated this iPad after "+Math.round((Date.now()-live.seatWaitSince)/1000)+"s — you are NOT in yet. This iPad keeps knocking every few seconds; if it stays stuck, ask Admin to check this slot in Admin → Live, or Free slot it and rejoin.";
+    if(reason&&reason!==live.joinError){live.joinError=reason;renderJoinDocks();}
   }
 }
 function startPlayerPing(){
@@ -1963,6 +2030,7 @@ function disconnectLive(silent){
   if(live.presenceTimer){clearInterval(live.presenceTimer);live.presenceTimer=null;}
   if(live.syncTimer){clearInterval(live.syncTimer);live.syncTimer=null;}
   if(live.heartbeatTimer){clearInterval(live.heartbeatTimer);live.heartbeatTimer=null;}
+  if(live.hostBacklogTimer){clearInterval(live.hostBacklogTimer);live.hostBacklogTimer=null;}
   stopHostDiscovery();
   live.viewerRetries=0;
   live.lastSeen=[0,0]; live.stale=[false,false];
@@ -2184,7 +2252,7 @@ function renderJoinDocks(){
       var mode=dockMode(i);
       var rem=mode==="join"?getPlayerDaySession():null;
       var isDefaultName=(state.players[i].name==="Player "+(i+1));
-      var sig=mode+"|"+(rem?rem.code:"")+"|"+(isDefaultName?"d":"n")+"|"+state.players[i].name+"|"+state.sessionId+"|"+(live.ready[i]?"R":"-")+"|"+((live.readyPending&&live.mySlot===i)?"P":"-")+"|"+(live.joinPending?"J":"-"); /* v38: the unconfirmed-join state is in the signature too, so the dock flips to “joining” the moment Join is tapped and back when the host confirms or the join stops */ /* v30: Ready state is part of the signature so the dock flips between the Ready button and the “You're ready” state · v37: the unconfirmed (pending) state is in the signature too, so the dock flips to “waiting for the host” the moment Ready is tapped */
+      var sig=mode+"|"+(rem?rem.code:"")+"|"+(isDefaultName?"d":"n")+"|"+state.players[i].name+"|"+state.sessionId+"|"+(live.ready[i]?"R":"-")+"|"+((live.readyPending&&live.mySlot===i)?"P":"-")+"|"+(live.joinPending?"J":"-")+"|"+(live.joinError||""); /* v38: the unconfirmed-join state is in the signature too, so the dock flips to “joining” the moment Join is tapped and back when the host confirms or the join stops */ /* v30: Ready state is part of the signature so the dock flips between the Ready button and the “You're ready” state · v37: the unconfirmed (pending) state is in the signature too, so the dock flips to “waiting for the host” the moment Ready is tapped */
       if(sig===dockSig[i]&&dock.hidden===(mode==="hidden"))return; /* unchanged — leave the live inputs exactly as they are */
       dockSig[i]=sig;
       if(mode==="hidden"){dock.hidden=true;dock.innerHTML="";return;}
@@ -2196,6 +2264,7 @@ function renderJoinDocks(){
         var codeVal=joinDraft["c"+i]||(rem?rem.code:"")||earlyRoomCode||"";
         dock.innerHTML='<h3>Join — Player '+(i+1)+'</h3>'
           +'<div class="join-mini" style="text-align:left"><input id="pJoinCode'+i+'" placeholder="ROOM CODE" maxlength="10" autocapitalize="characters" autocomplete="off" value="'+esc(codeVal)+'"><input id="pJoinName'+i+'" placeholder="Your name" maxlength="18" autocomplete="off" value="'+esc(joinDraft["n"+i]||"")+'"><button class="btn primary join-go-btn" onclick="playerJoinAs('+i+')">Join →</button></div>'
+          +(live.joinError?'<div class="jd-note" style="color:#FCA5A5;font-weight:700">✕ '+esc(live.joinError)+'</div>':"")
           +(rem?'<div style="margin-top:8px"><button class="btn small" onclick="forgetTodaysRoom()">Forget today\'s code</button></div>':"");
       } else if(mode==="joining"){
         /* v38: while the host has not confirmed, the dock says exactly that.
@@ -2204,6 +2273,7 @@ function renderJoinDocks(){
            like it did nothing at all. */
         dock.innerHTML='<h3>Joining — Player '+(i+1)+'</h3>'
           +'<div class="jd-note">⏳ Connected — waiting for the host to confirm your seat…<br><b>You are not in yet.</b> This screen moves to your player screen by itself the moment the host confirms.</div>'
+          +(live.joinError?'<div class="jd-note" style="color:#FCA5A5;font-weight:700">✕ '+esc(live.joinError)+'</div>':"")
           +'<div style="margin-top:10px"><button class="btn" onclick="cancelJoin()">Cancel — stop trying</button></div>';
       } else {
         /* The name bar comes back at the start of EVERY session, even though
@@ -2603,7 +2673,8 @@ function renderLiveMonitor(){
         +'<div class="pstats"><div class="pstat"><b>'+p.score+'</b><small>Score</small></div><div class="pstat"><b>'+p.correct+'</b><small>Correct</small></div><div class="pstat"><b>'+p.streak+'</b><small>Streak</small></div><div class="pstat"><b>'+fmtSecs(at)+'</b><small>Answer time</small></div></div>'
         +'<div class="panswer '+ansCls+'">'+ansBox+(conn.detail?'<div style="margin-top:6px;color:var(--muted);font-size:12.5px">'+esc(conn.detail)+'</div>':"")+'</div>'
         +histHtml
-        +'<div class="plinkrow"><a class="btn small" href="'+esc(screenPath('p'+(i+1)))+'" style="text-decoration:none">Open '+esc(dispName(i))+'</a></div>'
+        +'<div class="plinkrow"><a class="btn small" href="'+esc(screenPath('p'+(i+1)))+'" style="text-decoration:none">Open '+esc(dispName(i))+'</a>'+(live.mode==="host"&&live.occupied[i]?'<button class="btn small" onclick="resetPlayer('+i+')">Free slot</button>':"")+'</div>'
+        +(live.mode==="host"?'<div style="font-size:12.5px;color:var(--muted);margin-top:6px">Last seen: '+(live.lastSeen[i]?(Math.max(0,Math.round((Date.now()-live.lastSeen[i])/1000))+"s ago"):"never")+(live.occupied[i]?"":" · slot free")+'</div>':"")
         +'</div>';
     })(i);
   }
