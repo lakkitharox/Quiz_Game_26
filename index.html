@@ -722,7 +722,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>About</h3>
         <p><b style="color:var(--text)">Myth or Fact</b> — 2 players · 10 random statements per round · fastest correct tap scores.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v48</b> · 28 Nov 2026 — one room row in Supabase is the whole game: connection, names, scores, questions, answers and the winner all travel in that one row. Screens read it once when they open, then follow it live. Nothing runs in the background.</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v49</b> · 28 Nov 2026 — one room row in Supabase is the whole game: connection, names, scores, questions, answers and the winner all travel in that one row. Screens read it once when they open, then follow it live. Nothing runs in the background. Connecting is allowed minutes, not seconds: no screen calls the server “not answering” until a call has gone unanswered for a full 3 minutes, and a room save that timed out is checked against the row itself before it is ever called failed.</p>
       </div>
       </div>
     </div>
@@ -885,12 +885,25 @@ function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeSt
    the app had a timeout, so the boot probe, the host-start gate and every
    screen downstream waited forever on that one stuck request. The iPads
    proved the server itself was up (their Realtime socket connected).
-   v43 gives EVERY Supabase REST call an 8-second AbortController timeout
+   v43 gives EVERY Supabase REST call an AbortController timeout
    (via the client's global fetch below), wraps the critical room reads
    in a matching promise timeout, retries the boot probe every 5 s with a
    plain persistent error, stops gating host start on a single read, and
-   surfaces REST errors instead of swallowing them. */
-var REST_TIMEOUT_MS=8000;
+   surfaces REST errors instead of swallowing them.
+   v49: that timeout is now 3 MINUTES (REST_TIMEOUT_MS below). The user
+   reports that connecting the Host and player screens normally takes a
+   few minutes, and a simple room read took 10.6 s in live evidence — so
+   any seconds-scale timeout aborts calls that are still on their way
+   and reports a failure while the connection is actually in progress.
+   A call is now given a full 3 minutes before it counts as unanswered;
+   while it is waiting, the screens say “still connecting…”, and
+   “server not answering” is declared only after those 3 minutes of
+   silence. The same 3 minutes applies to the Realtime socket timeout
+   (see getSupa) and to the Start-pending gate (armStartPendingTimeout).
+   The Host-login and join waits have no separate deadline of their own
+   in this build — they ride on this same per-call timeout, so they too
+   allow minutes now. */
+var REST_TIMEOUT_MS=180000; /* v49: 3 minutes — connecting screens normally takes minutes, so a single slow call (~10s, or even ~2min) must never be reported as a failure */
 function isTimeoutError(e){ if(!e)return false; if(e.isTimeout)return true; var m=String((e&&e.message)||e||""), n=String((e&&e.name)||""); return n==="AbortError"||n==="TimeoutError"||/abort|timeout|timed out/i.test(m); }
 function timedFetch(input,init){
   init=init||{};
@@ -926,7 +939,7 @@ function timedFetch(input,init){
      answer, even an error, is surfaced at once, never retried blindly.
    Realtime subscriptions are unchanged — they were never the problem. */
 function noopAuthLock(name,acquireTimeout,fn){return fn();}
-function getSupa(){ if(supa){return supa;} if(!window.supabase||!window.supabase.createClient){return null;} try{supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,lock:noopAuthLock},global:{fetch:timedFetch}});}catch(e){supa=null;} return supa; }
+function getSupa(){ if(supa){return supa;} if(!window.supabase||!window.supabase.createClient){return null;} try{supa=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,lock:noopAuthLock},global:{fetch:timedFetch},realtime:{timeout:REST_TIMEOUT_MS}});}catch(e){supa=null;} return supa; } /* v49: realtime timeout raised from the library's 10s default to the same 3 minutes — a slow socket subscribe must not be declared lost in seconds either */
 function restHeaders(extra){
   var h={"apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY,"Content-Type":"application/json"};
   if(extra)for(var k in extra)h[k]=extra[k];
@@ -1263,9 +1276,9 @@ function fetchRoomRow(code){
      room row from the server. That row holds everything the game
      shares (code, names, scores, question + answers, winner, designs).
      Resolves the row, or null when there is no such room. One clock
-     only: the timed fetch aborts a single attempt at 8 s and there is
+     only: the timed fetch aborts a single attempt at 3 minutes (v49) and there is
      NO automatic retry (v46 QUIET — restWithRetry is now a single call);
-     the old second 18.5 s wrapper race is gone. A failure is surfaced via
+     the old second wrapper race is gone. A failure is surfaced via
      noteRoomsError and flagged on live.lastReadFailed, never swallowed,
      so screens can tell “no room yet” (a successful read with no row)
      apart from “server not answering” (roomsSource === "error"). */
@@ -1363,6 +1376,27 @@ function buildStatePayload(){
     baseSeq:hostWriteSeq+1, lastWriter:tabId,
     hostTab:tabId, hostSeq:++hostWriteSeq}; /* which host tab wrote this row, and its write count — the host ignores its own echoes (lastWriter) and spots stale-based player patches via baseSeq */
 }
+function verifyRoomSaveLanded(payload,code){
+  /* v49: after a timed-out save, the server may have committed the write
+     even though the response never arrived (live evidence: the 5720 row
+     was updated and in the lobby seconds after the app reported failure).
+     Re-read the row once and check whether THIS save is what is stored.
+     The proof is the save's hostSeq: player patches keep the row's
+     hostSeq but replace lastWriter with their own id, so lastWriter must
+     NOT be required — a player joining or answering between the save and
+     the read-back does not undo the save. hostSeq at or beyond this
+     save's means this save (or a newer one from this tab) is stored.
+     Resolves true only when the read-back proves the save landed. */
+  return new Promise(function(resolve){setTimeout(resolve,700);}).then(function(){
+    return fetchRoomRow(code).then(function(row){
+      if(live.lastReadFailed||!row||!row.state)return false;
+      var st=row.state;
+      if(typeof st.hostSeq==="number"&&typeof payload.hostSeq==="number"&&st.hostSeq>=payload.hostSeq)return true;
+      if(st.lastWriter===tabId&&st.ts&&payload.ts&&st.ts>=payload.ts)return true;
+      return false;
+    }).catch(function(){return false;});
+  });
+}
 function writeRoomState(){
   /* v40: “room-row write” now means WRITE THE ROOM ROW. Every screen reads
      the state back out of the table (immediately on join, then live via
@@ -1372,14 +1406,30 @@ function writeRoomState(){
      check this instead of assuming delivery (the v35 rule, kept). */
   if(live.mode!=="host"||!live.code) return Promise.resolve(false);
   var payload=buildStatePayload();
+  var saveCode=live.code;
   /* v44: direct REST upsert (see the v44 note at getSupa). v47: ONE
      attempt, never retried automatically — a failed save is stamped
      (lastWriteFailedAt) and said plainly on screen; the next save
-     happens when someone acts. */
-  return restWithRetry("POST",ROOMS_TABLE+"?on_conflict=code",[{code:live.code,state:payload,time_left:state.timeLeft,updated_at:new Date().toISOString()}],"resolution=merge-duplicates").then(function(){
+     happens when someone acts.
+     v49: a TIMEOUT is no longer declared a failure on its own. The
+     write is verified by reading the room row back (verifyRoomSaveLanded):
+     if the row shows this save, it counts as success; failure is
+     reported only when the read-back proves it did not land. */
+  function markSaveFailed(err){
+    noteRoomsError(err);live.lastWriteFailedAt=Date.now();live.roomWriteFails=(live.roomWriteFails||0)+1;if(!live.roomWriteErrorShown){live.roomWriteErrorShown=true;setLiveError("✕ The game server did not answer the room save — the other screens cannot see the current game. Nothing retries on its own; the next tap tries again.");}return false;
+  }
+  return restWithRetry("POST",ROOMS_TABLE+"?on_conflict=code",[{code:saveCode,state:payload,time_left:state.timeLeft,updated_at:new Date().toISOString()}],"resolution=merge-duplicates").then(function(){
     markRoomsOk(); live.lastWriteOkAt=Date.now(); live.lastWriteFailedAt=0; live.roomWriteFails=0; live.roomWriteErrorShown=false;
     return true;
-  }).catch(function(err){noteRoomsError(err);live.lastWriteFailedAt=Date.now();live.roomWriteFails=(live.roomWriteFails||0)+1;if(!live.roomWriteErrorShown){live.roomWriteErrorShown=true;setLiveError("✕ The game server did not answer the room save — the other screens cannot see the current game. Nothing retries on its own; the next tap tries again.");}return false;});
+  }).catch(function(err){
+    if(isTimeoutError(err)){
+      return verifyRoomSaveLanded(payload,saveCode).then(function(landed){
+        if(landed){markRoomsOk();live.lastWriteOkAt=Date.now();live.lastWriteFailedAt=0;live.roomWriteFails=0;live.roomWriteErrorShown=false;clearLiveError();return true;}
+        return markSaveFailed(err);
+      });
+    }
+    return markSaveFailed(err);
+  });
 }
 function queueRoomWrite(){ if(roomWriteQueued) return; roomWriteQueued=true; setTimeout(function(){roomWriteQueued=false;writeRoomState();},60); }
 /* ================= v47: THE HOST FOLLOWS ITS OWN ROOM ROW =================
@@ -2715,9 +2765,9 @@ function armStartPendingTimeout(){
     live.startPendingTimer=null;
     if(!live.startPending)return;
     live.startPending=false;
-    setLiveError("✕ Game NOT started — the room did not connect in time. Check this device's internet connection, wait until the connection line shows Live, then press Start again.");
+    setLiveError("✕ Game NOT started — the room still had not connected after 3 minutes of waiting. Check this device's internet connection, wait until the connection line shows Live, then press Start again.");
     toast("✕ Game NOT started — the room did not connect");
-  },12000);
+  },180000); /* v49: was 12s — connecting is allowed a full 3 minutes before Start is declared failed; until then the screens honestly show “still connecting…” */
 }
 function disarmStartPendingTimeout(){if(live.startPendingTimer){clearTimeout(live.startPendingTimer);live.startPendingTimer=null;}}
 function answer(i,val){
