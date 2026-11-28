@@ -449,6 +449,15 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
     <div class="dr-code" id="adminRoomCodeBig">QUIZ-<b>····</b></div>
     <div class="dr-meta" id="adminRoomMeta">Today's code — new code tomorrow.</div>
     <div class="dr-status" id="adminRoomStatus">Loading…</div>
+    <div class="dr-status" id="roomsStatusTop" style="margin-top:8px">☁️ Game server: checking…</div>
+    <div id="hostGuardBox" hidden style="margin-top:10px;border:1.5px solid var(--red);background:rgba(239,68,68,.12);border-radius:12px;padding:12px 13px">
+      <b style="font-size:14.5px">✕ Another Admin tab is already hosting today's room</b>
+      <p style="font-size:13.5px;line-height:1.55;margin:7px 0 10px">That tab — probably an older copy of this page left open — is holding the room, so this tab was NOT made the host and nothing here is connected yet. Close the other Admin tab, or take the room over: this tab becomes the host and keeps the players already seated in the room.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn primary" onclick="hostTakeOver()">Take over this room</button>
+        <button class="btn" onclick="dismissHostGuard()">Dismiss</button>
+      </div>
+    </div>
     <div class="dr-actions">
       <button class="btn primary" id="adminRoomCreateBtn" onclick="hostCreateRoom()">● Create Today's Room</button>
       <button class="btn" id="adminRoomCopyBtn" onclick="copyTodaysCode()">Copy today's code</button>
@@ -707,7 +716,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>About</h3>
         <p><b style="color:var(--text)">Myth or Fact</b> — 2 players · 10 random statements per round · fastest correct tap scores.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v41</b> · 28 Nov 2026 — Seat fix: a player device now keeps the same identity across reloads (before, every reload made it a stranger, so the host's seat confirmation never matched and BOTH iPads could sit on “Joining…” forever while Admin showed them joined); the host re-checks the taps table every 5 seconds for joins it missed, and reads the room row back after writing it to prove the save actually landed — if it didn't, Admin says so plainly instead of claiming Live. An iPad that can't be seated gets the plain reason on its own screen, and Admin → Live shows each slot's last-seen time with a Free slot button. (v40: Supabase became the game server: the live game state lives in the quiz_rooms table and every screen reads it (player taps arrive as quiz_room_events rows), so a screen that joins late or drops for a moment picks the game up again from the table instead of waiting for a lost message. Needs the one-time SQL in Admin → Live → Game server.</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v42</b> · 28 Nov 2026 — Connection fix: if another Admin tab (e.g. an older copy left open) is already hosting today's room, Create no longer fails silently — a persistent message says so, with a <b style="color:var(--text)">Take over this room</b> button that makes this tab the host and keeps seated players seated. Room writes are stamped per tab, so Admin can now tell “another tab is overwriting the room” apart from “the save didn't land”. The game-server state shows at the top of Admin at all times. (v41: player devices keep one identity across reloads; the host re-checks the taps table every 5 s and reads the room row back after writing. v40: Supabase is the game server — state in quiz_rooms, taps in quiz_room_events.)</p>
       </div>
       </div>
     </div>
@@ -725,7 +734,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
 <div class="toast" id="toast"></div>
 <div class="live-error" id="liveError" hidden></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
 <script>
 var SUPABASE_URL="https://aylhgfftsokskgpgvemn.supabase.co";
 var SUPABASE_ANON_KEY="sb_publishable_HiyUZMv_FNEr-Ux4OGPZRA_8q9PpG8Q";
@@ -839,7 +848,22 @@ function getQ(){return state.active[state.idx]||state.questions[state.idx]||null
 
 /* ================= LIVE (v40: Supabase tables — see the game-server section below) ================= */
 var supa=null;
-var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:persistedClientId("main"),joinError:"",roomWriteFails:0,roomWriteErrorShown:false,hostBacklogTimer:null,seatWaitSince:0,occupied:[null,null],ready:[false,false],readyPending:false,readyWant:null,readyRetry:null,startPending:false,joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,joinedAt:0,heartbeatTimer:null,viewerFallbackTimer:null,viewerPollTimer:null,joinedViaStored:false,forceRejoin:false,hostHbTimer:null,hostReconnectTimer:null,startPendingTimer:null,lastStateAt:0,joinPending:false,joinStartedAt:0,joinFromSlot:null,joinWaitTimer:null,processedEv:{},lastRejectAt:{}};
+var live={mode:"offline",code:null,channel:null,connected:false,mySlot:null,wantSlot:null,myName:"",clientId:persistedClientId("main"),joinError:"",roomWriteFails:0,roomWriteErrorShown:false,foreignHostShown:false,hostBacklogTimer:null,seatWaitSince:0,occupied:[null,null],ready:[false,false],readyPending:false,readyWant:null,readyRetry:null,startPending:false,joinRetry:null,assigned:false,lastSeen:[0,0],stale:[false,false],pingTimer:null,presenceTimer:null,syncTimer:null,viewerRetries:0,joinedAt:0,heartbeatTimer:null,viewerFallbackTimer:null,viewerPollTimer:null,joinedViaStored:false,forceRejoin:false,hostHbTimer:null,hostReconnectTimer:null,startPendingTimer:null,lastStateAt:0,joinPending:false,joinStartedAt:0,joinFromSlot:null,joinWaitTimer:null,processedEv:{},lastRejectAt:{}};
+/* ================= PER-TAB HOST IDENTITY (v42) =================
+   The single-host guard needs to tell TABS apart, but v41 made
+   live.clientId one persisted id per BROWSER (“main”) — every tab in the
+   browser shares it, so two Admin tabs looked like the same host to the
+   guard while overwriting each other's room row, and a leftover pre-v41
+   tab (random id per load) blocked every fresh tab with only a toast.
+   tabId is per-TAB: kept in sessionStorage, which survives this tab's
+   own reloads but is never shared with another tab. It is used ONLY for
+   the host heartbeat/guard and for stamping this host's room writes —
+   player seat identity stays the persisted per-slot id from v41. */
+var tabId=(function(){var KEY="tfq-tab-id";try{if(window.sessionStorage){var v=sessionStorage.getItem(KEY);if(v&&v.length>=6)return v;var nid="t"+Math.random().toString(36).slice(2,11)+Date.now().toString(36);sessionStorage.setItem(KEY,nid);return nid;}}catch(e){}return "t"+Math.random().toString(36).slice(2,11)+Date.now().toString(36);})();
+var hostBlocked=null; /* v42: set when the single-host guard refuses Create — the refusal is persistent (banner + panel box with Take over), never toast-only */
+var hostForceOnce=false; /* v42: one guard bypass, armed only by the Take over button */
+var adoptSeats=null; /* v42: seats/players read from an existing room row just before (re)creating it, so a takeover or host restart never wipes seated players */
+var hostWriteSeq=0; /* v42: stamps each room write with this tab's id + a counter, so a read-back can tell “my save” from “another host tab's save” */
 var pendingWantSlot=null; /* set by a /PlayerN screen's own join form so the host pins that exact slot */
 var joinDraft={"c0":"","n0":"","c1":"","n1":""}; /* v19: text typed into a player screen's join form, kept across stage re-renders (see render()) */
 var lastHostState=null, liveMyAnswer=null, liveMyIdx=-1, broadcastQueued=false;
@@ -861,7 +885,7 @@ function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeSt
 function designFingerprint(k){var d=liveDesign[k];if(!d)return k+": —";var bg=d.bgMode==="image"?"image":d.bgMode==="color"?("solid "+(d.bgColor||"")):("grad "+(d.bg1||"")+" → "+(d.bg2||""));return bg+(d.headline?(" · headline “"+d.headline+"”"):" · no headline");}
 function diagLines(admin){
   var L=[];
-  L.push(["Build","v41"]);
+  L.push(["Build","v42"]);
   L.push(["Live library (Supabase)",diag.supa]);
   L.push(["This screen's role",live.mode==="host"?"Host (room owner)":live.mode==="player"?("Player "+(live.mySlot!==null?live.mySlot+1:"?")):live.mode==="viewer"?"Host display (viewer)":"Offline / demo"]);
   L.push(["Room channel",diag.channel]);
@@ -880,7 +904,7 @@ function diagLines(admin){
   return L;
 }
 function diagHTML(admin){
-  return '<b class="diag-t">🔎 Diagnostics — Build v41</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
+  return '<b class="diag-t">🔎 Diagnostics — Build v42</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
 }
 function renderDiag(){
   var ad=$("adminDiag"); if(ad)ad.innerHTML=diagHTML(true);
@@ -1011,6 +1035,7 @@ function copyAllScreenLinks(btn){
 }
 function renderAdminRoomPanel(){
   try{if(typeof refreshNavLinks==="function")refreshNavLinks();}catch(e){}
+  var gb=$("hostGuardBox"); if(gb)gb.hidden=!hostBlocked; /* v42: the guard refusal (with Take over) stays on screen until it is acted on */
   var big=$("adminRoomCodeBig"); if(!big)return;
   var daily=getDailyRoom(), code=daily.code;
   big.innerHTML="QUIZ-<b>"+esc(code)+"</b>";
@@ -1112,11 +1137,17 @@ var EVENTS_TABLE="quiz_room_events";
 var ROOMS_SQL="create table if not exists public.quiz_rooms (\n  code text primary key,\n  state jsonb not null default '{}'::jsonb,\n  time_left integer not null default 0,\n  updated_at timestamptz not null default now()\n);\ncreate table if not exists public.quiz_room_events (\n  id bigint generated by default as identity primary key,\n  code text not null,\n  client_id text not null,\n  to_id text,\n  type text not null,\n  payload jsonb not null default '{}'::jsonb,\n  created_at timestamptz not null default now()\n);\ncreate index if not exists quiz_room_events_code_idx on public.quiz_room_events (code, id);\nalter table public.quiz_rooms enable row level security;\nalter table public.quiz_room_events enable row level security;\ndrop policy if exists \"Quiz rooms read\" on public.quiz_rooms;\ndrop policy if exists \"Quiz rooms insert\" on public.quiz_rooms;\ndrop policy if exists \"Quiz rooms update\" on public.quiz_rooms;\ndrop policy if exists \"Quiz rooms delete\" on public.quiz_rooms;\ncreate policy \"Quiz rooms read\" on public.quiz_rooms for select using (true);\ncreate policy \"Quiz rooms insert\" on public.quiz_rooms for insert with check (true);\ncreate policy \"Quiz rooms update\" on public.quiz_rooms for update using (true) with check (true);\ncreate policy \"Quiz rooms delete\" on public.quiz_rooms for delete using (true);\ndrop policy if exists \"Quiz room events read\" on public.quiz_room_events;\ndrop policy if exists \"Quiz room events insert\" on public.quiz_room_events;\ndrop policy if exists \"Quiz room events update\" on public.quiz_room_events;\ndrop policy if exists \"Quiz room events delete\" on public.quiz_room_events;\ncreate policy \"Quiz room events read\" on public.quiz_room_events for select using (true);\ncreate policy \"Quiz room events insert\" on public.quiz_room_events for insert with check (true);\ncreate policy \"Quiz room events update\" on public.quiz_room_events for update using (true) with check (true);\ncreate policy \"Quiz room events delete\" on public.quiz_room_events for delete using (true);\ndo $$ begin alter publication supabase_realtime add table public.quiz_rooms; exception when duplicate_object then null; end $$;\ndo $$ begin alter publication supabase_realtime add table public.quiz_room_events; exception when duplicate_object then null; end $$;";
 var roomsSource="checking"; /* checking | ok | setup | error */
 function renderRoomsStatus(){
-  var box=$("roomsStatus"); if(!box)return;
-  if(roomsSource==="ok")box.innerHTML="☁️ <b style='color:#16A34A'>Supabase is the game server</b> — the live game state is stored in the quiz_rooms table and every screen reads it from there.";
-  else if(roomsSource==="setup")box.innerHTML="⚠️ <b>Not set up yet</b> — the game-server tables don't exist in the quiz Supabase project, so no screen can connect. Run the SQL below once.";
-  else if(roomsSource==="error")box.innerHTML="⚠️ Couldn't reach the game-server tables just now — screens keep retrying by themselves; tap “I've run it — check again” to re-check.";
-  else box.innerHTML="☁️ Checking the game server…";
+  var msg;
+  if(roomsSource==="ok")msg="☁️ <b style='color:#16A34A'>Supabase is the game server</b> — the live game state is stored in the quiz_rooms table and every screen reads it from there.";
+  else if(roomsSource==="setup")msg="⚠️ <b>Not set up yet</b> — the game-server tables don't exist in the quiz Supabase project, so no screen can connect. Run the SQL below once.";
+  else if(roomsSource==="error")msg="⚠️ Couldn't reach the game-server tables just now — screens keep retrying by themselves; tap “I've run it — check again” to re-check.";
+  else msg="☁️ Checking the game server…";
+  var box=$("roomsStatus"); if(box)box.innerHTML=msg;
+  /* v42: the same state is mirrored into the always-visible room panel at
+     the top of Admin — before, it only existed inside the Live section,
+     so an Admin sitting on any other section saw no server state at all
+     and a failed connect looked like nothing happening. */
+  var top=$("roomsStatusTop"); if(top)top.innerHTML="Game server — "+msg;
   var setup=$("roomsSetup"); if(setup)setup.hidden=roomsSource!=="setup";
   var pre=$("roomsSql"); if(pre)pre.textContent=ROOMS_SQL;
 }
@@ -1182,12 +1213,27 @@ function verifyRoomRow(){
      compare the seats. Admin's “joined” count is host-local state; this
      read-back proves the row every other screen reads actually holds it.
      A mismatch re-writes the row; repeated failure is said plainly and
-     persistently, never hidden behind a local “Live” claim. */
+     persistently, never hidden behind a local “Live” claim.
+     v42: a mismatch is no longer automatically “the save failed”. Every
+     write is stamped with the writing tab's id (hostTab): if the row
+     that comes back carries ANOTHER tab's stamp, the save DID land —
+     and then a second Admin tab hosting the same room overwrote it.
+     That is a different problem with a different fix (close the other
+     tab), so it gets its own persistent message, it never counts as a
+     write failure, and this tab does NOT re-write the row in answer —
+     re-writing is exactly the two-host fight that made the row flap
+     and every screen look disconnected. */
   if(live.mode!=="host"||!live.code)return;
   fetchRoomRow(live.code).then(function(row){
     if(live.mode!=="host")return;
-    var ok=row&&row.state&&JSON.stringify(row.state.occupied||[])===JSON.stringify(live.occupied);
-    if(ok){live.roomWriteFails=0;if(live.roomWriteErrorShown){live.roomWriteErrorShown=false;clearLiveError();}}
+    var st=row&&row.state?row.state:null;
+    if(st&&st.hostTab&&st.hostTab!==tabId){
+      live.roomWriteFails=0; /* my saves are landing — a rival host is replacing them */
+      if(!live.foreignHostShown){live.foreignHostShown=true;setLiveError("✕ Another Admin tab is also hosting this room — this tab's saves ARE reaching the game server, but the other tab keeps overwriting the room, so the Host screen and the iPads keep losing the game. Close the other Admin tab (an older copy of this page left open counts). This tab keeps hosting; the message clears once only one host remains.");}
+      return;
+    }
+    var ok=st&&JSON.stringify(st.occupied||[])===JSON.stringify(live.occupied);
+    if(ok){live.roomWriteFails=0;if(live.foreignHostShown){live.foreignHostShown=false;clearLiveError();}if(live.roomWriteErrorShown){live.roomWriteErrorShown=false;clearLiveError();}}
     else{
       live.roomWriteFails=(live.roomWriteFails||0)+1;
       queueBroadcast();
@@ -1218,7 +1264,8 @@ function buildStatePayload(){
     lastGain:state.lastGain.slice(),timeLeft:state.timeLeft,timerDur:state.timerDur,points:state.points,
     orderMode:state.orderMode, timerStyle:state.timerStyle, timeoutMode:state.timeoutMode, paused:state.paused, strict2p:state.strict2p, gameMode:state.gameMode,
     buttonStyle:state.buttonStyle, buttonScale:state.buttonScale, trueColor:state.trueColor, falseColor:state.falseColor, trueLabel:state.trueLabel, falseLabel:state.falseLabel,
-    design:clone(liveDesign), screenTs:clone(designScreenTs), ts:Date.now()};
+    design:clone(liveDesign), screenTs:clone(designScreenTs), ts:Date.now(),
+    hostTab:tabId, hostSeq:++hostWriteSeq}; /* v42: which host tab wrote this row — verifyRoomRow tells a rival host's write apart from a save that never landed */
 }
 function broadcastState(){
   /* v40: “broadcast” now means WRITE THE ROOM ROW. Every screen reads
@@ -1314,37 +1361,87 @@ function hostReconnect(){
   broadcastState(); /* write the current game into the room row again… */
   hostSubscribeEvents(true); /* …and re-follow the events table (its SUBSCRIBED handler re-writes the row once more) */
 }
+function applyAdoptedSeats(){
+  /* v42: put the seats/players from an existing room row back into this
+     tab's host state BEFORE its first write — so taking over a room (or
+     restarting the host) never publishes an empty-seats row, which is
+     what used to kick both seated iPads the moment a new host wrote. */
+  if(!adoptSeats)return false;
+  var occ=adoptSeats.occupied||[];
+  live.occupied=[occ[0]||null,occ[1]||null];
+  var rd=adoptSeats.ready||[];
+  live.ready=[!!rd[0],!!rd[1]];
+  if(adoptSeats.players){for(var ai=0;ai<2;ai++){var ap=adoptSeats.players[ai];if(ap){if(ap.name)state.players[ai].name=String(ap.name).slice(0,18);state.players[ai].score=+ap.score||0;state.players[ai].correct=+ap.correct||0;state.players[ai].streak=+ap.streak||0;}}}
+  live.lastSeen=[live.occupied[0]?Date.now():0,live.occupied[1]?Date.now():0];
+  live.stale=[false,false];
+  adoptSeats=null;
+  return true;
+}
 function hostCreateRoom(){
   var s=getSupa();
-  if(!s){toast("Live unavailable in this browser — demo mode still works");return;}
+  if(!s){setLiveError("✕ Room NOT created — the live connection (Supabase library) did not load in this tab. Check this device's internet connection, then reload this page and tap Create Today's Room again.");toast("Live unavailable in this browser — demo mode still works");return;}
   if(live.mode!=="offline"){toast("Already in a live room");return;}
-  /* v32 SINGLE-HOST GUARD: a second Admin tab in this browser used to be
-     able to create a rival host for the same room — two hosts broadcasting
-     different states is exactly how screens end up disagreeing. The live
-     host leaves a heartbeat in this browser's storage (see below); a fresh
-     create that finds a heartbeat from ANOTHER tab less than 12s old
-     refuses, and says why, instead of silently splitting the room. */
-  try{var hb0=window.localStorage?JSON.parse(localStorage.getItem(HOST_HB_KEY)||"null"):null;if(hb0&&hb0.code===getDailyRoomCode()&&hb0.clientId!==live.clientId&&(Date.now()-hb0.ts)<12000){toast("⚠ Another tab in this browser is already hosting today's room — control the game from that tab, or close it and try again.");return;}}catch(e){}
+  /* v32 SINGLE-HOST GUARD, v42 identity + refusal: a second Admin tab in
+     this browser must not silently split the room. The live host leaves
+     a heartbeat in this browser's storage (see below), stamped with its
+     PER-TAB id (tabId — v41's shared per-browser clientId could not tell
+     tabs apart, and a leftover pre-v41 tab's random id blocked every
+     fresh tab). A refusal is now PERSISTENT — the red banner plus the
+     “Take over this room” box in the room panel — never a toast that
+     vanishes and leaves Create looking like it did nothing. The only
+     bypass is that Take over button (hostForceOnce). */
+  var force=hostForceOnce; hostForceOnce=false;
+  if(!force){
+    try{
+      var hb0=window.localStorage?JSON.parse(localStorage.getItem(HOST_HB_KEY)||"null"):null;
+      var hbId=hb0?(hb0.tabId||hb0.clientId):null; /* heartbeats from older builds carry only clientId — still another tab's mark */
+      if(hb0&&hb0.code===getDailyRoomCode()&&hbId&&hbId!==tabId&&(Date.now()-hb0.ts)<12000){
+        hostBlocked={code:getDailyRoomCode(),at:Date.now()};
+        setLiveError("✕ Room NOT created in this tab — another Admin tab in this browser is already hosting today's room, so this tab is not connected to anything. Close the other Admin tab and tap Create Today's Room again, or tap “Take over this room” in the room panel at the top of Admin.");
+        renderAdminRoomPanel(); updateLiveUI();
+        return;
+      }
+    }catch(e){}
+  }
+  hostBlocked=null;
   live.code=getDailyRoomCode(); live.mode="host"; live.connected=false; live.occupied=[null,null]; live.ready=[false,false]; live.lastSeen=[0,0]; live.stale=[false,false]; live.processedEv={}; /* v21: today's code — the same room all day, reopening never changes it */
   try{if(window.localStorage)localStorage.setItem(OPEN_ROOM_KEY,live.code);}catch(e){} /* v19: same-browser Host tabs can find this room in this browser's storage too */
-  /* v40: creating the room = writing its row into quiz_rooms. Stale event
-     rows from an earlier closed room are cleared first, then the row is
-     written, then the events subscription starts. If the write fails
-     because the tables don't exist yet, the room is NOT created and the
-     app says so — with the one-time SQL one tap away in Admin → Live. */
-  try{s.from(EVENTS_TABLE).delete().eq("code",live.code).then(function(){},function(){});}catch(e){}
-  broadcastState().then(function(wrote){
+  /* v40: creating the room = writing its row into quiz_rooms, then the
+     events subscription starts. If the write fails because the tables
+     don't exist yet, the room is NOT created and the app says so — with
+     the one-time SQL one tap away in Admin → Live.
+     v42: if today's room row ALREADY exists (a takeover, or the host
+     tab was closed/reloaded without closing the room), its seats are
+     adopted before the first write and its pending player taps are
+     kept — a fresh room with no row still clears stale event rows
+     from an earlier closed room first, as before. */
+  var beginHost=function(adopted){
     if(live.mode!=="host")return;
-    if(!wrote&&roomsSource==="setup"){
-      live.mode="offline"; live.code=null; live.connected=false;
-      if(live.startPending){live.startPending=false;disarmStartPendingTimeout();setLiveError("✕ Game NOT started — "+roomsSetupErrorText());}
-      else setLiveError(roomsSetupErrorText());
-      toast("✕ Room NOT created — the game-server tables are not set up yet");
-      updateLiveUI(); render();
-      return;
-    }
-    hostSubscribeEvents(false);
-  });
+    if(!adopted){try{s.from(EVENTS_TABLE).delete().eq("code",live.code).then(function(){},function(){});}catch(e){}}
+    broadcastState().then(function(wrote){
+      if(live.mode!=="host")return;
+      if(!wrote&&roomsSource==="setup"){
+        live.mode="offline"; live.code=null; live.connected=false;
+        if(live.startPending){live.startPending=false;disarmStartPendingTimeout();setLiveError("✕ Game NOT started — "+roomsSetupErrorText());}
+        else setLiveError(roomsSetupErrorText());
+        toast("✕ Room NOT created — the game-server tables are not set up yet");
+        updateLiveUI(); render();
+        return;
+      }
+      hostSubscribeEvents(false);
+    });
+  };
+  if(adoptSeats){applyAdoptedSeats();beginHost(true);}
+  else{
+    fetchRoomRow(live.code).then(function(row){
+      if(live.mode!=="host")return;
+      if(row&&row.state&&row.state.occupied&&(row.state.occupied[0]||row.state.occupied[1])){
+        adoptSeats={occupied:row.state.occupied.slice(),ready:(row.state.ready||[]).slice(),players:row.state.players||null};
+        applyAdoptedSeats(); beginHost(true);
+        toast("Rejoined today's existing room — players already seated stay seated");
+      } else beginHost(false);
+    }).catch(function(){if(live.mode==="host")beginHost(false);});
+  }
   if(live.presenceTimer)clearInterval(live.presenceTimer);
   live.presenceTimer=setInterval(function(){
     if(live.mode!=="host")return;
@@ -1381,9 +1478,31 @@ function hostCreateRoom(){
   /* v32: host heartbeat for the single-host guard above — refreshed every
      4s while this tab hosts, removed when the room closes. */
   if(live.hostHbTimer)clearInterval(live.hostHbTimer);
-  var writeHb=function(){try{if(window.localStorage)localStorage.setItem(HOST_HB_KEY,JSON.stringify({code:live.code,clientId:live.clientId,ts:Date.now()}));}catch(e){}};
+  var writeHb=function(){try{if(window.localStorage)localStorage.setItem(HOST_HB_KEY,JSON.stringify({code:live.code,clientId:live.clientId,tabId:tabId,ts:Date.now()}));}catch(e){}};
   writeHb(); live.hostHbTimer=setInterval(writeHb,4000);
 }
+/* ================= HOST TAKEOVER (v42) =================
+   The way out of a guard refusal: this tab reads the room row the other
+   tab is hosting, adopts its seats (nobody is kicked), clears the stale
+   heartbeat, and creates the room under the one-time guard bypass. The
+   other tab is still open afterwards — verifyRoomRow's hostTab stamp
+   makes it (and this tab) say plainly that two hosts are overwriting
+   each other until it is closed. */
+function hostTakeOver(){
+  var s=getSupa(); if(!s){toast("Live unavailable in this browser");return;}
+  if(live.mode!=="offline"){toast("Already in a live room");return;}
+  var code=getDailyRoomCode();
+  fetchRoomRow(code).then(function(row){
+    if(row&&row.state)adoptSeats={occupied:(row.state.occupied||[]).slice(),ready:(row.state.ready||[]).slice(),players:row.state.players||null};
+    hostBlocked=null; clearLiveError();
+    try{if(window.localStorage)localStorage.removeItem(HOST_HB_KEY);}catch(e){}
+    hostForceOnce=true;
+    hostCreateRoom();
+    if(live.mode==="host")toast("This tab is taking over room QUIZ-"+code+" — players already seated stay seated. Close the other Admin tab so it stops overwriting the room.");
+    renderAdminRoomPanel();
+  });
+}
+function dismissHostGuard(){hostBlocked=null;clearLiveError();renderAdminRoomPanel();updateLiveUI();}
 /* ================= ROOM DISCOVERY (standalone Host finds the game) =================
    v40: there is no announce to miss any more. Today's room code is
    derived from the date, so a Host screen opened on its own — even from
@@ -2035,7 +2154,7 @@ function disconnectLive(silent){
   live.viewerRetries=0;
   live.lastSeen=[0,0]; live.stale=[false,false];
   if(live.channel){var ch=live.channel;live.channel=null;try{var s=getSupa();if(s)s.removeChannel(ch);}catch(e){}}
-  live.mode="offline";live.code=null;live.connected=false;live.mySlot=null;live.wantSlot=null;live.assigned=false;live.occupied=[null,null];live.ready=[false,false];live.startPending=false;lastHostState=null;liveMyAnswer=null;
+  live.mode="offline";live.code=null;live.connected=false;live.mySlot=null;live.wantSlot=null;live.assigned=false;live.occupied=[null,null];live.ready=[false,false];live.startPending=false;lastHostState=null;liveMyAnswer=null;hostBlocked=null;live.foreignHostShown=false;
   if(wasPlayer){state.questions=clone(DEFAULT_QS);state.active=[];state.phase="lobby";state.idx=0;state.answers=[null,null];state.lastGain=[0,0];state.players=[{name:"Player 1",score:0,streak:0,correct:0},{name:"Player 2",score:0,streak:0,correct:0}];}
   updateLiveUI(); render();
   if(!silent)toast("Left the live room — demo mode is on");
