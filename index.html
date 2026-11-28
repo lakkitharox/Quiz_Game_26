@@ -716,7 +716,7 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 26px;color:var(--muted2);fo
       <div class="panel">
         <h3>About</h3>
         <p><b style="color:var(--text)">Myth or Fact</b> — 2 players · 10 random statements per round · fastest correct tap scores.</p>
-        <p style="margin-bottom:0"><b style="color:var(--text)">Build v44</b> · 28 Nov 2026 — THE CONNECTION FIX: the reason Admin's server calls hung while the screens showed “Connected” is found. This app signs nobody in, but the Supabase library's default sign-in layer guards every table call with a cross-tab browser lock — with Admin, Host and the players open as tabs in one browser, the calls queued behind that lock and never answered, while the live socket (which never uses the lock) kept working, so the room never landed in the server table. That layer is now switched off, and the game itself — room reads/writes and player taps — talks to the server tables directly, keeping the 8-second timeout plus an automatic retry when a call is dropped. And no fake connection messages: “Room Live” appears only after a save has actually landed on the server, and Admin's joined/ready counts come only from reading the room row back from the server — until the server confirms, the panels say “seats not confirmed by the server yet” instead of inventing a number. Nothing else changed: designer, statements, rules and options are exactly as before. (v43: one clean Supabase-only system — every screen talks only to the quiz_rooms + quiz_room_events tables, the host writes a heartbeat into the room row every 10 seconds, players ping their presence, and every screen's Live status is read from those heartbeats. v42: if another Admin tab (e.g. an older copy left open) is already hosting today's room, Create no longer fails silently — a persistent message says so, with a <b style="color:var(--text)">Take over this room</b> button that makes this tab the host and keeps seated players seated. Room writes are stamped per tab, so Admin can now tell “another tab is overwriting the room” apart from “the save didn't land”. The game-server state shows at the top of Admin at all times. (v41: player devices keep one identity across reloads; the host re-checks the taps table every 5 s and reads the room row back after writing. v40: Supabase is the game server — state in quiz_rooms, taps in quiz_room_events.)</p>
+        <p style="margin-bottom:0"><b style="color:var(--text)">Build v45</b> · 28 Nov 2026 — SIMPLE SYNC. One room row on the server holds everything the game shares: the room code, the player names, the scores, the current question and answers, the winner — and the screen designs from the Screens designer, which travel inside that same row. Admin writes the row; the Host screen and both iPads read it. Nothing sits in between: the read-back checks, the confirmed-seat counts and the second clocks are gone — one write, one read. Creating a room is now just that one write, so it happens the moment the button is tapped. If the server does not answer, every screen says so plainly and keeps trying by itself; nothing claims Live, joined or connected before it is true. Everything else — the designer, the statements, the rules, the sessions — is unchanged.</p>
       </div>
       </div>
     </div>
@@ -885,7 +885,7 @@ function diagTime(ts){if(!ts)return "—";try{return new Date(ts).toLocaleTimeSt
 function designFingerprint(k){var d=liveDesign[k];if(!d)return k+": —";var bg=d.bgMode==="image"?"image":d.bgMode==="color"?("solid "+(d.bgColor||"")):("grad "+(d.bg1||"")+" → "+(d.bg2||""));return bg+(d.headline?(" · headline “"+d.headline+"”"):" · no headline");}
 function diagLines(admin){
   var L=[];
-  L.push(["Build","v44"]);
+  L.push(["Build","v45"]);
   L.push(["Live library (Supabase)",diag.supa]);
   L.push(["This screen's role",live.mode==="host"?"Host (room owner)":live.mode==="player"?("Player "+(live.mySlot!==null?live.mySlot+1:"?")):live.mode==="viewer"?"Host display (viewer)":"Offline / demo"]);
   L.push(["Room channel",diag.channel]);
@@ -904,7 +904,7 @@ function diagLines(admin){
   return L;
 }
 function diagHTML(admin){
-  return '<b class="diag-t">🔎 Diagnostics — Build v44</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
+  return '<b class="diag-t">🔎 Diagnostics — Build v45</b>'+diagLines(admin).map(function(l){return '<div class="diag-line"><span>'+esc(l[0])+'</span><code>'+esc(l[1])+'</code></div>';}).join("");
 }
 function renderDiag(){
   var ad=$("adminDiag"); if(ad)ad.innerHTML=diagHTML(true);
@@ -1263,20 +1263,20 @@ function tableChannel(s,topic){
   return s.channel(topic);
 }
 function fetchRoomRow(code){
-  /* Read the room's row — THE way a screen learns the game.
-     Resolves the row, or null when there is no such room. v43: the read
-     is wrapped in the 8-second timeout, and a failure is surfaced via
-     noteRoomsError — never swallowed — so callers and the Admin server
-     panel can tell “no room yet” (a successful read with no row) apart
-     from “server not answering” (roomsSource === "error").
-     v44: the read is a direct REST call (restWithRetry) — it no longer
-     passes through the library's auth layer at all, so the cross-tab
-     lock that froze Admin's first read can never hold it up, and one
-     dropped request is retried automatically. */
-  return withTimeout(restWithRetry("GET",ROOMS_TABLE+"?select=code,state,time_left,updated_at&code=eq."+encodeURIComponent(code)),REST_TIMEOUT_MS*2+2500,"Reading the room timed out").then(function(rows){
-    markRoomsOk(); live.lastReadOkAt=Date.now();
+  /* v45 SIMPLE SYNC — THE way a screen learns the game: read the one
+     room row from the server. That row holds everything the game
+     shares (code, names, scores, question + answers, winner, designs).
+     Resolves the row, or null when there is no such room. One clock
+     only: the timed fetch aborts a single attempt at 8 s and one
+     dropped request is retried once (restWithRetry) — the old second
+     18.5 s wrapper race is gone. A failure is surfaced via
+     noteRoomsError and flagged on live.lastReadFailed, never swallowed,
+     so screens can tell “no room yet” (a successful read with no row)
+     apart from “server not answering” (roomsSource === "error"). */
+  return restWithRetry("GET",ROOMS_TABLE+"?select=code,state,time_left,updated_at&code=eq."+encodeURIComponent(code)).then(function(rows){
+    markRoomsOk(); live.lastReadOkAt=Date.now(); live.lastReadFailed=false;
     return (rows&&rows.length)?rows[0]:null;
-  }).catch(function(err){noteRoomsError(err);return null;});
+  }).catch(function(err){live.lastReadFailed=true;noteRoomsError(err);return null;});
 }
 /* ================= BOOT PROBE WITH RETRY (v43) =================
    The exact failure in the user's screenshots: Admin opened, the first
@@ -1325,53 +1325,17 @@ function persistedClientId(scope){
   }catch(e){}
   return "c"+Math.random().toString(36).slice(2,11)+Date.now().toString(36);
 }
-var lastRoomVerifyAt=0;
-function verifyRoomRow(){
-  /* v41: never trust that a room write landed — read the row back and
-     compare the seats. Admin's “joined” count is host-local state; this
-     read-back proves the row every other screen reads actually holds it.
-     A mismatch re-writes the row; repeated failure is said plainly and
-     persistently, never hidden behind a local “Live” claim.
-     v42: a mismatch is no longer automatically “the save failed”. Every
-     write is stamped with the writing tab's id (hostTab): if the row
-     that comes back carries ANOTHER tab's stamp, the save DID land —
-     and then a second Admin tab hosting the same room overwrote it.
-     That is a different problem with a different fix (close the other
-     tab), so it gets its own persistent message, it never counts as a
-     write failure, and this tab does NOT re-write the row in answer —
-     re-writing is exactly the two-host fight that made the row flap
-     and every screen look disconnected. */
-  if(live.mode!=="host"||!live.code)return;
-  fetchRoomRow(live.code).then(function(row){
-    if(live.mode!=="host")return;
-    var st=row&&row.state?row.state:null;
-    /* v44 HONEST COUNTS: this read-back is the ONLY source Admin's
-       “joined / ready” numbers may come from — the seats the SERVER's
-       room row actually holds, never this tab's local list. Until a
-       read-back has succeeded, the panels say the seats are not
-       confirmed yet instead of inventing a number. */
-    if(row){live.serverOccupied=(st&&st.occupied)?st.occupied.slice():[];live.serverSeatsAt=Date.now();}
-    else if(roomsSource==="ok"){live.serverOccupied=[];live.serverSeatsAt=Date.now();}
-    if(st&&st.hostTab&&st.hostTab!==tabId){
-      live.roomWriteFails=0; /* my saves are landing — a rival host is replacing them */
-      if(!live.foreignHostShown){live.foreignHostShown=true;setLiveError("✕ Another Admin tab is also hosting this room — this tab's saves ARE reaching the game server, but the other tab keeps overwriting the room, so the Host screen and the iPads keep losing the game. Close the other Admin tab (an older copy of this page left open counts). This tab keeps hosting; the message clears once only one host remains.");}
-      return;
-    }
-    var ok=st&&JSON.stringify(st.occupied||[])===JSON.stringify(live.occupied);
-    if(ok){live.roomWriteFails=0;if(live.foreignHostShown){live.foreignHostShown=false;clearLiveError();}if(live.roomWriteErrorShown){live.roomWriteErrorShown=false;clearLiveError();}}
-    else{
-      live.roomWriteFails=(live.roomWriteFails||0)+1;
-      queueRoomWrite();
-      if(live.roomWriteFails>=2&&!live.roomWriteErrorShown){live.roomWriteErrorShown=true;setLiveError("✕ The game server is NOT saving the room — Admin may show players as joined, but the room table does not hold them, so the iPads and the Host screen cannot see their seats. Check this device's internet connection; the app keeps retrying the save by itself.");}
-    }
-  }).catch(function(){});
-}
+/* v45: the old read-back verify loop (v41/v42/v44) is REMOVED — the
+   user asked for the confirmations gone. A room write's own success is
+   the only check now: “Room Live” shows only while writes are actually
+   landing (hostWriteFresh), and Admin's counts are the host's own
+   seats — the same ones it writes into the row. One write, one read. */
 function sendRoomEvent(type,payload,toId){
   /* A player → host tap, stored as a row the host cannot miss. Resolves
      true only when the row actually landed in the table.
      v44: direct REST insert (see the v44 note at getSupa). */
   if(!live.code)return Promise.resolve(false);
-  return withTimeout(restWithRetry("POST",EVENTS_TABLE,{code:live.code,client_id:live.clientId,to_id:toId||null,type:type,payload:payload||{}}),REST_TIMEOUT_MS*2+2500,"Sending to the server timed out").then(function(){
+  return restWithRetry("POST",EVENTS_TABLE,{code:live.code,client_id:live.clientId,to_id:toId||null,type:type,payload:payload||{}}).then(function(){
     markRoomsOk(); return true;
   }).catch(function(err){noteRoomsError(err);return false;});
 }
@@ -1392,7 +1356,7 @@ function buildStatePayload(){
     design:clone(liveDesign), screenTs:clone(designScreenTs), ts:Date.now(),
     hostBeat:Date.now(), /* v43 HEARTBEAT: the host re-writes this row at least every 10 s (heartbeat timer), so every other screen can tell a live host from a dead one by whether this value keeps changing — see hostIsAlive() */
     seen:live.lastSeen.slice(), /* the host's heartbeat view of the players: when each iPad last pinged (its own 10 s ping rows in quiz_room_events) */
-    hostTab:tabId, hostSeq:++hostWriteSeq}; /* v42: which host tab wrote this row — verifyRoomRow tells a rival host's write apart from a save that never landed */
+    hostTab:tabId, hostSeq:++hostWriteSeq}; /* which host tab wrote this row, and its write count — kept in the row for diagnostics */
 }
 function writeRoomState(){
   /* v40: “room-row write” now means WRITE THE ROOM ROW. Every screen reads
@@ -1407,9 +1371,8 @@ function writeRoomState(){
      save no longer passes through the library's auth layer, and one
      dropped request is retried automatically before it counts as a
      failure here. */
-  return withTimeout(restWithRetry("POST",ROOMS_TABLE+"?on_conflict=code",[{code:live.code,state:payload,time_left:state.timeLeft,updated_at:new Date().toISOString()}],"resolution=merge-duplicates"),REST_TIMEOUT_MS*2+2500,"Saving the room timed out").then(function(){
-    markRoomsOk(); live.lastWriteOkAt=Date.now(); live.hostBeatAt=payload.hostBeat; live.hostBeatSeenAt=live.lastWriteOkAt; /* v43: a landed write IS this host's heartbeat — Admin's own Live status is read from this stamp, not from a local guess */
-    var nowV=Date.now(); if(nowV-lastRoomVerifyAt>4000){lastRoomVerifyAt=nowV;verifyRoomRow();} /* v41: prove the write landed by reading the row back and comparing the seats */
+  return restWithRetry("POST",ROOMS_TABLE+"?on_conflict=code",[{code:live.code,state:payload,time_left:state.timeLeft,updated_at:new Date().toISOString()}],"resolution=merge-duplicates").then(function(){
+    markRoomsOk(); live.lastWriteOkAt=Date.now(); live.hostBeatAt=payload.hostBeat; live.hostBeatSeenAt=live.lastWriteOkAt; /* a landed write IS this host's heartbeat — Admin's own Live status is read from this stamp, not from a local guess. v45: no read-back verify after the write — the write's own success is the only confirmation. */
     return true;
   }).catch(function(err){noteRoomsError(err);live.roomWriteFails=(live.roomWriteFails||0)+1;if(live.roomWriteFails>=2&&!live.roomWriteErrorShown){live.roomWriteErrorShown=true;setLiveError("✕ The game server did not answer the room save — the other screens cannot see the current game. Check this device's internet connection; the app keeps retrying.");}return false;});
 }
@@ -1537,11 +1500,12 @@ function hostCreateRoom(){
      events subscription starts. If the write fails because the tables
      don't exist yet, the room is NOT created and the app says so — with
      the one-time SQL one tap away in Admin → Live.
-     v42: if today's room row ALREADY exists (a takeover, or the host
-     tab was closed/reloaded without closing the room), its seats are
-     adopted before the first write and its pending player taps are
-     kept — a fresh room with no row still clears stale event rows
-     from an earlier closed room first, as before. */
+     v45: seats from an existing room row are adopted only on the
+     Take over path (adoptSeats, set by hostTakeOver's single read)
+     before the first write; a plain Create writes a fresh room at
+     once and clears stale event rows from an earlier closed room
+     first, as before — seated iPads simply knock again and rejoin
+     within seconds. */
   var beginHost=function(adopted){
     if(live.mode!=="host")return;
     if(!adopted){try{restRequest("DELETE",EVENTS_TABLE+"?code=eq."+encodeURIComponent(live.code)).then(function(){},function(){});}catch(e){}}
@@ -1559,28 +1523,7 @@ function hostCreateRoom(){
     });
   };
   if(adoptSeats){applyAdoptedSeats();beginHost(true);}
-  else{
-    /* v43: host start is NOT gated on this one read. The read (already
-       8-second-timed in fetchRoomRow) only decides whether existing
-       seats get adopted; a fallback timer starts the host after 8 s
-       even if the read somehow never settles, and a failed/timed-out
-       read (roomsSource "error", row null) starts a fresh room — the
-       write that follows is itself timed and surfaces its own error,
-       and if the tables are missing it refuses with the setup message
-       inside beginHost, exactly as before. begunHost guards against
-       the read and the timer both starting the host. */
-    var begunHost=false;
-    var startFromRead=function(row){
-      if(begunHost||live.mode!=="host")return; begunHost=true;
-      if(row&&row.state&&row.state.occupied&&(row.state.occupied[0]||row.state.occupied[1])){
-        adoptSeats={occupied:row.state.occupied.slice(),ready:(row.state.ready||[]).slice(),players:row.state.players||null};
-        applyAdoptedSeats(); beginHost(true);
-        toast("Rejoined today's existing room — players already seated stay seated");
-      } else beginHost(false);
-    };
-    var gateTimer=setTimeout(function(){startFromRead(null);},REST_TIMEOUT_MS);
-    fetchRoomRow(live.code).then(function(row){clearTimeout(gateTimer);startFromRead(row);}).catch(function(){clearTimeout(gateTimer);startFromRead(null);});
-  }
+  else beginHost(false); /* v45 SIMPLE: creating the room IS the one write — no read first, no gate, no fallback timer, so the room is written the moment Create is tapped instead of after a read that could take 8–18 s. If the write fails, beginHost says so plainly (setup message when the tables are missing) and the 10 s heartbeat write keeps retrying it. Seat adoption happens only through Take over, which does its own single read. */
   if(live.presenceTimer)clearInterval(live.presenceTimer);
   live.presenceTimer=setInterval(function(){
     if(live.mode!=="host")return;
@@ -1627,9 +1570,8 @@ function hostCreateRoom(){
    The way out of a guard refusal: this tab reads the room row the other
    tab is hosting, adopts its seats (nobody is kicked), clears the stale
    heartbeat, and creates the room under the one-time guard bypass. The
-   other tab is still open afterwards — verifyRoomRow's hostTab stamp
-   makes it (and this tab) say plainly that two hosts are overwriting
-   each other until it is closed. */
+   other tab should then be closed — two hosts writing one room row
+   would keep overwriting each other. */
 function hostTakeOver(){
   var s=getSupa(); if(!s){toast("Live unavailable in this browser");return;}
   if(live.mode!=="offline"){toast("Already in a live room");return;}
@@ -2168,13 +2110,20 @@ function hostLoginSubmit(){
   hostLoginTimer=setTimeout(function(){
     hostLoginTimer=null;
     if(!hostLoginPending)return;
-    hostLoginPending=false;
+    /* v45: no second clock, no false deadline. The viewer keeps reading
+       the room row every few seconds for as long as it takes, so at
+       20 s this only updates the words to the REAL reason nothing has
+       arrived: the server is not answering (roomsSource "error"), the
+       tables are missing ("setup"), or the room does not exist yet.
+       The attempt stays pending — the pop-up closes by itself the
+       moment the room row appears (hostLoginSuccess). */
     var b=$("hostLoginBtn"); if(b){b.disabled=false;b.textContent="Try again — Connect / Log in";}
-    setSt("✕ That code did not connect — no room was found for that code within 14 seconds. Check the code is exactly today's code from Admin, that Admin has tapped Create Today's Room, and that this device is online. You are NOT connected.","err");
-    setLiveError("✕ Host did not connect — no room was found for the code entered in the pop-up. Check today's code in Admin and that the room is created, then tap Connect to room and try again.");
+    if(roomsSource==="error")setSt("✕ The game server is not answering — this screen's reads are not getting through, so no room can be found yet. You are NOT connected. This screen keeps checking by itself; check this device's internet connection if this stays.","err");
+    else if(roomsSource==="setup")setSt(roomsSetupErrorText(),"err");
+    else setSt("No room found for that code yet — a room appears here the moment Admin taps Create Today's Room. You are NOT connected yet. This screen keeps checking every few seconds; check the code is exactly today's code from Admin, or tap Cancel to stop.","wait");
     updateHostConnectUI();
     var m=$("hostLoginModal"); if(m)m.hidden=false;
-  },14000);
+  },20000);
   hostViewerJoin(code,false); /* the viewer path — reads the room row now, follows it live, polls until the room exists, rebuilds on drops */
   updateLiveUI(); render();
 }
@@ -2315,17 +2264,17 @@ function disconnectLive(silent){
   try{if(currentView==="host"&&live.mode==="offline")setTimeout(maybeHostViewer,700);}catch(e){}
 }
 function countJoined(){return live.occupied.filter(function(x){return !!x}).length}
-/* v44: joined/ready counts that are CONFIRMED by the server — read back
-   from the room row in verifyRoomRow. null = no read-back has succeeded
-   yet, so no number may be shown. */
-function confirmedJoined(){if(!live.serverSeatsAt||!live.serverOccupied)return null;return live.serverOccupied.filter(function(x){return !!x}).length;}
-function confirmedReady(){if(!live.serverSeatsAt||!live.serverOccupied)return null;var n=0;live.serverOccupied.forEach(function(cid){if(!cid)return;var sl=live.occupied.indexOf(cid);if(sl!==-1&&live.ready[sl])n++;});return n;}
+/* v45 SIMPLE: Admin's joined/ready counts are the host's own game state —
+   the exact seats and Ready flags this tab writes into the room row.
+   “Live” itself is still earned, never assumed: it shows only while
+   room saves are actually landing on the server (hostWriteFresh — a
+   write succeeded within the last 25 s; the 10 s heartbeat write keeps
+   that fresh). No read-back loop, no second set of numbers. */
 function hostPanelStatus(){
-  var cj=confirmedJoined();
-  var joinedTxt=(cj===null)?"seats not confirmed by the server yet":(cj+" of 2 joined — confirmed by the server");
+  var joinedTxt=countJoined()+" of 2 joined · "+countReady()+" of 2 ready";
   if(hostWriteFresh())return "<b style='color:#16A34A'>● Live</b> · "+joinedTxt;
   if(live.lastWriteOkAt)return "<b>Server not answering…</b> · "+joinedTxt;
-  return "<b>Not live — no save confirmed by the server yet</b> · "+joinedTxt;
+  return "<b>Not live yet</b> · waiting for the first room save to land on the server";
 }
 function countReady(){return live.ready.filter(function(x){return !!x}).length}
 /* v30: once a player has set a name, every screen shows THAT name — the
@@ -2403,7 +2352,7 @@ function updateLiveUI(){
   var aliveNow=isHost?hostWriteFresh():(live.mode==="viewer"||isPlayer)?hostIsAlive():false;
   dot.className="conn-dot "+(aliveNow?"on":(live.mode!=="offline"?"wait":""));
   $("roomCodeDisplay").textContent=live.code?("QUIZ-"+live.code):"—";
-  $("connStatus").textContent=isHost?(hostWriteFresh()?("Live host · "+(confirmedJoined()===null?"seats not confirmed yet":(confirmedJoined()+" joined — server-confirmed"))):(live.lastWriteOkAt?"Server not answering…":"Connecting…")):isPlayer?(live.assigned?(hostIsAlive()?("Live · "+dispName(live.mySlot)):("Host not answering · "+dispName(live.mySlot))):(live.connected?"Joining…":"Connecting…")):live.mode==="viewer"?(hostIsAlive()?"Live · following the game":(live.hostBeatSeenAt?"Host not answering":"Connecting to the game…")):"Demo mode";
+  $("connStatus").textContent=isHost?(hostWriteFresh()?("Live host · "+countJoined()+" joined"):(live.lastWriteOkAt?"Server not answering…":"Connecting…")):isPlayer?(live.assigned?(hostIsAlive()?("Live · "+dispName(live.mySlot)):("Host not answering · "+dispName(live.mySlot))):(live.connected?"Joining…":"Connecting…")):live.mode==="viewer"?(hostIsAlive()?"Live · following the game":(live.hostBeatSeenAt?"Host not answering":"Connecting to the game…")):"Demo mode";
   renderAdminRoomPanel();
   renderJoinDocks();
   renderDiag();
@@ -2454,13 +2403,10 @@ function hostStageHTML(){
       /* v30: chips show each player BY NAME with their Ready state —
          “NAME — ✅ Ready” / “NAME — ⏳ Not ready”. “Player N” only appears
          for a slot nobody has joined yet. */
-      /* v44: the chips and the counts come from the SERVER-CONFIRMED
-         seats (live.serverOccupied, read back from the room row) — a
-         player appears here only once the server's row holds their
-         seat, never from this tab's local list alone. */
-      var chips=""; for(var i=0;i<2;i++){var sOcc=live.serverOccupied&&live.serverOccupied[i];var sReady=sOcc&&live.occupied[i]===live.serverOccupied[i]&&live.ready[i];chips+='<span class="slot-chip '+(sOcc?(sReady?"ready":"filled"):"")+'">'+(sOcc?(esc(state.players[i].name)+(sReady?" — ✅ Ready":" — ⏳ Not ready")):("○ Player "+(i+1)+" — waiting to join…"))+'</span>';}
-      var cjH=confirmedJoined();
-      liveBit='<div style="margin-top:16px"><div>'+chips+'</div><div class="statusline '+(hostWriteFresh()&&cjH!==null?"ok":"wait")+'">'+(hostWriteFresh()?(cjH===null?"● Live — seats not confirmed by the server yet":("● Live — "+cjH+" of 2 joined · "+confirmedReady()+" of 2 ready — server-confirmed")):"◌ Not live — no save confirmed by the server yet")+'</div></div>';
+      /* v45 SIMPLE: the chips show the host's own seats — the same
+         occupied[] / ready[] this tab writes into the room row. */
+      var chips=""; for(var i=0;i<2;i++){var sOcc=live.occupied[i];var sReady=sOcc&&live.ready[i];chips+='<span class="slot-chip '+(sOcc?(sReady?"ready":"filled"):"")+'">'+(sOcc?(esc(state.players[i].name)+(sReady?" — ✅ Ready":" — ⏳ Not ready")):("○ Player "+(i+1)+" — waiting to join…"))+'</span>';}
+      liveBit='<div style="margin-top:16px"><div>'+chips+'</div><div class="statusline '+(hostWriteFresh()?"ok":"wait")+'">'+(hostWriteFresh()?("● Live — "+countJoined()+" of 2 joined · "+countReady()+" of 2 ready"):"◌ Not live yet — the room save has not landed on the server")+'</div></div>';
     } else if(live.mode==="viewer"){
       var vchips=""; for(var i=0;i<2;i++){var named=state.players[i].name!=="Player "+(i+1);vchips+='<span class="slot-chip '+(named?(live.ready[i]?"ready":"filled"):"")+'">'+(named?(esc(state.players[i].name)+(live.ready[i]?" — ✅ Ready":" — ⏳ Not ready")):("○ Player "+(i+1)+" — waiting…"))+'</span>';}
       /* v37: freshness line — a viewer that joined a room but hears nothing
@@ -2937,8 +2883,7 @@ function renderLiveMonitor(){
   var pct=state.timerDur===0?100:Math.max(0,Math.min(100,state.timeLeft/state.timerDur*100));
   var timerTxt=state.timerDur===0?"No timer":(state.timeLeft+"s left");
   var phaseTxt=state.phase.charAt(0).toUpperCase()+state.phase.slice(1)+(state.paused?" · Paused":"")+" · "+(state.gameMode==="manual"?"Manual":"Automatic");
-  var cjM=confirmedJoined();
-  var roomTxt=live.mode==="host"?((hostWriteFresh()?"Live room QUIZ-":"Room QUIZ-")+live.code+" · "+(cjM===null?"seats not confirmed by the server yet":(cjM+" of 2 joined · "+confirmedReady()+" of 2 ready — server-confirmed"))):(live.mode==="player"?("Joined as "+dispName(live.mySlot)):(live.mode==="viewer"?"Following live game":"No live room — demo mode"));
+  var roomTxt=live.mode==="host"?((hostWriteFresh()?"Live room QUIZ-":"Room QUIZ-")+live.code+" · "+countJoined()+" of 2 joined · "+countReady()+" of 2 ready"):(live.mode==="player"?("Joined as "+dispName(live.mySlot)):(live.mode==="viewer"?"Following live game":"No live room — demo mode"));
   var h="";
   h+='<div class="live-top">';
   h+='<div class="live-stat"><small>Timer</small><b id="liveTimerNum">'+timerTxt+'</b><span>'+(state.timerDur===0?"Off":(state.timerDur+"s · "+state.timeoutMode))+(state.paused?" · ⏸ Paused":"")+'</span><div class="live-timerbar"><i style="width:'+pct+'%"></i></div></div>';
